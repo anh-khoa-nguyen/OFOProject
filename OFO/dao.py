@@ -1,8 +1,9 @@
 import json
 import os
+import config
 
 def auth_user(username, password):
-    current_dir = os.path.dirname(__file__)
+    current_dir = config.project_dir
     filepath = os.path.join(current_dir, 'data', 'users.json')  # tức là OFO/data/users.json
 
     with open(filepath, encoding="utf-8") as f:
