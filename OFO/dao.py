@@ -1,7 +1,11 @@
 import json
+import os
 
 def auth_user(username, password):
-    with open("../data/users.json", encoding="utf-8") as f:
+    current_dir = os.path.dirname(__file__)
+    filepath = os.path.join(current_dir, 'data', 'users.json')  # tức là OFO/data/users.json
+
+    with open(filepath, encoding="utf-8") as f:
         users = json.load(f)
 
         for u in users:
