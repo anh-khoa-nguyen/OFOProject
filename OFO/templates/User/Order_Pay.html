@@ -1,0 +1,186 @@
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/Order_Pay.css') }}"/>
+</head>
+
+{% extends 'layout/base.html' %}
+{% block content %}
+<div class="checkout-page">
+    <div class="checkout-container">
+        <h1>Thanh Toán Đơn Hàng</h1>
+
+        <div class="checkout-header">
+            <a href="#" class="back-button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd"
+                          d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+                </svg>
+            </a>
+            <img src="{{ url_for('static', filename='images/logokymie1.png') }}" alt="Avatar quán ăn" class="restaurant-avatar">
+            <div class="restaurant-details">
+                <span class="header-title">Trà sữa Ba Ghiền</span>
+            </div>
+        </div>
+        <div class="checkout-layout">
+            <!-- CỘT BÊN TRÁI -->
+            <div class="checkout-main">
+                <!-- Thông tin giao hàng -->
+                <div class="checkout-section">
+                    <h3>Giao đến</h3>
+                    <div class="info-box">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill=#E91E63
+                             class="bi bi-geo-alt-fill" viewBox="0 0 16 16">
+                            <path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10zm0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/>
+                        </svg>
+                        <p class="address-text">123 Đường ABC, Phường XYZ, Quận 1, TP.HCM</p>
+                        <a href="#" class="change-link">Thay đổi</a>
+                    </div>
+                </div>
+                <!-- Ghi chú -->
+                <div class="checkout-section">
+                    <h3>Ghi chú</h3>
+                    <input type="text" class="note-input" placeholder="Ghi chú cho tài xế (tùy chọn)...">
+                </div>
+                <!-- Khuyến mãi -->
+                <div class="checkout-section">
+                    <h3>Khuyến mãi</h3>
+                    <a id="open-promo-btn" href="#" class="info-box promo-box">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
+                             class="bi bi-ticket-detailed-fill" viewBox="0 0 16 16">
+                            <path d="M0 4.5A1.5 1.5 0 0 1 1.5 3h13A1.5 1.5 0 0 1 16 4.5V6a.5.5 0 0 1-.5.5 1.5 1.5 0 0 0 0 3 .5.5 0 0 1 .5.5v1.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 11.5V10a.5.5 0 0 1 .5-.5 1.5 1.5 0 1 0 0-3A.5.5 0 0 1 0 6V4.5Zm4 1a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 0-1h-7a.5.5 0 0 0-.5.5Zm0 5a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 0-1h-7a.5.5 0 0 0-.5.5ZM4 8.5a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 0-1h-3a.5.5 0 0 0-.5.5Z"/>
+                        </svg>
+                        <p class="promo-text">Giảm 20k cho đơn hàng</p>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                             class="bi bi-chevron-right" viewBox="0 0 16 16">
+                            <path fill-rule="evenodd"
+                                  d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z"/>
+                        </svg>
+                    </a>
+                </div>
+                <!-- Phương thức thanh toán -->
+                <div class="checkout-section">
+                    <h3>Phương thức thanh toán</h3>
+                    <a href="#" class="info-box payment-box selected">
+                        <img src="https://upload.wikimedia.org/wikipedia/vi/9/9d/VNPAY-QR.png" alt="VNPay Logo"
+                             class="payment-logo">
+                        <p class="payment-text">Ví VNPay</p>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                             class="bi bi-chevron-right" viewBox="0 0 16 16">
+                            <path fill-rule="evenodd"
+                                  d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- CỘT BÊN PHẢI -->
+            <div class="checkout-sidebar">
+                <div class="order-summary">
+                    <h3>Tóm tắt đơn hàng</h3>
+                    <div class="order-items">
+                        <div class="order-item">
+                            <div class="item-main">
+                                <span class="item-qty">1x</span>
+                                <span class="item-name">Cơm Tấm Sườn Bì Chả</span>
+                            </div>
+                            <span class="item-price">65.000đ</span>
+                        </div>
+                        <p class="item-options">+ Thêm chả, ít đường</p>
+
+                        <div class="order-item">
+                            <div class="item-main">
+                                <span class="item-qty">1x</span>
+                                <span class="item-name">Trà Đào Cam Sả</span>
+                            </div>
+                            <span class="item-price">45.000đ</span>
+                        </div>
+                    </div>
+                    <div class="price-details">
+                        <div class="price-line">
+                            <span>Tạm tính</span>
+                            <span>110.000đ</span>
+                        </div>
+                        <div class="price-line">
+                            <span>Phí giao hàng</span>
+                            <span>15.000đ</span>
+                        </div>
+                        <div class="price-line promo-line">
+                            <span>Giảm giá</span>
+                            <span>-20.000đ</span>
+                        </div>
+                    </div>
+                    <div class="price-total">
+                        <span>Tổng cộng</span>
+                        <span class="total-amount">105.000đ</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="checkout-footer">
+            <div class="button-wrapper">
+                <button type="submit" class="place-order-btn">Thanh toán</button>
+            </div>
+            <p class="terms-notice">Bằng việc nhấn 'Thanh toán', bạn đồng ý với các Điều khoản Dịch vụ của chúng tôi
+                và
+                không thể hủy đơn hàng này.</p>
+        </div>
+    </div>
+</div>
+<div id="promo-modal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Chọn Khuyến Mãi</h2>
+            <button id="close-modal-btn" class="close-button">×</button>
+        </div>
+        <div class="modal-body">
+            <!-- Mã khuyến mãi 1 -->
+            <div class="promo-item">
+                <div class="promo-icon blue">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16"><path d="M1.5 3A1.5 1.5 0 0 0 0 4.5V6a.5.5 0 0 0 .5.5h15a.5.5 0 0 0 .5-.5V4.5A1.5 1.5 0 0 0 14.5 3h-13zM16 7.5h-15a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h15a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zM14.5 10a1.5 1.5 0 0 0-1.5 1.5v1.5a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5V11.5a1.5 1.5 0 0 0-1.5-1.5h-13z"/></svg>
+                </div>
+                <div class="promo-details">
+                    <p class="promo-title">Giảm 20k cho đơn hàng</p>
+                    <p class="promo-condition">Đơn tối thiểu 100k</p>
+                </div>
+                <button class="apply-promo-btn">Áp dụng</button>
+            </div>
+             <!-- Mã khuyến mãi 2 -->
+            <div class="promo-item">
+                <div class="promo-icon green">
+                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16"><path d="M0 3.5A1.5 1.5 0 0 1 1.5 2h9A1.5 1.5 0 0 1 12 3.5V5h1.02a1.5 1.5 0 0 1 1.17.563l1.481 1.85a1.5 1.5 0 0 1 .329.938V10.5a1.5 1.5 0 0 1-1.5 1.5H14a2 2 0 1 1-4 0H5a2 2 0 1 1-4 0a1.5 1.5 0 0 1-1.5-1.5V3.5zM1 3a.5.5 0 0 0-.5.5v5.793a.5.5 0 0 0 .421.492l1.025.342A4.503 4.503 0 0 0 5 12c2.036 0 3.734-1.298 4.292-3.042l1.025-.342A.5.5 0 0 0 11 8.293V3.5a.5.5 0 0 0-.5-.5H1zM3 10a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm9 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/></svg>
+                </div>
+                <div class="promo-details">
+                    <p class="promo-title">Freeship 15k</p>
+                    <p class="promo-condition">Áp dụng cho mọi đơn hàng</p>
+                </div>
+                <button class="apply-promo-btn">Áp dụng</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const openPromoButton = document.getElementById('open-promo-btn');
+        const promoModal = document.getElementById('promo-modal');
+        const closeModalButton = document.getElementById('close-modal-btn');
+
+        // Mở modal
+        openPromoButton.addEventListener('click', function(event) {
+            event.preventDefault();
+            promoModal.classList.add('active');
+        });
+
+        // Đóng modal bằng nút X
+        closeModalButton.addEventListener('click', function() {
+            promoModal.classList.remove('active');
+        });
+
+        // Đóng modal bằng cách click bên ngoài
+        promoModal.addEventListener('click', function(event) {
+            if (event.target === promoModal) {
+                promoModal.classList.remove('active');
+            }
+        });
+    });
+</script>
+{% endblock %}
