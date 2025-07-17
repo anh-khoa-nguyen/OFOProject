@@ -1,0 +1,39 @@
+{# Đặt biến để báo cho header ẩn các nút #}
+{% set hide_header_controls = True %}
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}"/>
+</head>
+
+{% extends 'layout/base.html' %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6 col-xl-5">
+        <div class="login-container">
+            <h1 class="text-center h3 fw-bold">KYMIE FOOD</h1>
+
+            <p class="text-center h5 my-4">Bảo mật đăng nhập</p>
+
+            <form>
+                <div class="mb-3">
+                    <label for="phone" class="form-label">Nhập số điện thoại đã đăng kí của bạn</label>
+                    <!-- Chỉ cần thẻ input này. Script trong base.html sẽ xử lý nó -->
+                    <input type="tel" class="form-control" id="phone" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="password" class="form-label">Vui lòng nhập mật khẩu</label>
+                    <input type="password" class="form-control" id="password" placeholder="Mật khẩu" required>
+                </div>
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary btn-lg">Đăng nhập</button>
+                </div>
+
+                <div class="text-center mt-4">
+                    <p>Nếu bạn chưa có tài khoản, vui lòng <a href="{{ url_for('preregister') }}">Đăng kí tài khoản</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
