@@ -21,6 +21,9 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}"/>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css">
+    <link rel="icon" href="{{ url_for('static', filename='images/logo.ico') }}" type="image/x-icon">
+    <!-- CSS cho International Telephone Input -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/css/intlTelInput.css"/>
 </head>
 <body>
 
@@ -37,14 +40,28 @@
     {% include 'layout/footer.html'%}
 {% endblock %}
 
-<script src="{{ url_for('static', filename='js/main.js') }}"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/moment.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/moment-with-locales.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/js/intlTelInput.min.js"></script>
 <script>
     window.onload = function(){
         let dates = document.getElementsByClassName("date");
         for (let d of dates)
             d.innerText = moment(d.innerText).locale("vi").fromNow();
+
+         // --- PHẦN CODE MỚI ĐỂ KHỞI TẠO Ô NHẬP SỐ ĐIỆN THOẠI ---
+        // 1. Tìm phần tử input có id="phone"
+        var phoneInput = document.querySelector("#phone");
+
+        // 2. Chỉ khởi tạo thư viện NẾU tìm thấy phần tử đó trên trang hiện tại
+        if (phoneInput) {
+            window.intlTelInput(phoneInput, {
+                initialCountry: "vn", // Mặc định là Việt Nam
+                separateDialCode: true, // Hiển thị mã vùng riêng (+84)
+                utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/js/utils.js",
+            });
+        }
     }
 </script>
 </body>
