@@ -3,22 +3,24 @@
         <nav class="navbar navbar-expand-lg navbar-light">
             <!-- Logo -->
             <a class="navbar-brand" href="#">
-                <img src="https://food.grab.com/static/images/logo-grabfood-green.svg" alt="GrabFood Logo"
-                     style="height: 28px;">
+                <img src="{{ url_for('static', filename='images/logokymie1.png') }}" alt="GrabFood Logo"
+                     style="height: 50px;">
             </a>
 
             <!-- Spacer to push controls to the right -->
             <div class="ms-auto d-flex align-items-center">
 
+                {# --- BẮT ĐẦU KHỐI ĐIỀU KIỆN --- #}
+                {% if not hide_header_controls %}
                 <!-- Cart Button -->
                 <button type="button" class="btn btn-custom-light me-2">
                     <i class="bi bi-bag"></i>
                 </button>
 
                 <!-- Login/Register Button -->
-                <button type="button" class="btn btn-custom-light me-2">
+                <a href="{{ url_for('login') }}" class="btn btn-custom-light me-2">
                     Đăng nhập/Đăng ký
-                </button>
+                </a>
 
                 <!-- Language Dropdown -->
                 <div class="dropdown">
@@ -31,6 +33,8 @@
                         <li><a class="dropdown-item" href="#">EN - English</a></li>
                     </ul>
                 </div>
+                {% endif %}
+                {# --- KẾT THÚC KHỐI ĐIỀU KIỆN --- #}
             </div>
         </nav>
     </div>

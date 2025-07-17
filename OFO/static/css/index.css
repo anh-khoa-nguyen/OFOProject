@@ -1,0 +1,22 @@
+body, html {
+      height: 100%;
+    }
+    .bg-cover {
+      background-image: url('https://images.unsplash.com/photo-1617191513006-0372829aeb80'); /* Thay bằng ảnh của bạn */
+      background-size: cover;
+      background-position: center;
+    }
+    .search-box {
+      background-color: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .search-input {
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    .btn-search {
+      background-color: #00b14f;
+      color: white;
+    }
