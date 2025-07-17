@@ -1,0 +1,78 @@
+/* Header CSS */
+
+.btn-custom-light {
+    background-color: white;
+    border: 1px solid #e0e0e0; /* Light grey border */
+    color: #555; /* Dark grey text color */
+}
+
+.btn-custom-light:hover {
+    background-color: #f8f9fa; /* Slightly off-white on hover */
+    border-color: #dcdcdc;
+    color: #333;
+}
+
+header .navbar {
+    padding: 0.5rem 0;
+    background-color: green;
+}
+
+/* Footer CSS */
+.bg-grab-green {
+    background-color: #00b14f;
+}
+
+/* Footer Logo */
+.footer-logo {
+    width: 140px;
+}
+
+/* Footer Horizontal Line */
+.footer-hr {
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Footer Links */
+.footer-link {
+    color: white;
+    text-decoration: none;
+    font-size: 0.95rem;
+    transition: opacity 0.2s;
+}
+
+.footer-link:hover {
+    color: white;
+    opacity: 0.8;
+}
+
+.social-icon {
+    color: white;
+    font-size: 1.5rem;
+    margin-left: 1rem;
+    transition: opacity 0.2s;
+}
+
+.social-icon:hover {
+    color: white;
+    opacity: 0.8;
+}
+
+/* App Store and Google Play Badges */
+.store-badge {
+    height: 40px;
+}
+
+.bottom-footer-link {
+    color: white;
+    text-decoration: none;
+}
+
+.bottom-footer-link:hover {
+    color: white;
+    text-decoration: underline;
+}
+
+.bottom-footer-link::before {
+    content: "•";
+    margin: 0 0.5rem;
+}
