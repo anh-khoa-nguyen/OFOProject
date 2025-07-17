@@ -1,9 +1,9 @@
 /* Header CSS */
 
 .btn-custom-light {
-    background-color: white;
+    background-color: black;
+    color: white;
     border: 1px solid #e0e0e0; /* Light grey border */
-    color: #555; /* Dark grey text color */
 }
 
 .btn-custom-light:hover {
@@ -14,12 +14,12 @@
 
 header .navbar {
     padding: 0.5rem 0;
-    background-color: green;
+    background-color: #FFC5D3;
 }
 
 /* Footer CSS */
 .bg-grab-green {
-    background-color: #00b14f;
+    background-color: #FFC5D3;
 }
 
 /* Footer Logo */
@@ -34,7 +34,8 @@ header .navbar {
 
 /* Footer Links */
 .footer-link {
-    color: white;
+    color: black;
+    font-weight: 600;
     text-decoration: none;
     font-size: 0.95rem;
     transition: opacity 0.2s;
@@ -46,7 +47,7 @@ header .navbar {
 }
 
 .social-icon {
-    color: white;
+    color: black;
     font-size: 1.5rem;
     margin-left: 1rem;
     transition: opacity 0.2s;
@@ -63,7 +64,7 @@ header .navbar {
 }
 
 .bottom-footer-link {
-    color: white;
+    color: black;
     text-decoration: none;
 }
 
