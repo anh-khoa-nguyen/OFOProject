@@ -1,0 +1,20 @@
+.login-page-body {
+    background-color: #f8f9fa; /* Màu nền xám nhạt cho trang đăng nhập */
+}
+
+.login-container {
+    margin-top: 5rem;
+    margin-bottom: 5rem;
+    padding: 2rem;
+    background-color: #ffffff;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+.iti {
+    width: 100%;
+    display: block;
+}
+
+.iti .form-control {
+    height: calc(1.5em + .75rem + 2px);
+}
