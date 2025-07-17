@@ -5,9 +5,11 @@ app = Flask(__name__)
 @app.route("/")
 def index():
     return render_template('restaurant_detail.html')
+
 @app.route('/login')
 def login():
     return render_template('login.html')
+  
 @app.route('/preregister', methods=['GET', 'POST'])
 def preregister():
     if request.method == 'POST':
@@ -28,7 +30,19 @@ def register():
             return render_template('register.html')
 
     return render_template('register.html', phone=phone)
+  
+#Restaurant
+@app.route('/resregister')
+def resregister():
+    return render_template('Restaurant/ResRegister.html')
+  
+@app.route('/reslogin')
+def reslogin():
+    return render_template('Restaurant/ResLogin.html')
 
+@app.route("/tim-kiem")
+def tim_kiem():
+    return render_template('tim-kiem.html')
 
 if __name__ == '__main__':
     with app.app_context():
