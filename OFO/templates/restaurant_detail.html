@@ -1,0 +1,682 @@
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/restaurant.css') }}">
+</head>
+{% extends 'layout/base.html' %}
+
+
+{% block content %}
+<div class="container py-4">
+
+    <div class="restaurant-info-block">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="#">Trang chủ</a></li>
+                <li class="breadcrumb-item"><a href="#">Nhà hàng</a></li>
+                <li class="breadcrumb-item active" aria-current="page">ToCoToCo - Tôn Đức Thắng</li>
+            </ol>
+        </nav>
+
+        <h1 class="restaurant-title mt-2">ToCoToCo - Tôn Đức Thắng</h1>
+        <p class="text-muted fs-5">Trà sữa</p>
+
+        <div class="restaurant-meta-group mt-3">
+            <div class="restaurant-meta-item">
+                <i class="bi bi-star-fill text-warning"></i>
+                <span>4.4</span>
+            </div>
+            <div class="restaurant-meta-item">
+                <i class="bi bi-clock"></i>
+                <span>60 phút</span>
+            </div>
+            <div class="restaurant-meta-item">
+                <i class="bi bi-dot"></i>
+                <span>1.155,7 km</span>
+            </div>
+        </div>
+
+        <div class="restaurant-meta-item mt-3 text-muted">
+            <span>Giờ mở cửa</span>
+            <strong class="text-dark ms-2">Hôm nay 09:00-22:45</strong>
+        </div>
+
+        <div class="promo-section restaurant-meta-item mt-3">
+            <i class="bi bi-tag-fill"></i>
+            <span>Tận hưởng ưu đãi</span>
+            <a href="#" class="ms-2">Xem chi tiết</a>
+        </div>
+    </div>
+    <div class="category-navbar-wrapper mt-4">
+        <div class="category-navbar">
+
+            <!-- Nút cuộn trái -->
+            <button id="scroll-left-btn" class="scroll-btn left d-none">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+
+            <!-- Danh sách các danh mục -->
+            <div id="category-nav-list" class="category-nav-list">
+                <a href="#section-uu-dai" class="category-nav-item active">Ưu đãi hôm nay</a>
+                <a href="#section-danh-cho-ban" class="category-nav-item">Dành cho bạn</a>
+                <a href="#section-deal-hoi" class="category-nav-item">Deal Hời Nè! Chốt Đê!!</a>
+                <a href="#section-flash-sale" class="category-nav-item">Flash Sale</a>
+                <a href="#section-mat-qua" class="category-nav-item">Mát Quá Trời Mát!!!!</a>
+                <a href="#section-an-uong" class="category-nav-item">Deal Ăn Uống Ê Hề Nè !!!</a>
+                <a href="#section-mon-moi" class="category-nav-item">Món Mới</a>
+                <a href="#section-tra-trai-cay" class="category-nav-item">Trà Trái Cây</a>
+                <a href="#section-mon-dac-biet" class="category-nav-item">Special Menu</a>
+                <a href="#section-tra-sua" class="category-nav-item">Trà Sữa</a>
+                <a href="#section-banh-trang" class="category-nav-item">Bánh Tráng</a>
+            </div>
+
+            <!-- Nút cuộn phải -->
+            <button id="scroll-right-btn" class="scroll-btn right">
+                <i class="bi bi-chevron-right"></i>
+            </button>
+
+        </div>
+    </div>
+    <!-- ==== BẮT ĐẦU PHẦN HIỂN THỊ SẢN PHẨM ==== -->
+
+    <!-- Section 1: Ưu đãi hôm nay -->
+    <div id="section-uu-dai" class="menu-section">
+        <h2 class="menu-section-title">Ưu đãi hôm nay</h2>
+
+        <div class="row g-4">
+            <!-- Sản phẩm 1 -->
+            <div class="col-lg-4 col-md-6 d-flex">
+                <div class="product-card w-100">
+                    <div class="product-card-img-wrapper">
+                        <img src="{{ url_for('static', filename='images/tocotrachieu.jpg') }}"
+                             alt="ToCo rủ uống trà chiều">
+                    </div>
+                    <div class="product-card-body">
+                        <h5 class="product-card-title">ToCo rủ uống trà chiều</h5>
+                        <p class="product-card-desc">Combo mua 2 size M tặng 1 size M</p>
+                        <div class="product-card-footer">
+                            <div class="product-card-price">
+                                <div>
+                                    <span class="current-price">76.000</span>
+                                </div>
+                            </div>
+                            <button class="btn-add-to-cart">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sản phẩm 2 -->
+            <div class="col-lg-4 col-md-6 d-flex">
+                <div class="product-card w-100">
+                    <div class="product-card-img-wrapper">
+                        <img src="{{ url_for('static', filename='images/toco2.jpg') }}" alt="Daily Flash sale">
+                    </div>
+                    <div class="product-card-body">
+                        <h5 class="product-card-title">Daily Flash sale</h5>
+                        <p class="product-card-desc">Giảm 50% best seller size L ( chỉ áp dụng khung giờ từ 13h - 21h
+                            )</p>
+                        <div class="product-card-footer">
+                            <div class="product-card-price">
+                                <div>
+                                    <span class="current-price">20.000</span>
+                                </div>
+                            </div>
+                            <button class="btn-add-to-cart">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6 d-flex">
+                <div class="product-card w-100">
+                    <div class="product-card-img-wrapper">
+                        <img src="{{ url_for('static', filename='images/toco2.jpg') }}" alt="Daily Flash sale">
+                    </div>
+                    <div class="product-card-body">
+                        <h5 class="product-card-title">Daily Flash sale</h5>
+                        <p class="product-card-desc">Giảm 50% best seller size L ( chỉ áp dụng khung giờ từ 13h - 21h
+                            )</p>
+                        <div class="product-card-footer">
+                            <div class="product-card-price">
+                                <div>
+                                    <span class="current-price">20.000</span>
+                                </div>
+                            </div>
+                            <button class="btn-add-to-cart">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 d-flex">
+                <div class="product-card w-100">
+                    <div class="product-card-img-wrapper">
+                        <img src="{{ url_for('static', filename='images/tocotrachieu.jpg') }}"
+                             alt="ToCo rủ uống trà chiều">
+                    </div>
+                    <div class="product-card-body">
+                        <h5 class="product-card-title">ToCo rủ uống trà chiều</h5>
+                        <p class="product-card-desc">Combo mua 2 size M tặng 1 size M</p>
+                        <div class="product-card-footer">
+                            <div class="product-card-price">
+                                <div>
+                                    <span class="current-price">76.000</span>
+                                </div>
+                            </div>
+                            <button class="btn-add-to-cart">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 d-flex">
+                <div class="product-card w-100">
+                    <div class="product-card-img-wrapper">
+                        <img src="{{ url_for('static', filename='images/tocotrachieu.jpg') }}"
+                             alt="ToCo rủ uống trà chiều">
+                    </div>
+                    <div class="product-card-body">
+                        <h5 class="product-card-title">ToCo rủ uống trà chiều</h5>
+                        <p class="product-card-desc">Combo mua 2 size M tặng 1 size M</p>
+                        <div class="product-card-footer">
+                            <div class="product-card-price">
+                                <div>
+                                    <span class="current-price">76.000</span>
+                                </div>
+                            </div>
+                            <button class="btn-add-to-cart">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Section 2: Dành cho bạn -->
+    <div id="section-danh-cho-ban" class="menu-section">
+        <h2 class="menu-section-title">Dành cho bạn</h2>
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6 d-flex">
+                <div class="product-card w-100">
+                    <div class="product-card-img-wrapper">
+                        <img src="{{ url_for('static', filename='images/tocotrachieu.jpg') }}"
+                             alt="ToCo rủ uống trà chiều">
+                    </div>
+                    <div class="product-card-body">
+                        <h5 class="product-card-title">ToCo rủ uống trà chiều</h5>
+                        <p class="product-card-desc">Combo mua 2 size M tặng 1 size M</p>
+                        <div class="product-card-footer">
+                            <div class="product-card-price">
+                                <div>
+                                    <span class="current-price">76.000</span>
+                                </div>
+                            </div>
+                            <button class="btn-add-to-cart">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 d-flex">
+                <div class="product-card w-100">
+                    <div class="product-card-img-wrapper">
+                        <img src="{{ url_for('static', filename='images/tocotrachieu.jpg') }}"
+                             alt="ToCo rủ uống trà chiều">
+                    </div>
+                    <div class="product-card-body">
+                        <h5 class="product-card-title">ToCo rủ uống trà chiều</h5>
+                        <p class="product-card-desc">Combo mua 2 size M tặng 1 size M</p>
+                        <div class="product-card-footer">
+                            <div class="product-card-price">
+                                <div>
+                                    <span class="current-price">76.000</span>
+                                </div>
+                            </div>
+                            <button class="btn-add-to-cart">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 d-flex">
+                <div class="product-card w-100">
+                    <div class="product-card-img-wrapper">
+                        <img src="{{ url_for('static', filename='images/tocotrachieu.jpg') }}"
+                             alt="ToCo rủ uống trà chiều">
+                    </div>
+                    <div class="product-card-body">
+                        <h5 class="product-card-title">ToCo rủ uống trà chiều</h5>
+                        <p class="product-card-desc">Combo mua 2 size M tặng 1 size M</p>
+                        <div class="product-card-footer">
+                            <div class="product-card-price">
+                                <div>
+                                    <span class="current-price">76.000</span>
+                                </div>
+                            </div>
+                            <button class="btn-add-to-cart">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Các section khác với ID tương ứng -->
+    <div id="section-deal-hoi" class="menu-section">
+        <h2 class="menu-section-title">Deal Hời Nè! Chốt Đê!!</h2>
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6 d-flex">
+                <div class="product-card w-100">
+                    <div class="product-card-img-wrapper">
+                        <img src="{{ url_for('static', filename='images/tocotrachieu.jpg') }}"
+                             alt="ToCo rủ uống trà chiều">
+                    </div>
+                    <div class="product-card-body">
+                        <h5 class="product-card-title">ToCo rủ uống trà chiều</h5>
+                        <p class="product-card-desc">Combo mua 2 size M tặng 1 size M</p>
+                        <div class="product-card-footer">
+                            <div class="product-card-price">
+                                <div>
+                                    <span class="current-price">76.000</span>
+                                </div>
+                            </div>
+                            <button class="btn-add-to-cart">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="section-flash-sale" class="menu-section">
+        <h2 class="menu-section-title">Flash Sale</h2>
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6 d-flex">
+                <div class="product-card w-100">
+                    <div class="product-card-img-wrapper">
+                        <img src="{{ url_for('static', filename='images/tocotrachieu.jpg') }}"
+                             alt="ToCo rủ uống trà chiều">
+                    </div>
+                    <div class="product-card-body">
+                        <h5 class="product-card-title">ToCo rủ uống trà chiều</h5>
+                        <p class="product-card-desc">Combo mua 2 size M tặng 1 size M</p>
+                        <div class="product-card-footer">
+                            <div class="product-card-price">
+                                <div>
+                                    <span class="current-price">76.000</span>
+                                </div>
+                            </div>
+                            <button class="btn-add-to-cart">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="section-mat-qua" class="menu-section">
+        <h2 class="menu-section-title">Mát Quá Trời Mát!!!!</h2>
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6 d-flex">
+                <div class="product-card w-100">
+                    <div class="product-card-img-wrapper">
+                        <img src="{{ url_for('static', filename='images/tocotrachieu.jpg') }}"
+                             alt="ToCo rủ uống trà chiều">
+                    </div>
+                    <div class="product-card-body">
+                        <h5 class="product-card-title">ToCo rủ uống trà chiều</h5>
+                        <p class="product-card-desc">Combo mua 2 size M tặng 1 size M</p>
+                        <div class="product-card-footer">
+                            <div class="product-card-price">
+                                <div>
+                                    <span class="current-price">76.000</span>
+                                </div>
+                            </div>
+                            <button class="btn-add-to-cart">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 d-flex">
+                <div class="product-card w-100">
+                    <div class="product-card-img-wrapper">
+                        <img src="{{ url_for('static', filename='images/tocotrachieu.jpg') }}"
+                             alt="ToCo rủ uống trà chiều">
+                    </div>
+                    <div class="product-card-body">
+                        <h5 class="product-card-title">ToCo rủ uống trà chiều</h5>
+                        <p class="product-card-desc">Combo mua 2 size M tặng 1 size M</p>
+                        <div class="product-card-footer">
+                            <div class="product-card-price">
+                                <div>
+                                    <span class="current-price">76.000</span>
+                                </div>
+                            </div>
+                            <button class="btn-add-to-cart">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="section-an-uong" class="menu-section">
+        <h2 class="menu-section-title">Deal Ăn Uống Ê Hề Nè !!!</h2>
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6 d-flex">
+                <div class="product-card w-100">
+                    <div class="product-card-img-wrapper">
+                        <img src="{{ url_for('static', filename='images/tocotrachieu.jpg') }}"
+                             alt="ToCo rủ uống trà chiều">
+                    </div>
+                    <div class="product-card-body">
+                        <h5 class="product-card-title">ToCo rủ uống trà chiều</h5>
+                        <p class="product-card-desc">Combo mua 2 size M tặng 1 size M</p>
+                        <div class="product-card-footer">
+                            <div class="product-card-price">
+                                <div>
+                                    <span class="current-price">76.000</span>
+                                </div>
+                            </div>
+                            <button class="btn-add-to-cart">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 d-flex">
+                <div class="product-card w-100">
+                    <div class="product-card-img-wrapper">
+                        <img src="{{ url_for('static', filename='images/tocotrachieu.jpg') }}"
+                             alt="ToCo rủ uống trà chiều">
+                    </div>
+                    <div class="product-card-body">
+                        <h5 class="product-card-title">ToCo rủ uống trà chiều</h5>
+                        <p class="product-card-desc">Combo mua 2 size M tặng 1 size M</p>
+                        <div class="product-card-footer">
+                            <div class="product-card-price">
+                                <div>
+                                    <span class="current-price">76.000</span>
+                                </div>
+                            </div>
+                            <button class="btn-add-to-cart">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==== KẾT THÚC PHẦN HIỂN THỊ SẢN PHẨM ==== -->
+
+<!-- Nút để mở Offcanvas -->
+<button class="btn btn-primary btn-lg" type="button" data-bs-toggle="offcanvas"
+        data-bs-target="#productOptionsOffcanvas" aria-controls="productOptionsOffcanvas">
+    Mở Tùy chọn sản phẩm
+</button>
+
+<!-- Offcanvas cho Product Options -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="productOptionsOffcanvas" aria-labelledby="offcanvasLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasLabel"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <!-- NỘI DUNG CÓ THỂ CUỘN -->
+        <div class="scrollable-content">
+            <!-- Thông tin sản phẩm chính -->
+            <div class="product-main-info d-flex align-items-start">
+                <img src="{{ url_for('static', filename='images/menu.png') }}" class="product-image me-3"
+                     alt="Trà Sữa Bơ">
+                <div class="flex-grow-1">
+                    <h5 class="fw-bold mb-1">Trà Sữa Bơ</h5>
+                    <p class="small text-muted">Sự hòa quyện giữa trà sữa lài thơm thanh đậm đà cùng bơ tươi Đà Lạt xay
+                        nhuyễn và sánh mịn. Thông tin dị ứng: Sản phẩm có chứa sữa</p>
+                </div>
+                <div class="text-end ms-2 flex-shrink-0">
+                    <span class="fw-bold fs-5" id="basePriceText">27.000</span>
+                </div>
+            </div>
+
+            <!-- Tùy chọn Size -->
+            <div class="options-section" id="size-options">
+                <div class="d-flex justify-content-between mb-3">
+                    <h6 class="fw-bold mb-0">SIZE</h6>
+                    <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill">Pick 1</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="size" id="sizeM" data-base-price="27000"
+                               checked>
+                        <label class="form-check-label w-100" for="sizeM">Trà Sữa Bơ M</label>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="size" id="sizeL" data-base-price="33000">
+                        <label class="form-check-label w-100" for="sizeL">Trà Sữa Bơ L</label>
+                    </div>
+                    <span class="fw-normal">+6.000</span>
+                </div>
+            </div>
+
+            <!-- Tùy chọn Topping -->
+            <div class="options-section" id="topping-options" data-max-selection="4">
+                <div class="d-flex justify-content-between mb-3">
+                    <div>
+                        <h6 class="fw-bold mb-0">1. Topping</h6>
+                        <small class="text-muted">Optional, max 4</small>
+                    </div>
+                    <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill">Optional</span>
+                </div>
+                <!-- Các topping -->
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="7000" id="topping1">
+                        <label class="form-check-label w-100" for="topping1">Sợi Pha Lê</label>
+                    </div>
+                    <span class="fw-normal">+7.000</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="7000" id="topping2">
+                        <label class="form-check-label w-100" for="topping2">Trân Châu Củ Năng</label>
+                    </div>
+                    <span class="fw-normal">+7.000</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="10000" id="topping3">
+                        <label class="form-check-label w-100" for="topping3">Topping Cheese Ball</label>
+                    </div>
+                    <span class="fw-normal">+10.000</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="7000" id="topping4">
+                        <label class="form-check-label w-100" for="topping4">Đậu Đỏ</label>
+                    </div>
+                    <span class="fw-normal">+7.000</span>
+                </div>
+            </div>
+            <div class="options-section">
+            <div class="mb-2">
+                <label for="specialInstructions" class="form-label">
+                    <strong class="me-2">Special instructions</strong>
+                    <small class="text-muted">Optional</small>
+                </label>
+                <input type="text" class="form-control" id="specialInstructions" placeholder="E.g. No onions please">
+            </div>
+        </div>
+
+        </div>
+
+
+        <!-- FOOTER CỐ ĐỊNH -->
+        <div class="offcanvas-footer d-flex align-items-center justify-content-between">
+            <div class="quantity-selector d-flex align-items-center">
+                <button class="btn" id="decrease-qty">-</button>
+                <input type="text" id="quantity" value="1" readonly>
+                <button class="btn" id="increase-qty">+</button>
+            </div>
+            <button class="btn btn-pink flex-grow-1 ms-3 fw-bold" id="add-to-basket-btn" disabled>Add to Basket</button>
+        </div>
+    </div>
+</div>
+
+
+
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // --- Phần 1: Các biến và phần tử cần thiết ---
+    const navList = document.getElementById('category-nav-list');
+    const navLinks = document.querySelectorAll('#category-nav-list .category-nav-item');
+    const sections = document.querySelectorAll('.menu-section');
+    const leftBtn = document.getElementById('scroll-left-btn');
+    const rightBtn = document.getElementById('scroll-right-btn');
+
+    // Chiều cao của header và thanh nav để tính toán vị trí cuộn chính xác
+    const offsetHeight = 150;
+
+    if (!navList) return; // Thoát nếu không có thanh nav
+
+    // --- Phần 2: Xử lý các nút cuộn trái/phải ---
+    if (leftBtn && rightBtn) {
+        const scrollAmount = 250;
+
+        function updateButtonVisibility() {
+            const maxScroll = navList.scrollWidth - navList.clientWidth;
+            leftBtn.classList.toggle('d-none', navList.scrollLeft <= 0);
+            rightBtn.classList.toggle('d-none', navList.scrollLeft >= maxScroll - 1);
+        }
+
+        leftBtn.addEventListener('click', () => navList.scrollBy({ left: -scrollAmount }));
+        rightBtn.addEventListener('click', () => navList.scrollBy({ left: scrollAmount }));
+        navList.addEventListener('scroll', updateButtonVisibility);
+        setTimeout(updateButtonVisibility, 100);
+    }
+
+    // --- Phần 3: Xử lý highlight tự động KHI CUỘN trang ---
+    function onWindowScroll() {
+        let currentSectionId = '';
+
+        // Tìm xem section nào đang ở trên cùng của màn hình
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop - offsetHeight;
+            if (window.pageYOffset >= sectionTop) {
+                currentSectionId = '#' + section.id;
+            }
+        });
+
+        // Highlight link tương ứng trong thanh nav
+        navLinks.forEach(link => {
+            link.classList.remove('active'); // Xóa active khỏi tất cả
+            if (link.getAttribute('href') === currentSectionId) {
+                link.classList.add('active'); // Thêm active cho link đúng
+                // Tự động cuộn thanh nav để link active luôn được nhìn thấy
+                link.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }
+        });
+    }
+
+    // Gán sự kiện cuộn cho toàn bộ cửa sổ
+    window.addEventListener('scroll', onWindowScroll);
+
+
+    // --- Phần 4: Xử lý cuộn mượt mà KHI CLICK vào một mục trên nav ---
+    navLinks.forEach(link => {
+        link.addEventListener('click', function(event) {
+            event.preventDefault(); // Ngăn hành vi nhảy trang mặc định
+
+            const targetId = this.getAttribute('href');
+            const targetSection = document.querySelector(targetId);
+
+            if (targetSection) {
+                const topPos = targetSection.offsetTop - (offsetHeight - 50); // Bớt đi một chút để không bị che
+                window.scrollTo({
+                    top: topPos,
+                    behavior: 'smooth'
+                });
+            }
+        });
+    });
+
+});
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const offcanvasElement = document.getElementById('productOptionsOffcanvas');
+
+        // Lấy các element cần thiết
+        const quantityInput = document.getElementById('quantity');
+        const decreaseBtn = document.getElementById('decrease-qty');
+        const increaseBtn = document.getElementById('increase-qty');
+        const addToBasketBtn = document.getElementById('add-to-basket-btn');
+
+        const sizeOptions = document.querySelectorAll('input[name="size"]');
+        const toppingOptionsContainer = document.getElementById('topping-options');
+        const toppingOptions = toppingOptionsContainer.querySelectorAll('input[type="checkbox"]');
+        const maxToppings = parseInt(toppingOptionsContainer.dataset.maxSelection);
+
+        // Hàm định dạng tiền tệ
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('vi-VN').format(value);
+        }
+
+        // Hàm chính để cập nhật tổng giá tiền
+        function updateTotal() {
+            // 1. Lấy giá cơ bản từ size đã chọn
+            const selectedSize = document.querySelector('input[name="size"]:checked');
+            let basePrice = parseFloat(selectedSize.dataset.basePrice);
+
+            // 2. Tính tổng giá topping
+            let toppingPrice = 0;
+            let checkedToppingsCount = 0;
+            toppingOptions.forEach(checkbox => {
+                if (checkbox.checked) {
+                    toppingPrice += parseFloat(checkbox.value);
+                    checkedToppingsCount++;
+                }
+            });
+
+            // 3. Lấy số lượng
+            const quantity = parseInt(quantityInput.value);
+
+            // 4. Tính tổng cuối cùng
+            const total = (basePrice + toppingPrice) * quantity;
+
+            // 5. Cập nhật nội dung nút
+            addToBasketBtn.textContent = `Add to Basket - ${formatCurrency(total)} ₫`;
+            addToBasketBtn.disabled = false;
+
+            // 6. Xử lý giới hạn topping
+             toppingOptions.forEach(checkbox => {
+                if (!checkbox.checked && checkedToppingsCount >= maxToppings) {
+                    checkbox.disabled = true; // Vô hiệu hóa các checkbox chưa chọn khi đạt giới hạn
+                } else {
+                    checkbox.disabled = false; // Bật lại nếu chưa đạt giới hạn
+                }
+            });
+        }
+
+        // Gán sự kiện cho các nút và input
+        increaseBtn.addEventListener('click', () => {
+            quantityInput.value = parseInt(quantityInput.value) + 1;
+            updateTotal();
+        });
+
+        decreaseBtn.addEventListener('click', () => {
+            let currentQty = parseInt(quantityInput.value);
+            if (currentQty > 1) {
+                quantityInput.value = currentQty - 1;
+                updateTotal();
+            }
+        });
+
+        sizeOptions.forEach(radio => radio.addEventListener('change', updateTotal));
+        toppingOptions.forEach(checkbox => checkbox.addEventListener('change', updateTotal));
+
+        // Tính toán lần đầu khi offcanvas được hiển thị
+        offcanvasElement.addEventListener('shown.bs.offcanvas', function () {
+            updateTotal();
+        });
+    });
+</script>
+{% endblock %}

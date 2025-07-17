@@ -4,8 +4,8 @@ app = Flask(__name__)
 
 @app.route("/")
 def index():
-    return render_template('xem-mon.html')
-  
+    return render_template('restaurant_detail.html')
+
 @app.route('/login')
 def login():
     return render_template('login.html')
