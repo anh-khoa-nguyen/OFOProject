@@ -1,11 +1,16 @@
-<header>
-    <div class="container-fluid">
-        <nav class="navbar navbar-expand-lg navbar-light">
+<header class="sticky-top bg-white shadow-sm">
+    <div class="">
+        <nav class="navbar navbar-expand-lg navbar-light px-5">
             <!-- Logo -->
-            <a class="navbar-brand" href="#">
+            <a class="navbar-brand" href="{{url_for('index')}}">
                 <img src="{{ url_for('static', filename='images/logokymie1.png') }}" alt="GrabFood Logo"
                      style="height: 50px;">
             </a>
+
+            <div class="input-group mx-5" style="width: 350px;">
+            <span class="input-group-text"><i class="bi bi-geo-alt-fill text-danger"></i></span>
+            <input id="addressInput" type="text" class="form-control" placeholder="Nhập địa chỉ...">
+        </div>
 
             <!-- Spacer to push controls to the right -->
             <div class="ms-auto d-flex align-items-center">

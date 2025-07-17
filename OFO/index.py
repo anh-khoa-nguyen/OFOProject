@@ -30,6 +30,10 @@ def register():
     return render_template('register.html', phone=phone)
 
 
+@app.route("/tim-kiem")
+def tim_kiem():
+    return render_template('tim-kiem.html')
+
 if __name__ == '__main__':
     with app.app_context():
         app.run(debug=True)
