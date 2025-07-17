@@ -4,7 +4,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def index():
-    return render_template('index.html')
+    return render_template('xem-mon.html')
   
 @app.route('/login')
 def login():
@@ -31,23 +31,19 @@ def register():
 
     return render_template('register.html', phone=phone)
   
-  #Restaurant
+#Restaurant
 @app.route('/resregister')
-def register():
+def resregister():
     return render_template('Restaurant/ResRegister.html')
   
 @app.route('/reslogin')
-def login():
+def reslogin():
     return render_template('Restaurant/ResLogin.html')
-
 
 @app.route("/tim-kiem")
 def tim_kiem():
     return render_template('tim-kiem.html')
 
-@app.route('/resregister')
-def register():
-    return render_template('Restaurant/ResRegister.html')
 if __name__ == '__main__':
     with app.app_context():
         app.run(debug=True)
