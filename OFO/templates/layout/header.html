@@ -22,10 +22,23 @@
                     <i class="bi bi-bag"></i>
                 </button>
 
+                {% if current_user.is_authenticated %}
+                                <!-- Login/Register Button -->
+                <a href="/" class="btn btn-custom-light me-2">
+                    <img src="{{current_user.avatar}}" width="25" class="rounded-circle">
+                    Chào {{ current_user.name}}
+                </a>
+                <a href="/logout" class="btn btn-custom-light me-2">
+                    Đăng xuất
+                </a>
+                {% else %}
                 <!-- Login/Register Button -->
-                <a href="{{ url_for('login') }}" class="btn btn-custom-light me-2">
+                <a href="{{ url_for('login_view') }}" class="btn btn-custom-light me-2">
                     Đăng nhập/Đăng ký
                 </a>
+                {% endif %}
+
+
 
                 <!-- Language Dropdown -->
                 <div class="dropdown">
