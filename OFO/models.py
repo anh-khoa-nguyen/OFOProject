@@ -6,10 +6,12 @@ from flask_login import UserMixin
 from enum import Enum as PyEnum
 from __init__ import db, app
 
+
 class UserRole(PyEnum):
     USER = 'user'
     RESTAURANT = 'restaurant'
     ADMIN = 'admin'
+
 
 class User(db.Model, UserMixin):
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -26,22 +28,36 @@ class User(db.Model, UserMixin):
     reviews = relationship('Review', backref='user', lazy=True)
     carts = relationship('Cart', backref='user', lazy=True)
 
+
 # 3. Bảng trung gian FavoriteRestaurants
 # Lưu ý: Với các bảng phụ (association table) được tạo bằng db.Table,
 # ta vẫn cần cung cấp tên bảng một cách tường minh.
 favorite_restaurants = db.Table('favorite_restaurants',
-                        Column('user_id', Integer, ForeignKey('user.id'), primary_key=True),
-                        Column('restaurant_id', Integer, ForeignKey('restaurant.id'), primary_key=True)
-)
+                                Column('user_id', Integer, ForeignKey('user.id'), primary_key=True),
+                                Column('restaurant_id', Integer, ForeignKey('restaurant.id'), primary_key=True)
+                                )
+
+
+class Category(db.Model):
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(50), nullable=False, unique=True)
+    image = Column(String(100), default="https://res.cloudinary.com/dq2jtbrda/image/upload/v1752904668/randomfood_tfdwhd.jpg")
+
+    # Mối quan hệ này cho phép từ một Category, bạn có thể truy cập
+    # danh sách các nhà hàng thuộc về nó (ví dụ: category.restaurants)
+    restaurants = relationship('Restaurant', back_populates='category', lazy='dynamic')
+
 
 class Restaurant(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)
     owner_user_id = Column(Integer, ForeignKey(User.id), nullable=False)
+    category_id = Column(Integer, ForeignKey(Category.id), nullable=True)
     restaurant_name = Column(String(50), nullable=False)
     address = Column(String(100))
     email = Column(String(50), unique=True)
     description = Column(String(100))
-    image = Column(String(100), default='https://res.cloudinary.com/dxxwcby8l/image/upload/v1647056401/ipmsmnxjydrhpo21xrd8.jpg')
+    image = Column(String(100),
+                   default='https://res.cloudinary.com/dxxwcby8l/image/upload/v1647056401/ipmsmnxjydrhpo21xrd8.jpg')
     open_time = Column(Time)
     close_time = Column(Time)
     status = Column(Boolean, default=True)
@@ -50,6 +66,10 @@ class Restaurant(db.Model):
     created_date = Column(DateTime, default=datetime.datetime.now)
 
     # Relationships
+    category = relationship('Category', back_populates='restaurants')
+
+    dish_groups = relationship('DishGroup', backref='restaurant', lazy='dynamic')
+
     favorited_by_users = relationship('User', secondary=favorite_restaurants, lazy='subquery',
                                       backref=db.backref('favorite_restaurants', lazy=True))
 
@@ -58,15 +78,26 @@ class Restaurant(db.Model):
     reviews = relationship('Review', backref='restaurant', lazy=True)
     carts = relationship('Cart', backref='restaurant', lazy=True)
 
+
+class DishGroup(db.Model):
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(50), nullable=False)
+    restaurant_id = Column(Integer, ForeignKey(Restaurant.id), nullable=False)
+    dishes = relationship('Dish', back_populates='group', lazy='dynamic')
+
+
 class Dish(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)
     restaurant_id = Column(Integer, ForeignKey(Restaurant.id), nullable=False, index=True)
+    dish_group_id = Column(Integer, ForeignKey(DishGroup.id), nullable=True)
     name = Column(String(50), nullable=False)
     description = Column(String(100))
     price = Column(Float, nullable=False, default=0)
     image = Column(String(100))
 
+    group = relationship('DishGroup', back_populates='dishes')
     option_groups = relationship('DishOptionGroup', backref='dish', lazy=True)
+
 
 class DishOptionGroup(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -76,11 +107,13 @@ class DishOptionGroup(db.Model):
     max = Column(Integer)
     options = relationship('DishOption', backref='dish_option_group', lazy=True)
 
+
 class Cart(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey(User.id), nullable=False)
     restaurant_id = Column(Integer, ForeignKey(Restaurant.id), nullable=False)
     items = relationship('CartItem', backref='cart', lazy=True, cascade="all, delete-orphan")
+
 
 class CartItem(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -90,14 +123,16 @@ class CartItem(db.Model):
 
     dish = relationship('Dish', lazy='joined')
     selected_options = relationship('DishOption', secondary='cart_item_option', backref='cart_item',
-            lazy='joined'
-)
+                                    lazy='joined'
+                                    )
+
 
 class DishOption(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)
     option_group_id = Column(Integer, ForeignKey(DishOptionGroup.id), nullable=False)
     name = Column(String(50), nullable=False)
     price = Column(Float, default=0)
+
 
 class CartItemOption(db.Model):
     cart_item_id = Column(Integer, ForeignKey(CartItem.id), primary_key=True, nullable=False)
@@ -111,20 +146,22 @@ class OrderState(PyEnum):
     DELIVERING = "Delivering"
     COMPLETED = "Completed"
 
+
 class Order(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey(User.id), nullable=False, index=True)
     restaurant_id = Column(Integer, ForeignKey(Restaurant.id), nullable=False, index=True)
     order_date = Column(DateTime, default=datetime.datetime.now)
-    subtotal = Column(Float, nullable=False) #tổng tiền
-    discount = Column(Float, default=0) #giảm giá
-    total = Column(Float, nullable=False) #thành tiền
+    subtotal = Column(Float, nullable=False)  # tổng tiền
+    discount = Column(Float, default=0)  # giảm giá
+    total = Column(Float, nullable=False)  # thành tiền
     delivery_address = Column(String(50), nullable=False)
     note = Column(String(100))
     order_status = Column(Enum(OrderState), default=OrderState.PENDING, nullable=False)
 
     details = relationship('OrderDetail', backref='order', lazy=True)
     review = relationship('Review', backref='order', uselist=False, cascade="all, delete-orphan")
+
 
 class OrderDetail(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -137,6 +174,7 @@ class OrderDetail(db.Model):
 
     dish = relationship('Dish', lazy='joined')
 
+
 class Review(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey(User.id), nullable=False, index=True)
@@ -145,6 +183,7 @@ class Review(db.Model):
     star = Column(Integer, nullable=False)
     comment = Column(String(1000))
     date = Column(DateTime, default=datetime.datetime.now)
+
 
 class Voucher(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -159,6 +198,7 @@ class Voucher(db.Model):
     end_date = Column(DateTime, nullable=False)
     active = Column(Boolean, default=True)
 
+
 voucher_applied = db.Table('voucher_applied',
                            Column('order_id', Integer, ForeignKey('order.id'), primary_key=True),
                            Column('voucher_id', Integer, ForeignKey('voucher.id'), primary_key=True)
@@ -170,8 +210,6 @@ Order.vouchers = relationship('Voucher', secondary=voucher_applied, lazy='subque
 if __name__ == '__main__':
     # Lệnh này cần chạy trong ngữ cảnh của ứng dụng Flask
     with app.app_context():
-        # Xóa tất cả dữ liệu cũ và tạo lại bảng từ đầu
-        # Cẩn thận: Lệnh này sẽ xóa hết dữ liệu hiện có!
         db.drop_all()
         db.create_all()
         db.session.commit()
@@ -260,7 +298,7 @@ if __name__ == '__main__':
         order1 = Order(user_id=customer1.id, restaurant_id=restaurant1.id, subtotal=order1_subtotal,
                        discount=order1_discount, total=order1_total, delivery_address='Nhà A, Chung cư Z, TP.HCM',
                        order_status=OrderState.COMPLETED)
-        order1.vouchers.append(voucher1) # Áp dụng voucher
+        order1.vouchers.append(voucher1)  # Áp dụng voucher
         db.session.add(order1)
         db.session.commit()
 
@@ -272,8 +310,8 @@ if __name__ == '__main__':
         db.session.commit()
 
         # Đơn hàng 2 của customer2 tại restaurant2
-        order2_subtotal = dish2_1.price * 2 # 2 tô bún bò đặc biệt
-        order2_total = order2_subtotal # Không có giảm giá
+        order2_subtotal = dish2_1.price * 2  # 2 tô bún bò đặc biệt
+        order2_total = order2_subtotal  # Không có giảm giá
         order2 = Order(user_id=customer2.id, restaurant_id=restaurant2.id, subtotal=order2_subtotal,
                        total=order2_total, delivery_address='100 Nguyễn Trãi, Quận 5, TP.HCM',
                        order_status=OrderState.DELIVERING)
@@ -290,6 +328,30 @@ if __name__ == '__main__':
         review1 = Review(user_id=order1.user_id, restaurant_id=order1.restaurant_id, order_id=order1.id,
                          star=5, comment='Cơm tấm ngon, giao hàng nhanh. Sẽ ủng hộ tiếp!')
         db.session.add(review1)
+        db.session.commit()
+
+        # 1. Tạo các Category
+        cat_com = Category(name='Cơm')
+        cat_trasua = Category(name='Trà sữa')
+        db.session.add_all([cat_com, cat_trasua])
+        db.session.commit()
+
+        # 2. Gán Category cho một nhà hàng
+        # Giả sử bạn đã có một nhà hàng tên `restaurant1`
+        # Gán trực tiếp đối tượng Category, không dùng .append() nữa
+        restaurant1.category = cat_com
+        db.session.commit()
+
+        # 3. Tạo DishGroup cho nhà hàng đó
+        group_com_chinh = DishGroup(name='Món Cơm Chính', restaurant_id=restaurant1.id)
+        group_canh = DishGroup(name='Các Món Canh', restaurant_id=restaurant1.id)
+        db.session.add_all([group_com_chinh, group_canh])
+        db.session.commit()
+
+        # 4. Tạo Món ăn và gán vào DishGroup
+        com_tam = Dish(name='Cơm tấm đặc biệt', price=35000, restaurant_id=restaurant1.id, group=group_com_chinh)
+        canh_kho_qua = Dish(name='Canh khổ qua', price=10000, restaurant_id=restaurant1.id, group=group_canh)
+        db.session.add_all([com_tam, canh_kho_qua])
         db.session.commit()
 
         print("--- TẠO DỮ LIỆU THỬ NGHIỆM THÀNH CÔNG ---")
