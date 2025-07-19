@@ -85,7 +85,7 @@
 
 .scrolling-wrapper {
   display: flex;
-      justify-content: space-between; /* hoặc center, evenly,... */
+      justify-content: flex-start; /* hoặc center, evenly,... */
       flex-wrap: wrap;
       width: 100%; /* chiếm đủ chiều ngang */
 }

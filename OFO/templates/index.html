@@ -12,10 +12,10 @@
     <div class="overlay-form">
         <h6 class="text-muted mb-1">Chào buổi sáng</h6>
         <h2 class="fw-bold mb-4">Where should we deliver your food today?</h2>
-      </span>
+        </span>
         <div class="input-group mb-3">
             <span class="input-group-text"><i class="bi bi-geo-alt-fill text-danger"></i></span>
-            <input id="addressInput" type="text" class="form-control" placeholder="Nhập địa chỉ...">
+            <input id="search_input" name="search_input" type="text" class="form-control" placeholder="Nhập địa chỉ...">
         </div>
 
         <button class="btn btn-pink w-100">Tìm kiếm</button>
@@ -33,111 +33,40 @@
         </button>
 
         <div class="scrolling-wrapper d-flex overflow-hidden flex-nowrap" id="carousel">
-            <!-- Card 1 -->
-            <div class="card card-promo">
-                <div class="position-relative">
-                    <img src="{{ url_for('static', filename='images/banhmi.png') }}" class="img-food" alt="Bánh mì">
-                    <div class="promo-tag">Promo</div>
-                </div>
-                <div class="card-body px-3">
-                    <p class="restaurant-title">Bánh Mì Hà Nội - Trường Sơn</p>
-                    <p class="text-secondary-small mb-1">Bánh Mì - Xôi</p>
-                    <div class="d-flex align-items-center mb-2 rating">
-                        <i class="bi bi-star-fill me-1"></i> 4.6
-                        <span class="mx-2">·</span>
-                        <i class="bi bi-clock me-1"></i> 15 phút
-                        <span class="mx-2">·</span>
-                        0.8 km
+            {% if restaurants %}
+            {% for restaurant in restaurants %}
+            <a href="{{ url_for('restaurant_detail', restaurant_id=restaurant.id) }}"
+               class="text-decoration-none text-dark">
+                <div class="card card-promo">
+                    <div class="position-relative">
+                        <img src="{{ restaurant.image }}" class="img-food" alt="{{ restaurant.restaurant_name }}">
+                        <div class="promo-tag">Promo</div>
                     </div>
-                    <p class="offer"><i class="bi bi-tag"></i> Giảm 1.500₫ một vài món nhất định</p>
-                </div>
-            </div>
-
-            <!-- Card 2 -->
-            <div class="card card-promo">
-                <div class="position-relative">
-                    <img src="{{ url_for('static', filename='images/mitron.png') }}" class="img-food" alt="Mì trộn">
-                    <div class="promo-tag">Promo</div>
-                </div>
-                <div class="card-body px-3">
-                    <p class="restaurant-title">Mì Trộn Tên Lửa - CMT8</p>
-                    <p class="text-secondary-small mb-1">Bún - Phở - Cháo</p>
-                    <div class="d-flex align-items-center mb-2 rating">
-                        <i class="bi bi-star-fill me-1"></i> 4.3
-                        <span class="mx-2">·</span>
-                        <i class="bi bi-clock me-1"></i> 25 phút
-                        <span class="mx-2">·</span>
-                        1.9 km
+                    <div class="card-body px-3">
+                        <p class="restaurant-title">{{ restaurant.restaurant_name }}</p>
+                        <p class="text-secondary-small mb-1">{{ restaurant.category.name if restaurant.category else
+                            'Nhà hàng' }}</p>
+                        <div class="d-flex align-items-center mb-2 rating">
+                            <i class="bi bi-star-fill me-1"></i> 4.6
+                            <span class="mx-2">·</span>
+                            <i class="bi bi-clock me-1"></i> 15 phút
+                            <span class="mx-2">·</span>
+                            0.8 km
+                        </div>
+                        <p class="offer"><i class="bi bi-tag"></i> Giảm 1.500₫ một vài món nhất định</p>
                     </div>
-                    <p class="offer"><i class="bi bi-tag"></i> MỘT NGƯỜI ĂN - 39.000Đ BAO M...</p>
                 </div>
-            </div>
-
-            <!-- Card 3 -->
-            <div class="card card-promo">
-                <div class="position-relative">
-                    <img src="{{ url_for('static', filename='images/garan.png') }}" class="img-food" alt="Jollibee">
-                    <div class="promo-tag">Promo</div>
-                </div>
-                <div class="card-body px-3">
-                    <p class="restaurant-title">Jollibee - EC Tô Hiến Thành</p>
-                    <p class="text-secondary-small mb-1">Thức ăn nhanh</p>
-                    <div class="d-flex align-items-center mb-2 rating">
-                        <i class="bi bi-star-fill me-1"></i> 4.4
-                        <span class="mx-2">·</span>
-                        <i class="bi bi-clock me-1"></i> 15 phút
-                        <span class="mx-2">·</span>
-                        0.2 km
-                    </div>
-                    <p class="offer"><i class="bi bi-tag"></i> 🍗 Jollibee Ưu Đãi Combo 🍗</p>
-                </div>
-            </div>
-
-            <!-- Card 4 -->
-            <div class="card card-promo">
-                <div class="position-relative">
-                    <img src="{{ url_for('static', filename='images/comtron.png') }}" class="img-food" alt="Cơm trộn">
-                    <div class="promo-tag">Promo</div>
-                </div>
-                <div class="card-body px-3">
-                    <p class="restaurant-title">Tiệm Cơm Nhà Trộn - Phú Nhuận</p>
-                    <p class="text-secondary-small mb-1">Cơm</p>
-                    <div class="d-flex align-items-center mb-2 rating">
-                        <i class="bi bi-star-fill me-1"></i> 4.5
-                        <span class="mx-2">·</span>
-                        <i class="bi bi-clock me-1"></i> 25 phút
-                        <span class="mx-2">·</span>
-                        2.4 km
-                    </div>
-                    <p class="offer"><i class="bi bi-tag"></i> Đồng Giá 33K</p>
-                </div>
-            </div>
-
-            <!-- Card 5 -->
-            <div class="card card-promo">
-                <div class="position-relative">
-                    <img src="{{ url_for('static', filename='images/comtron.png') }}" class="img-food" alt="Cơm trộn">
-                    <div class="promo-tag">Promo</div>
-                </div>
-                <div class="card-body px-3">
-                    <p class="restaurant-title">Tiệm Cơm Nhà Trộn - Phú Nhuận</p>
-                    <p class="text-secondary-small mb-1">Cơm</p>
-                    <div class="d-flex align-items-center mb-1 rating">
-                        <i class="bi bi-star-fill me-1"></i> 4.5
-                        <span class="mx-2">·</span>
-                        <i class="bi bi-clock me-1"></i> 25 phút
-                        <span class="mx-2">·</span>
-                        2.4 km
-                    </div>
-                    <p class="offer"><i class="bi bi-tag"></i> Đồng Giá 33K</p>
-                </div>
-            </div>
-
-            <button class="carousel-arrow right" id="arrowRight">
-                <i class="bi bi-chevron-right"></i>
-            </button>
+            </a>
+            {% endfor %}
+            {% else %}
+            <p class="text-center p-3">Không có nhà hàng nào để hiển thị.</p>
+            {% endif %}
         </div>
 
+        {# Nút phải của bạn nên nằm ngoài vòng lặp và ngoài thẻ <a> #}
+        <button class="carousel-arrow right" id="arrowRight">
+            <i class="bi bi-chevron-right"></i>
+        </button>
         <!-- Xem tất cả -->
         <div class="text-center mt-4 see-all">
             <a href="#" class="text-muted text-decoration-none fw-semibold">See all promotions</a>
@@ -149,48 +78,19 @@
         <h2 class="fw-bold text-center mb-4">Thích ăn gì, tui tới nè!</h2>
 
         <div class="row g-4">
-            <!-- Món ăn -->
+            {% if categories %}
+            {% for category in categories %}
             <div class="col-6 col-md-3">
-                <img src="{{ url_for('static', filename='images/category/hutieu.png') }}" class="category-img"
-                     alt="Thịt gà">
-                <div class="category-title">Hủ tiếu</div>
+                <a href="{{ url_for('search_by_category', category_name=category.name) }}"
+                   class="text-decoration-none text-dark">
+                    <img src="{{ category.image }}" class="category-img" alt="{{ category.name }}">
+                    <div class="category-title">{{ category.name }}</div>
+                </a>
             </div>
-            <div class="col-6 col-md-3">
-                <img src="{{ url_for('static', filename='images/category/doannhanh.png') }}" class="category-img"
-                     alt="Thịt">
-                <div class="category-title">Thức ăn nhanh</div>
-            </div>
-            <div class="col-6 col-md-3">
-                <img src="{{ url_for('static', filename='images/category/banhmi.png') }}" class="category-img"
-                     alt="Thức ăn nhanh">
-                <div class="category-title">Thức ăn nhanh</div>
-            </div>
-            <div class="col-6 col-md-3">
-                <img src="{{ url_for('static', filename='images/category/thitga.png') }}" class="category-img"
-                     alt="Cơm">
-                <div class="category-title">Cơm</div>
-            </div>
-
-            <div class="col-6 col-md-3">
-                <img src="{{ url_for('static', filename='images/category/trasua.png') }}" class="category-img"
-                     alt="Cơm tấm">
-                <div class="category-title">Cơm tấm</div>
-            </div>
-            <div class="col-6 col-md-3">
-                <img src="{{ url_for('static', filename='images/category/pizza.png') }}" class="category-img"
-                     alt="Cháo">
-                <div class="category-title">Cháo</div>
-            </div>
-            <div class="col-6 col-md-3">
-                <img src="{{ url_for('static', filename='images/category/comtam.png') }}" class="category-img"
-                     alt="Mì Ý">
-                <div class="category-title">Mì Ý</div>
-            </div>
-            <div class="col-6 col-md-3">
-                <img src="{{ url_for('static', filename='images/category/chao.png') }}" class="category-img"
-                     alt="Pizza">
-                <div class="category-title">Pizza</div>
-            </div>
+            {% endfor %}
+            {% else %}
+            <p class="text-center">Hiện chưa có danh mục nào.</p>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -223,15 +123,26 @@
     window.addEventListener('load', updateArrows);
     window.addEventListener('resize', updateArrows);
 </script>
-<script src="https://unpkg.com/@geoapify/geocoder-autocomplete"></script>
+
+<script async
+        src="https://maps.googleapis.com/maps/api/js?keyAIzaSyC362TCwm-FO9TTg_IoNvnxMBay5wK86pk&libraries=places&callback=initMap">
+</script>
+
 <script>
-    new Geoapify.GeocoderAutocomplete(
-      document.getElementById('autocomplete'),
-      '12fffa3303c44dbaaec51de078681daf',
-      { /* các tuỳ chọn như khu vực, ngôn ngữ */ }
-    )
-    .on('select', (result) => {
-      console.log(result); // chứa địa chỉ đã chọn và coords
+    document.addEventListener('DOMContentLoaded', function () {
+        var searchInput = document.getElementById('search_input');
+        var autocomplete = new google.maps.places.Autocomplete(searchInput, {
+            types: ['geocode'],
+            componentRestrictions: { country: 'vn' } // VN chỉ Việt Nam
+        });
+
+        autocomplete.addListener('place_changed', function () {
+            var place = autocomplete.getPlace();
+            if (place && place.formatted_address) {
+                console.log('Địa chỉ đã chọn:', place.formatted_address);
+                searchInput.value = place.formatted_address; // cập nhật input nếu cần
+            }
+        });
     });
 </script>
 {% endblock %}
