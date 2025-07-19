@@ -21,6 +21,7 @@ class User(db.Model, UserMixin):
     phone = Column(String(10), unique=True, index=True)
     password = Column(String(255), nullable=False)
     role = Column(Enum(UserRole), nullable=False, default=UserRole.USER)
+    avatar = Column(String(100), default='https://res.cloudinary.com/dxxwcby8l/image/upload/v1647056401/ipmsmnxjydrhpo21xrd8.jpg')
     active = Column(Boolean, default=True)
     created_date = Column(DateTime, default=datetime.datetime.now)
 
@@ -228,19 +229,19 @@ if __name__ == '__main__':
 
         # Tạo người dùng Admin
         admin_user = User(name='Admin Master', email='admin@ofood.com', phone='0900000000',
-                          password=hashlib.md5('123456'.encode('utf-8')).hexdigest(), role=UserRole.ADMIN)
+                          password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()), role=UserRole.ADMIN)
 
         # Tạo các chủ nhà hàng
         owner1 = User(name='Anh Bảy Cơm Tấm', email='owner1@ofood.com', phone='0901111111',
-                      password=hashlib.md5('123456'.encode('utf-8')).hexdigest(), role=UserRole.RESTAURANT)
+                      password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()), role=UserRole.RESTAURANT)
         owner2 = User(name='Chị Mười Bún Bò', email='owner2@ofood.com', phone='0902222222',
-                      password=hashlib.md5('123456'.encode('utf-8')).hexdigest(), role=UserRole.RESTAURANT)
+                      password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()), role=UserRole.RESTAURANT)
 
         # Tạo các khách hàng
         customer1 = User(name='Khách Hàng A', email='customer1@email.com', phone='0981112222',
-                         password=hashlib.md5('123456'.encode('utf-8')).hexdigest(), role=UserRole.USER)
+                         password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()), role=UserRole.USER)
         customer2 = User(name='Khách Hàng B', email='customer2@email.com', phone='0982223333',
-                         password=hashlib.md5('123456'.encode('utf-8')).hexdigest(), role=UserRole.USER)
+                         password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()), role=UserRole.USER)
 
         db.session.add_all([admin_user, owner1, owner2, customer1, customer2])
         db.session.commit()

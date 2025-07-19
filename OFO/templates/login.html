@@ -8,21 +8,28 @@
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-8 col-lg-6 col-xl-5">
-        <div class="login-container">
-            <h1 class="text-center h3 fw-bold">KYMIE FOOD</h1>
-
+        <div class="login-container ">
+        <a class="navbar-brand d-flex justify-content-center" href="{{ url_for('index') }}">
+                        <img src="{{ url_for('static', filename='images/logokymie1.png') }}" alt="GrabFood Logo"
+                             style="height: 85px;">
+                    </a>
             <p class="text-center h5 my-4">Bảo mật đăng nhập</p>
 
-            <form>
+            <form method="post" action="/login">
+                {% if error %}
+                    <div id="error-alert" class="alert alert-danger text-center mt-3">
+                        {{ error }}
+                    </div>
+                {% endif %}
+
                 <div class="mb-3">
                     <label for="phone" class="form-label">Nhập số điện thoại đã đăng kí của bạn</label>
-                    <!-- Chỉ cần thẻ input này. Script trong base.html sẽ xử lý nó -->
-                    <input type="tel" class="form-control" id="phone" required>
+                    <input type="tel" class="form-control" id="phone" name="phone" required>
                 </div>
 
                 <div class="mb-3">
                     <label for="password" class="form-label">Vui lòng nhập mật khẩu</label>
-                    <input type="password" class="form-control" id="password" placeholder="Mật khẩu" required>
+                    <input type="password" class="form-control" id="password" placeholder="Mật khẩu" name="password" required>
                 </div>
 
                 <div class="d-grid">
@@ -36,4 +43,16 @@
         </div>
     </div>
 </div>
+<script>
+    window.addEventListener('DOMContentLoaded', function () {
+        const alertBox = document.getElementById('error-alert');
+        if (alertBox) {
+            setTimeout(() => {
+                alertBox.style.transition = 'opacity 0.5s ease-out';
+                alertBox.style.opacity = '0';
+                setTimeout(() => alertBox.remove(), 500); // Xoá khỏi DOM sau khi ẩn
+            }, 1000); // Đợi 1 giây
+        }
+    });
+</script>
 {% endblock %}

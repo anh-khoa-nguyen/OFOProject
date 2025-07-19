@@ -8,7 +8,14 @@
 {% block content %}
 <div class="register-page">
     <h2>Đăng ký tài khoản</h2>
-    <form action="/register/submit" method="POST" class="register-form">
+     {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    <form action="/register" method="POST" class="register-form" enctype="multipart/form-data">
         <label for="name">Họ và tên</label>
         <input type="text" id="name" name="name" required>
 
@@ -28,6 +35,9 @@
             <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
             <div class="invalid-feedback">Mật khẩu xác nhận không khớp.</div>
         </div>
+
+        <label for="name">Ảnh đại diện</label>
+        <input type="file" id="avatar" name="avatar" required>
 
         <button type="submit">Đăng ký</button>
     </form>
