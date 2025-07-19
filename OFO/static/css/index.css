@@ -111,6 +111,7 @@ body, html {
   gap: 1rem;
   overflow-x: hidden; /* không cho tự cuộn ngang */
   scroll-behavior: smooth;
+  justify-content: space-between;
   width: 100%;
 }
 
