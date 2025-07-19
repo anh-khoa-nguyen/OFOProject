@@ -1,15 +1,154 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
 from __init__ import app, db, login
 import dao
 from flask_login import login_user,logout_user
 from models import *
 from flask import request, jsonify
 from flask import session
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+import cloudinary.uploader
 
-
-@app.route("/")
+@app.route("/", methods=['GET','POST'])
 def index():
-    return render_template('index.html')
+    categories = dao.load_categories(8)
+    random_restaurants = dao.load_random_restaurants(limit=10)
+    return render_template('index.html', categories=categories, restaurants=random_restaurants)
+
+@app.route('/search')
+def search():
+    categories = dao.load_categories(8)
+    return render_template('tim-kiem.html', categories=categories)
+
+@app.route('/restaurant/<int:restaurant_id>')
+def restaurant_detail(restaurant_id):
+    """
+    Route này hiển thị trang chi tiết cho một nhà hàng cụ thể.
+    """
+    restaurant = dao.get_restaurant_by_id(restaurant_id)
+
+    if not restaurant:
+        return "Nhà hàng không tồn tại!", 404
+
+    return render_template('restaurant_detail.html', restaurant=restaurant)
+
+@app.route('/api/dish/<int:dish_id>')
+def get_dish_options_api(dish_id):
+    """
+    API endpoint để lấy thông tin chi tiết của một món ăn và các tùy chọn của nó
+    để hiển thị trong offcanvas.
+    """
+    try:
+        dish = dao.get_dish_with_options(dish_id)
+
+        if not dish:
+            return jsonify({'error': 'Món ăn không tồn tại'}), 404
+
+        # Chuyển đổi dữ liệu thành cấu trúc JSON
+        response_data = {
+            'id': dish.id,
+            'name': dish.name,
+            'description': dish.description,
+            'price': dish.price,
+            'image': dish.image,
+            'option_groups': [
+                {
+                    'id': group.id,
+                    'name': group.name,
+                    'mandatory': group.mandatory,
+                    'max_selection': group.max,
+                    'options': [
+                        {
+                            'id': option.id,
+                            'name': option.name,
+                            'price_change': option.price
+                        } for option in group.options
+                    ]
+                } for group in dish.option_groups
+            ]
+        }
+        return jsonify(response_data)
+
+    except Exception as e:
+        print(f"Lỗi tại API get_dish_options_api: {e}")
+        return jsonify({'error': 'Lỗi hệ thống'}), 500
+
+
+@app.route('/search/<string:category_name>')
+def search_by_category(category_name):
+    restaurants_found = dao.search_restaurants(category_name=category_name)
+
+    # Lấy tất cả các danh mục để hiển thị trong thanh cuộn
+    all_categories = dao.load_categories()
+
+    # Lấy đối tượng danh mục đã tìm kiếm để hiển thị tiêu đề
+
+    # Render template tim-kiem.html và truyền dữ liệu vào
+    return render_template('tim-kiem.html',
+                           restaurants=restaurants_found,
+                           categories=all_categories,
+                         )
+
+@app.route('/rating')
+def rating():
+    return render_template('rating.html')
+
+
+@app.route('/rating/<int:order_id>', methods=['GET', 'POST'])
+def rating_page(order_id):
+    order = dao.Order.query.get(order_id)
+
+    # --- Các bước kiểm tra an toàn (giữ nguyên) ---
+    if not order:
+        flash("Đơn hàng không tồn tại!", "danger")
+        return redirect(url_for('index'))
+    # if order.user_id != current_user.id:
+    #     flash("Bạn không có quyền đánh giá đơn hàng này.", "danger")
+    #     return redirect(url_for('index'))
+    if order.review:
+        flash("Đơn hàng này đã được bạn đánh giá rồi.", "info")
+        return redirect(url_for('restaurant_detail', restaurant_id=order.restaurant_id))
+
+    if request.method == 'POST':
+        try:
+            star = request.form.get('rating')
+            comment = request.form.get('comment')
+
+            # Lấy danh sách các file ảnh từ form
+            images = request.files.getlist('images')
+
+            if not star or not comment:
+                return jsonify({'success': False, 'message': 'Vui lòng cho điểm và viết nhận xét.'}), 400
+
+            # --- LOGIC UPLOAD ẢNH ---
+            uploaded_urls = []
+            if images:
+                for image in images:
+                    # Kiểm tra xem file có thực sự được gửi lên không
+                    if image and image.filename != '':
+                        # Upload lên Cloudinary
+                        res = cloudinary.uploader.upload(image)
+                        # Lấy URL an toàn và thêm vào danh sách
+                        uploaded_urls.append(res.get('secure_url'))
+
+            # Gọi hàm DAO để lưu đánh giá, truyền cả danh sách URL vào
+            dao.add_review(
+                order_id=order_id,
+                star=int(star),
+                comment=comment,
+                image_urls=uploaded_urls  # Truyền danh sách URL
+            )
+
+            return jsonify({'success': True, 'message': 'Cảm ơn bạn đã gửi đánh giá!'})
+
+        except ValueError as e:
+            return jsonify({'success': False, 'message': str(e)}), 400
+        except Exception as e:
+            print(f"Lỗi khi lưu đánh giá: {e}")
+            return jsonify({'success': False, 'message': 'Đã có lỗi xảy ra, vui lòng thử lại.'}), 500
+
+    # --- HIỂN THỊ TRANG KHI LÀ GET REQUEST (giữ nguyên) ---
+    restaurant = dao.get_restaurant_by_id(order.restaurant_id)
+    return render_template('rating.html', restaurant=restaurant, order=order)
+
 
 @app.route('/login',methods=['GET', 'POST'])
 def login_view():
