@@ -7,201 +7,128 @@
 
 {% block content %}
 <div class="container my-4">
-  <!-- Search -->
-  <div class="mb-3">
-    <div class="d-flex align-items-center search-box">
-      <i class="bi bi-search me-2"></i>
-      <input
-        type="text"
-        class="form-control border-0 bg-transparent shadow-none"
-        placeholder="Tìm món hoặc quán ăn"
-        style="flex: 1"
-      />
+    <!-- Search -->
+    <div class="mb-3">
+        <div class="d-flex align-items-center search-box">
+            <i class="bi bi-search me-2"></i>
+            <input
+                    type="text"
+                    class="form-control border-0 bg-transparent shadow-none"
+                    placeholder="Tìm món hoặc quán ăn"
+                    style="flex: 1"
+            />
+        </div>
     </div>
-  </div>
 
-  <!-- Horizontal category scroll -->
-  <div class="category-scroll d-flex overflow-auto w-100">
-    <div class="category-card position-relative flex-fill mx-2">
-      <img src="{{ url_for('static', filename='images/category/hutieu.png') }}" alt="" class="img-fluid w-100" />
-      <span class="overlay-text">Vùng deal siêu đậm</span>
+    <!-- Horizontal category scroll -->
+    <div class="category-scroll d-flex overflow-auto w-100">
+        {% if categories %}
+        {% for category in categories %}
+        <a href="{{ url_for('search_by_category', category_name=category.name) }}" class="category-card-link flex-fill mx-2">
+        <div class="category-card position-relative flex-fill mx-2">
+            <img src="{{ category.image }}" alt="" class="img-fluid w-100"/>
+            <span class="overlay-text">{{ category.name }}</span>
+        </div>
+        </a>
+        {% endfor %}
+        {% else %}
+        <p class="text-center">Hiện chưa có danh mục nào.</p>
+        {% endif %}
     </div>
-    <div class="category-card position-relative flex-fill mx-2">
-      <img src="{{ url_for('static', filename='images/category/banhmi.png') }}" alt="" class="img-fluid w-100" />
-      <span class="overlay-text">Brand đỉnh deal đậm</span>
-    </div>
-    <div class="category-card position-relative flex-fill mx-2">
-      <img src="{{ url_for('static', filename='images/category/comtam.png') }}" alt="" class="img-fluid w-100"/>
-      <span class="overlay-text">Quán Trứ Danh</span>
-    </div>
-    <div class="category-card position-relative flex-fill mx-2">
-      <img src="{{ url_for('static', filename='images/category/doannhanh.png') }}" alt="" class="img-fluid w-100"/>
-      <span class="overlay-text">Ưu đãi GrabUnlimited</span>
-    </div>
-    <div class="category-card position-relative flex-fill mx-2">
-      <img src="{{ url_for('static', filename='images/category/thitga.png') }}" alt="" class="img-fluid w-100"/>
-      <span class="overlay-text">Đặt đông giảm đậm</span>
-    </div>
-    <div class="category-card position-relative flex-fill mx-2">
-      <img src="{{ url_for('static', filename='images/category/trasua.png') }}" alt="" class="img-fluid w-100"/>
-      <span class="overlay-text">Deal rẻ vô địch</span>
-    </div>
-  </div>
 </div>
 
 
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="#">Trang chủ</a></li>
-      <li class="breadcrumb-item active" aria-current="page">Nhà hàng</li>
+        <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Trang chủ</a></li>
+        {% if searched_category %}
+        <li class="breadcrumb-item active" aria-current="page">{{ searched_category.name }}</li>
+        {% else %}
+        <li class="breadcrumb-item active" aria-current="page">Tất cả nhà hàng</li>
+        {% endif %}
     </ol>
-  </nav>
+</nav>
 
-  <!-- Tiêu đề -->
-  <h2 class="fw-bold mb-4">Món ngon gần bạn</h2>
+<!-- Tiêu đề -->
+<h2 class="fw-bold mb-4">Món ngon gần bạn</h2>
 
-  <!-- Carousel -->
-  <!-- Carousel Món ngon gần bạn -->
+<!-- Carousel -->
+<!-- Carousel Món ngon gần bạn -->
 <div class="promo-carousel-wrapper position-relative mb-5">
 
-  <!-- Nút trái -->
-  <button class="carousel-arrow left" id="arrowLeft">
-    <i class="bi bi-chevron-left"></i>
-  </button>
+    <!-- Nút trái -->
+    <button class="carousel-arrow left" id="arrowLeft">
+        <i class="bi bi-chevron-left"></i>
+    </button>
 
-  <!-- Scrolling Wrapper -->
-  <div class="scrolling-wrapper d-flex overflow-hidden flex-nowrap" id="foodScroll">
+    <!-- Scrolling Wrapper -->
+    <div class="scrolling-wrapper d-flex overflow-hidden flex-nowrap" id="foodScroll">
 
-    <!-- Card 1 -->
-    <div class="card card-promo">
-      <div class="position-relative">
-        <img src="{{ url_for('static', filename='images/mitron.png') }}" class="img-food" alt="Mì trộn">
-        <div class="promo-tag">Promo</div>
-      </div>
-      <div class="card-body px-3">
-        <p class="restaurant-title">Mì Trộn Tên Lửa - CMT8</p>
-        <p class="text-secondary-small mb-1">Bún - Phở - Cháo</p>
-        <div class="d-flex align-items-center mb-2 rating">
-          <i class="bi bi-star-fill me-1"></i> 4.3
-          <span class="mx-2">·</span>
-          <i class="bi bi-clock me-1"></i> 20 phút
-          <span class="mx-2">·</span>
-          1.6 km
+        {% if restaurants %}
+        {# Lặp qua danh sách nhà hàng và hiển thị card #}
+        {% for restaurant in restaurants %}
+        <div class="card card-promo">
+            <a href="{{ url_for('restaurant_detail', restaurant_id=restaurant.id) }}"
+               class="text-decoration-none text-dark">
+                <div class="position-relative">
+                    <img src="{{ restaurant.image }}" class="img-food" alt="{{ restaurant.restaurant_name }}">
+                    <div class="promo-tag">Promo</div>
+                </div>
+                <div class="card-body px-3">
+                    <p class="restaurant-title">{{ restaurant.restaurant_name }}</p>
+                    <p class="text-secondary-small mb-1">{{ restaurant.category.name if restaurant.category else 'Nhà
+                        hàng' }}</p>
+                    {# Dữ liệu rating, thời gian, khoảng cách (hiện chưa có trong model) #}
+                    <div class="d-flex align-items-center mb-2 rating">
+                        <i class="bi bi-star-fill me-1"></i> 4.5
+                        <span class="mx-2">·</span>
+                        <i class="bi bi-clock me-1"></i> 20 phút
+                        <span class="mx-2">·</span>
+                        1.6 km
+                    </div>
+                    <p class="offer"><i class="bi bi-tag"></i> Ưu đãi đặc biệt</p>
+                </div>
+            </a>
         </div>
-        <p class="offer"><i class="bi bi-tag"></i> 39.000đ Bao no</p>
-      </div>
+        {% endfor %}
+        {% else %}
+        {# Hiển thị thông báo nếu không có kết quả #}
+        <div class="w-100 text-center p-5">
+            <p class="text-muted fs-5">Không tìm thấy nhà hàng nào trong danh mục này.</p>
+        </div>
+        {% endif %}
+
+
+
     </div>
 
-    <!-- Card 2 -->
-    <div class="card card-promo">
-      <div class="position-relative">
-        <img src="{{ url_for('static', filename='images/comtron.png') }}" class="img-food" alt="Cơm trộn">
-        <div class="promo-tag">Promo</div>
-      </div>
-      <div class="card-body px-3">
-        <p class="restaurant-title">Tiệm Cơm Nhà Trộn - CMT8</p>
-        <p class="text-secondary-small mb-1">Cơm</p>
-        <div class="d-flex align-items-center mb-2 rating">
-          <i class="bi bi-star-fill me-1"></i> 4.3
-          <span class="mx-2">·</span>
-          <i class="bi bi-clock me-1"></i> 20 phút
-          <span class="mx-2">·</span>
-          1.6 km
-        </div>
-        <p class="offer"><i class="bi bi-tag"></i> 39.000đ Bao no</p>
-      </div>
-    </div>
-
-    <!-- Card 3 -->
-    <div class="card card-promo">
-      <div class="position-relative">
-        <img src="{{ url_for('static', filename='images/banhmi.png') }}" class="img-food" alt="Bánh mì">
-        <div class="promo-tag">Promo</div>
-      </div>
-      <div class="card-body px-3">
-        <p class="restaurant-title">Bánh Mì Hà Nội - Trường Sơn</p>
-        <p class="text-secondary-small mb-1">Bánh Mì - Xôi</p>
-        <div class="d-flex align-items-center mb-2 rating">
-          <i class="bi bi-star-fill me-1"></i> 4.3
-          <span class="mx-2">·</span>
-          <i class="bi bi-clock me-1"></i> 20 phút
-          <span class="mx-2">·</span>
-          1.6 km
-        </div>
-        <p class="offer"><i class="bi bi-tag"></i> 39.000đ Bao no</p>
-      </div>
-    </div>
-
-    <!-- Card 4 -->
-    <div class="card card-promo">
-      <div class="position-relative">
-        <img src="{{ url_for('static', filename='images/garan.png') }}" class="img-food" alt="Gà rán">
-        <div class="promo-tag">Promo</div>
-      </div>
-      <div class="card-body px-3">
-        <p class="restaurant-title">Jollibee - Tô Hiến Thành</p>
-        <p class="text-secondary-small mb-1">Thức ăn nhanh</p>
-        <div class="d-flex align-items-center mb-2 rating">
-          <i class="bi bi-star-fill me-1"></i> 4.3
-          <span class="mx-2">·</span>
-          <i class="bi bi-clock me-1"></i> 20 phút
-          <span class="mx-2">·</span>
-          1.6 km
-        </div>
-        <p class="offer"><i class="bi bi-tag"></i> 39.000đ Bao no</p>
-      </div>
-    </div>
-
-    <!-- Card 5 -->
-    <div class="card card-promo">
-      <div class="position-relative">
-        <img src="{{ url_for('static', filename='images/mitron.png') }}" class="img-food" alt="Mì trộn">
-        <div class="promo-tag">Promo</div>
-      </div>
-      <div class="card-body px-3">
-        <p class="restaurant-title">Mì Trộn Tên Lửa - CMT8</p>
-        <p class="text-secondary-small mb-1">Bún - Phở - Cháo</p>
-        <div class="d-flex align-items-center mb-2 rating">
-          <i class="bi bi-star-fill me-1"></i> 4.3
-          <span class="mx-2">·</span>
-          <i class="bi bi-clock me-1"></i> 20 phút
-          <span class="mx-2">·</span>
-          1.6 km
-        </div>
-        <p class="offer"><i class="bi bi-tag"></i> 39.000đ Bao no</p>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- Nút phải -->
-  <button class="carousel-arrow right" id="arrowRight">
-    <i class="bi bi-chevron-right"></i>
-  </button>
-
+    <!-- Nút phải -->
+    <button class="carousel-arrow right" id="arrowRight">
+        <i class="bi bi-chevron-right"></i>
+    </button>
 
 
 </div>
 
 
 <script>
-  const scrollContainer = document.getElementById('foodScroll');
-  const leftArrow = document.getElementById('arrowLeft');
-  const rightArrow = document.getElementById('arrowRight');
+    const scrollContainer = document.getElementById('foodScroll');
+    const leftArrow = document.getElementById('arrowLeft');
+    const rightArrow = document.getElementById('arrowRight');
 
-  // Bấm để cuộn trái/phải
-  leftArrow.addEventListener('click', () => {
-    scrollContainer.scrollBy({ left: -300, behavior: 'smooth' });
-  });
+    // Bấm để cuộn trái/phải
+    leftArrow.addEventListener('click', () => {
+      scrollContainer.scrollBy({ left: -300, behavior: 'smooth' });
+    });
 
-  rightArrow.addEventListener('click', () => {
-    scrollContainer.scrollBy({ left: 300, behavior: 'smooth' });
-  });
+    rightArrow.addEventListener('click', () => {
+      scrollContainer.scrollBy({ left: 300, behavior: 'smooth' });
+    });
 
-  // Ẩn/hiện nút trái khi scroll
-  scrollContainer.addEventListener('scroll', () => {
-    leftArrow.classList.toggle('d-none', scrollContainer.scrollLeft < 10);
-  });
+    // Ẩn/hiện nút trái khi scroll
+    scrollContainer.addEventListener('scroll', () => {
+      leftArrow.classList.toggle('d-none', scrollContainer.scrollLeft < 10);
+    });
 </script>
 {% endblock %}
 

@@ -1,4 +1,5 @@
 import datetime
+from datetime import time
 from sqlalchemy import (Column, Integer, String, Boolean, Float, ForeignKey,
                         Enum, DateTime, Time, JSON)
 from sqlalchemy.orm import relationship
@@ -20,6 +21,7 @@ class User(db.Model, UserMixin):
     phone = Column(String(10), unique=True, index=True)
     password = Column(String(255), nullable=False)
     role = Column(Enum(UserRole), nullable=False, default=UserRole.USER)
+    avatar = Column(String(100), default='https://res.cloudinary.com/dxxwcby8l/image/upload/v1647056401/ipmsmnxjydrhpo21xrd8.jpg')
     active = Column(Boolean, default=True)
     created_date = Column(DateTime, default=datetime.datetime.now)
 
@@ -62,16 +64,17 @@ class Restaurant(db.Model):
     close_time = Column(Time)
     status = Column(Boolean, default=True)
     active = Column(Boolean, default=False)
+    star_average = Column(Float)
 
     created_date = Column(DateTime, default=datetime.datetime.now)
 
     # Relationships
     category = relationship('Category', back_populates='restaurants')
 
-    dish_groups = relationship('DishGroup', backref='restaurant', lazy='dynamic')
+    dish_groups = relationship('DishGroup', back_populates='restaurant', lazy='subquery')
 
     favorited_by_users = relationship('User', secondary=favorite_restaurants, lazy='subquery',
-                                      backref=db.backref('favorite_restaurants', lazy=True))
+                                      backref=db.backref('favorite_restaurants', lazy='dynamic'))
 
     dishes = relationship('Dish', backref='restaurant', lazy=True)
     orders = relationship('Order', backref='restaurant', lazy=True)
@@ -83,7 +86,9 @@ class DishGroup(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(50), nullable=False)
     restaurant_id = Column(Integer, ForeignKey(Restaurant.id), nullable=False)
-    dishes = relationship('Dish', back_populates='group', lazy='dynamic')
+
+    restaurant = relationship('Restaurant', back_populates='dish_groups')
+    dishes = relationship('Dish', back_populates='group', lazy='subquery')
 
 
 class Dish(db.Model):
@@ -91,9 +96,9 @@ class Dish(db.Model):
     restaurant_id = Column(Integer, ForeignKey(Restaurant.id), nullable=False, index=True)
     dish_group_id = Column(Integer, ForeignKey(DishGroup.id), nullable=True)
     name = Column(String(50), nullable=False)
-    description = Column(String(100))
+    description = Column(String(255))
     price = Column(Float, nullable=False, default=0)
-    image = Column(String(100))
+    image = Column(String(100), default="https://res.cloudinary.com/dq2jtbrda/image/upload/v1752912326/tocotrachieu_uqllag.webp")
 
     group = relationship('DishGroup', back_populates='dishes')
     option_groups = relationship('DishOptionGroup', backref='dish', lazy=True)
@@ -182,6 +187,7 @@ class Review(db.Model):
     order_id = Column(Integer, ForeignKey(Order.id), nullable=False, unique=True)
     star = Column(Integer, nullable=False)
     comment = Column(String(1000))
+    image = Column(String(1000))
     date = Column(DateTime, default=datetime.datetime.now)
 
 
@@ -223,44 +229,112 @@ if __name__ == '__main__':
 
         # Tạo người dùng Admin
         admin_user = User(name='Admin Master', email='admin@ofood.com', phone='0900000000',
-                          password=hashlib.md5('123456'.encode('utf-8')), role=UserRole.ADMIN)
+                          password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()), role=UserRole.ADMIN)
 
         # Tạo các chủ nhà hàng
         owner1 = User(name='Anh Bảy Cơm Tấm', email='owner1@ofood.com', phone='0901111111',
-                      password=hashlib.md5('123456'.encode('utf-8')), role=UserRole.RESTAURANT)
+                      password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()), role=UserRole.RESTAURANT)
         owner2 = User(name='Chị Mười Bún Bò', email='owner2@ofood.com', phone='0902222222',
-                      password=hashlib.md5('123456'.encode('utf-8')), role=UserRole.RESTAURANT)
+                      password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()), role=UserRole.RESTAURANT)
 
         # Tạo các khách hàng
         customer1 = User(name='Khách Hàng A', email='customer1@email.com', phone='0981112222',
-                         password=hashlib.md5('123456'.encode('utf-8')), role=UserRole.USER)
+                         password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()), role=UserRole.USER)
         customer2 = User(name='Khách Hàng B', email='customer2@email.com', phone='0982223333',
-                         password=hashlib.md5('123456'.encode('utf-8')), role=UserRole.USER)
+                         password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()), role=UserRole.USER)
 
         db.session.add_all([admin_user, owner1, owner2, customer1, customer2])
         db.session.commit()
 
+        # 1. Tạo các Category
+        cat_hutieu = Category(name='Hủ tiếu',
+                              image='https://res.cloudinary.com/dq2jtbrda/image/upload/v1752910881/hutieu_dashlv.jpg')
+        cat_trasua = Category(name='Trà sữa',
+                              image='https://res.cloudinary.com/dq2jtbrda/image/upload/v1752910879/trasua_gnipc9.jpg')
+        cat_thucannhanh = Category(name='Thức ăn nhanh',
+                                   image='https://res.cloudinary.com/dq2jtbrda/image/upload/v1752910878/thucannhanh_iwpo6l.jpg')
+        cat_comtam = Category(name='Cơm tấm',
+                              image='https://res.cloudinary.com/dq2jtbrda/image/upload/v1752910878/comtam_rhgbr4.webp')
+        cat_banhmi = Category(name='Bánh mì',
+                              image='https://res.cloudinary.com/dq2jtbrda/image/upload/v1752910877/banhmi_psbpiy.jpg')
+        cat_chao = Category(name='Cháo',
+                            image='https://res.cloudinary.com/dq2jtbrda/image/upload/v1752910878/chao_qyei6t.jpg')
+        cat_thitga = Category(name='Thịt gà',
+                              image='https://res.cloudinary.com/dq2jtbrda/image/upload/v1752910878/thitga_fb0zwg.webp')
+        cat_pizza = Category(name='Pizza',
+                             image='https://res.cloudinary.com/dq2jtbrda/image/upload/v1752910878/pizza_pchnus.webp')
+
+        db.session.add_all(
+            [cat_hutieu, cat_trasua, cat_thucannhanh, cat_comtam, cat_banhmi, cat_chao, cat_thitga, cat_pizza])
+        db.session.commit()
+
         # 2. TẠO NHÀ HÀNG
-        restaurant1 = Restaurant(owner_user_id=owner1.id, restaurant_name='Cơm Tấm Bảy Đời',
-                                 address='123 Đường Cơm, Phường 1, Quận 1, TP.HCM',
-                                 email='comtambaydoi@email.com', description='Cơm tấm gia truyền, sườn ướp đậm đà.')
-        restaurant2 = Restaurant(owner_user_id=owner2.id, restaurant_name='Bún Bò Mười Ngon',
-                                 address='456 Đường Bún, Phường 2, Quận 3, TP.HCM',
-                                 email='bunbomuoi@email.com', description='Bún bò Huế chuẩn vị, nước lèo thanh ngọt.')
+        restaurant1 = Restaurant(owner_user_id=owner1.id,
+                                 restaurant_name='Mì Trộn Tên Lửa - CMT8',
+                                 address='111 Cách Mạng Tháng Tám, P. 1, Q. 3, TP.HCM',
+                                 email='mitrontenlua@email.com',
+                                 description='Mì trộn độc đáo với các loại sốt nhà làm.',
+                                 image='https://res.cloudinary.com/dq2jtbrda/image/upload/v1752910914/mitron_bbzzqc.jpg',
+                                 category=cat_thucannhanh,
+                                 # Thêm giờ mở/đóng cửa
+                                 open_time=time(10, 0),  # 10:00 AM
+                                 close_time=time(22, 0))  # 10:00 PM
+
+        restaurant2 = Restaurant(owner_user_id=owner2.id,
+                                 restaurant_name='Tiệm Cơm Nhà Trộn - Phú Nhuận',
+                                 address='222 Phan Xích Long, P. 2, Q. Phú Nhuận, TP.HCM',
+                                 email='comnhatron@email.com',
+                                 description='Cơm trộn Hàn Quốc chuẩn vị cho giới trẻ.',
+                                 image='https://res.cloudinary.com/dq2jtbrda/image/upload/v1752910914/comtron_qhxxer.jpg',
+                                 category=cat_comtam,
+                                 # Thêm giờ mở/đóng cửa
+                                 open_time=time(11, 0),  # 11:00 AM
+                                 close_time=time(21, 30))  # 09:30 PM
+
+        restaurant3 = Restaurant(owner_user_id=owner2.id,
+                                 restaurant_name='Jollibee - EC Tô Hiến Thành',
+                                 address='333 Tô Hiến Thành, P. 13, Q. 10, TP.HCM',
+                                 email='jollibee.tht@email.com',
+                                 description='Gà giòn vui vẻ, Mì Ý sốt bò bằm.',
+                                 image='https://res.cloudinary.com/dq2jtbrda/image/upload/v1752910914/garan_mzz4tb.webp',
+                                 category=cat_thitga,
+                                 # Thêm giờ mở/đóng cửa
+                                 open_time=time(9, 0),  # 09:00 AM
+                                 close_time=time(22, 45))  # 10:45 PM
+
+        restaurant4 = Restaurant(owner_user_id=owner1.id,
+                                 restaurant_name='Bánh Mì Huỳnh Gia - Lê Văn Lương',
+                                 address='444 Lê Văn Lương, P. Tân Hưng, Q. 7, TP.HCM',
+                                 email='banhmihuynhgia@email.com',
+                                 description='Bánh mì heo quay da giòn trứ danh.',
+                                 image='https://res.cloudinary.com/dq2jtbrda/image/upload/v1752910913/banhmi_w70ph8.webp',
+                                 category=cat_banhmi,
+                                 # Thêm giờ mở/đóng cửa
+                                 open_time=time(6, 30),  # 06:30 AM
+                                 close_time=time(20, 0))  # 08:00 PM
 
         # Khách hàng yêu thích nhà hàng
         customer1.favorite_restaurants.append(restaurant1)
         customer1.favorite_restaurants.append(restaurant2)
-        customer2.favorite_restaurants.append(restaurant2)
+        customer2.favorite_restaurants.append(restaurant3)
 
-        db.session.add_all([restaurant1, restaurant2])
+        db.session.add_all([restaurant1, restaurant2, restaurant3, restaurant4])
         db.session.commit()
 
-        # 3. TẠO MÓN ĂN VÀ TÙY CHỌN
-        # Món ăn cho nhà hàng 1
-        dish1_1 = Dish(restaurant_id=restaurant1.id, name='Cơm tấm sườn', price=35000)
-        dish1_2 = Dish(restaurant_id=restaurant1.id, name='Cơm tấm bì chả', price=30000)
-        dish1_3 = Dish(restaurant_id=restaurant1.id, name='Canh khổ qua', price=10000)
+        dish1_1 = Dish(restaurant_id=restaurant1.id,
+                       name='Cơm tấm sườn',
+                       price=35000,
+                       description='Một miếng sườn cốt lết nướng thơm lừng trên than hồng, ăn kèm với cơm tấm nóng hổi, mỡ hành và nước mắm chua ngọt.')
+
+        dish1_2 = Dish(restaurant_id=restaurant1.id,
+                       name='Cơm tấm bì chả',
+                       price=30000,
+                       description='Sự kết hợp hoàn hảo giữa bì heo thái sợi giòn dai và chả trứng hấp mềm mịn, béo ngậy.')
+
+        dish1_3 = Dish(restaurant_id=restaurant1.id,
+                       name='Canh khổ qua',
+                       price=10000,
+                       description='Canh khổ qua dồn thịt thanh mát, giải nhiệt, vị đắng nhẹ đặc trưng, tốt cho sức khỏe.')
 
         # Món ăn cho nhà hàng 2
         dish2_1 = Dish(restaurant_id=restaurant2.id, name='Bún bò đặc biệt', price=55000)
@@ -324,22 +398,18 @@ if __name__ == '__main__':
         db.session.commit()
 
         # 6. TẠO ĐÁNH GIÁ (REVIEW)
-        # Chỉ những đơn hàng đã COMPLETED mới có thể có review
+        # Chỉ những đơn hàng đã COMPLETED mới có thể có review.css
         review1 = Review(user_id=order1.user_id, restaurant_id=order1.restaurant_id, order_id=order1.id,
                          star=5, comment='Cơm tấm ngon, giao hàng nhanh. Sẽ ủng hộ tiếp!')
         db.session.add(review1)
         db.session.commit()
 
-        # 1. Tạo các Category
-        cat_com = Category(name='Cơm')
-        cat_trasua = Category(name='Trà sữa')
-        db.session.add_all([cat_com, cat_trasua])
-        db.session.commit()
+
 
         # 2. Gán Category cho một nhà hàng
         # Giả sử bạn đã có một nhà hàng tên `restaurant1`
         # Gán trực tiếp đối tượng Category, không dùng .append() nữa
-        restaurant1.category = cat_com
+        restaurant1.category = cat_comtam
         db.session.commit()
 
         # 3. Tạo DishGroup cho nhà hàng đó
@@ -355,3 +425,8 @@ if __name__ == '__main__':
         db.session.commit()
 
         print("--- TẠO DỮ LIỆU THỬ NGHIỆM THÀNH CÔNG ---")
+
+
+
+#Thiếu Payment
+#Class Diagram Review

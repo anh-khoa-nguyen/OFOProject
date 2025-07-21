@@ -379,6 +379,7 @@
     background-color: #E91E63 !important;
     color: white !important;
 }
+
 /*Restaurant_main*/
 .btn-add-to-cart {
     background-color: #E91E63;
@@ -641,4 +642,26 @@
 
 .btn-submit:hover {
     background-color: #0056b3;
+
+.btn-sm{
+    border-radius: 15px !important;
+}
+
+.toast-notification {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 25px;
+    z-index: 1050;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s, visibility 0.5s;
+}
+.toast-notification.show {
+    opacity: 1;
+    visibility: visible;
 }
