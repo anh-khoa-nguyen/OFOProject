@@ -121,7 +121,7 @@ def receive_after_insert(mapper, connection, target):
     Lắng nghe sự kiện sau khi một bản ghi Review được thêm vào.
     'target' chính là đối tượng Review vừa được tạo.
     """
-    # Lấy restaurant_id từ review vừa được thêm
+    # Lấy restaurant_id từ review.css vừa được thêm
     restaurant_id = target.restaurant_id
 
     # Tính toán điểm trung bình
@@ -142,6 +142,73 @@ def receive_after_insert(mapper, connection, target):
         )
         # Thực thi câu lệnh UPDATE
         connection.execute(stmt)
+
+def get_reviews_by_restaurant(restaurant_id):
+    """
+    Lấy tất cả các đánh giá cho một nhà hàng cụ thể, sắp xếp từ mới nhất đến cũ nhất.
+    """
+    # .options(joinedload(Review.user)) sẽ tải trước thông tin người dùng để tránh N+1 query
+    return Review.query.filter_by(restaurant_id=restaurant_id)\
+                       .order_by(Review.date.desc())\
+                       .all()
+
+
+def get_restaurant_review_summary(restaurant_id):
+    """
+    Lấy dữ liệu tổng hợp về đánh giá cho một nhà hàng.
+    Bao gồm: tổng số review và số lượng cho từng mức sao.
+    """
+    # Dùng một câu query duy nhất để lấy số lượng cho từng mức sao
+    breakdown_query = db.session.query(
+        Review.star,
+        func.count(Review.id)
+    ).filter(Review.restaurant_id == restaurant_id).group_by(Review.star).all()
+
+    # Chuyển kết quả thành một dictionary, ví dụ: {5: 10, 4: 5, ...}
+    # Đồng thời tính tổng số review
+    total_reviews = 0
+    breakdown_dict = {star: 0 for star in range(1, 6)}  # Khởi tạo với tất cả giá trị = 0
+
+    for star, count in breakdown_query:
+        breakdown_dict[star] = count
+        total_reviews += count
+
+    return {
+        'total_reviews': total_reviews,
+        'breakdown': breakdown_dict
+    }
+
+def is_favorite(user_id, restaurant_id):
+    """
+    Kiểm tra xem một nhà hàng đã được người dùng yêu thích hay chưa.
+    """
+    user = User.query.get(user_id)
+    if user:
+        # .any() là cách hiệu quả để kiểm tra sự tồn tại
+        return user.favorite_restaurants.filter(Restaurant.id == restaurant_id).first() is not None
+    return False
+
+def toggle_favorite(user_id, restaurant_id):
+    """
+    Thêm hoặc xóa một nhà hàng khỏi danh sách yêu thích của người dùng.
+    Trả về 'added' nếu đã thêm, 'removed' nếu đã xóa.
+    """
+    user = User.query.get(user_id)
+    restaurant = Restaurant.query.get(restaurant_id)
+
+    if not user or not restaurant:
+        raise ValueError("Người dùng hoặc nhà hàng không tồn tại.")
+
+    if restaurant in user.favorite_restaurants:
+        # Nếu đã có, thì xóa đi
+        user.favorite_restaurants.remove(restaurant)
+        db.session.commit()
+        return 'removed'
+    else:
+        # Nếu chưa có, thì thêm vào
+        user.favorite_restaurants.append(restaurant)
+        db.session.commit()
+        return 'added'
 
 if __name__ == "__main__":
     print(auth_user("user", 123))

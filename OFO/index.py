@@ -1,6 +1,6 @@
 from __init__ import app, db, login
 import dao
-from flask_login import login_user,logout_user
+from flask_login import login_user, logout_user, login_required, current_user
 from models import *
 from flask import request, jsonify
 from flask import session
@@ -24,11 +24,14 @@ def restaurant_detail(restaurant_id):
     Route này hiển thị trang chi tiết cho một nhà hàng cụ thể.
     """
     restaurant = dao.get_restaurant_by_id(restaurant_id)
+    is_favorited = False
+    if current_user.is_authenticated:
+        is_favorited = dao.is_favorite(user_id=current_user.id, restaurant_id=restaurant_id)
 
     if not restaurant:
         return "Nhà hàng không tồn tại!", 404
 
-    return render_template('restaurant_detail.html', restaurant=restaurant)
+    return render_template('restaurant_detail.html', restaurant=restaurant, is_favorited=is_favorited)
 
 @app.route('/api/dish/<int:dish_id>')
 def get_dish_options_api(dish_id):
@@ -149,6 +152,88 @@ def rating_page(order_id):
     restaurant = dao.get_restaurant_by_id(order.restaurant_id)
     return render_template('rating.html', restaurant=restaurant, order=order)
 
+
+@app.route('/review/<int:restaurant_id>')
+def restaurant_reviews(restaurant_id):
+    # Lấy đối tượng nhà hàng, đã bao gồm 'star_average'
+    restaurant = dao.get_restaurant_by_id(restaurant_id)
+
+    if not restaurant:
+        flash("Nhà hàng không tồn tại!", "danger")
+        return redirect(url_for('index'))
+
+    # Lấy danh sách chi tiết các review
+    reviews = dao.get_reviews_by_restaurant(restaurant_id)
+
+    # Lấy dữ liệu tổng hợp (tổng số review và phân phối sao)
+    summary_data = dao.get_restaurant_review_summary(restaurant_id)
+
+    # Render template và truyền tất cả dữ liệu vào
+    return render_template('review.html',
+                           restaurant=restaurant,
+                           reviews=reviews,
+                           summary_data=summary_data)
+
+@app.route('/api/toggle-favorite/<int:restaurant_id>', methods=['POST'])
+@login_required
+def toggle_favorite_api(restaurant_id):
+    """
+    API endpoint để thêm hoặc xóa một nhà hàng khỏi danh sách yêu thích.
+    """
+    try:
+        # Gọi hàm DAO để thực hiện logic
+        status = dao.toggle_favorite(user_id=current_user.id, restaurant_id=restaurant_id)
+        # Trả về kết quả thành công và trạng thái mới
+        return jsonify({'success': True, 'status': status})
+    except ValueError as e:
+        return jsonify({'success': False, 'message': str(e)}), 404
+    except Exception as e:
+        print(f"Lỗi tại toggle_favorite_api: {e}")
+        return jsonify({'success': False, 'message': 'Đã có lỗi xảy ra.'}), 500
+
+
+@app.route('/api/set-address', methods=['POST'])
+def set_delivery_address():
+    """
+    API endpoint để nhận địa chỉ, kinh độ, vĩ độ và lưu vào session.
+    """
+    data = request.get_json()
+    address = data.get('address')
+    lat = data.get('lat')
+    lng = data.get('lng')
+
+    if not address or lat is None or lng is None:
+        return jsonify({'success': False, 'message': 'Dữ liệu địa chỉ không đầy đủ.'}), 400
+
+    # Lưu cả 3 thông tin vào session
+    session['delivery_address'] = address
+    session['delivery_latitude'] = lat
+    session['delivery_longitude'] = lng
+
+    return jsonify({'success': True, 'message': 'Đã cập nhật địa chỉ giao hàng.'})
+
+
+@app.route('/clear-address')
+def clear_delivery_address():
+    """
+    Xóa tất cả thông tin địa chỉ khỏi session và chuyển hướng về trang chủ.
+    """
+    session.pop('delivery_address', None)
+    session.pop('delivery_latitude', None)
+    session.pop('delivery_longitude', None)
+    return redirect(url_for('index'))
+
+
+@app.context_processor
+def inject_delivery_address():
+    """
+    Làm cho các biến địa chỉ có sẵn trong tất cả các template.
+    """
+    return dict(
+        delivery_address=session.get('delivery_address', '...'),
+        delivery_latitude=session.get('delivery_latitude'),
+        delivery_longitude=session.get('delivery_longitude')
+    )
 
 @app.route('/login',methods=['GET', 'POST'])
 def login_view():

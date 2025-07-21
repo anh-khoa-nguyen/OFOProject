@@ -74,7 +74,7 @@ class Restaurant(db.Model):
     dish_groups = relationship('DishGroup', back_populates='restaurant', lazy='subquery')
 
     favorited_by_users = relationship('User', secondary=favorite_restaurants, lazy='subquery',
-                                      backref=db.backref('favorite_restaurants', lazy=True))
+                                      backref=db.backref('favorite_restaurants', lazy='dynamic'))
 
     dishes = relationship('Dish', backref='restaurant', lazy=True)
     orders = relationship('Order', backref='restaurant', lazy=True)
@@ -398,7 +398,7 @@ if __name__ == '__main__':
         db.session.commit()
 
         # 6. TẠO ĐÁNH GIÁ (REVIEW)
-        # Chỉ những đơn hàng đã COMPLETED mới có thể có review
+        # Chỉ những đơn hàng đã COMPLETED mới có thể có review.css
         review1 = Review(user_id=order1.user_id, restaurant_id=order1.restaurant_id, order_id=order1.id,
                          star=5, comment='Cơm tấm ngon, giao hàng nhanh. Sẽ ủng hộ tiếp!')
         db.session.add(review1)
@@ -425,3 +425,8 @@ if __name__ == '__main__':
         db.session.commit()
 
         print("--- TẠO DỮ LIỆU THỬ NGHIỆM THÀNH CÔNG ---")
+
+
+
+#Thiếu Payment
+#Class Diagram Review
