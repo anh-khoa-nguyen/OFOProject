@@ -252,7 +252,10 @@ def login_view():
         u = dao.auth_user(phone=phone, password=password)
         if u:
             login_user(u)
-            return redirect('/')
+            if u.role == UserRole.ADMIN:
+                return redirect('/admin/')
+            else:
+                return redirect('/')
         else:
             error = "Tên đăng nhập hoặc mật khẩu không đúng."
             return render_template('login.html', error=error)
@@ -302,6 +305,7 @@ def register():
         email = request.form.get('email')
         password = request.form.get('password')
         confirm_password = request.form.get('confirm_password')
+        avatar = request.files.get('avatar')
 
         if password != confirm_password:
             flash('Mật khẩu xác nhận không khớp', 'danger')
@@ -316,7 +320,7 @@ def register():
                 phone = '0' + phone
             data['phone'] = phone  # cập nhật lại vào dict
 
-        dao.add_user(**data)
+        dao.add_user(avatar = avatar,**data)
         return redirect('/login')
 
     return render_template('register.html', phone=phone)
@@ -342,4 +346,5 @@ def get_user_by_id(user_id):
 import admin
 if __name__ == '__main__':
     with app.app_context():
+        import admin
         app.run(debug=True)

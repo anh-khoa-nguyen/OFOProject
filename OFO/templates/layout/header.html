@@ -23,11 +23,13 @@
                 </button>
 
                 {% if current_user.is_authenticated %}
-                                <!-- Login/Register Button -->
-                <a href="/" class="btn btn-custom-light me-2">
-                    <img src="{{current_user.avatar}}" width="25" class="rounded-circle">
-                    Chào {{ current_user.name}}
+                <!-- Login/Register Button -->
+                <a href="{% if current_user.role.name == 'ADMIN' %}{{ url_for('admin.index') }}{% else %}{{ url_for('index') }}{% endif %}" class="btn btn-custom-light me-2">
+                    <img src="{{ current_user.avatar }}" width="25" class="rounded-circle">
+                    Chào {{ current_user.name }}
                 </a>
+
+
                 <a href="/logout" class="btn btn-custom-light me-2">
                     Đăng xuất
                 </a>

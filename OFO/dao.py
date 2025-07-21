@@ -4,6 +4,7 @@ import config
 import hashlib
 from  models import *
 from __init__ import db,app
+import cloudinary.uploader
 from sqlalchemy import func, event
 from sqlalchemy.orm import subqueryload, joinedload
 
@@ -19,11 +20,15 @@ def get_user_by_id(user_id):
     return User.query.get(user_id)
 
 def add_user(name,phone,email,password,avatar=None):
- password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
- u = User(name=name,phone=phone,email=email,password=password)
+     password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
+     u = User(name=name,phone=phone,email=email,password=password)
+     if avatar:
+         res = cloudinary.uploader.upload(avatar)
+         u.avatar = res.get('secure_url')
 
- db.session.add(u)
- db.session.commit()
+
+     db.session.add(u)
+     db.session.commit()
 
 def load_categories(limit=8):
     """
