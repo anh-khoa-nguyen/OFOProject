@@ -12,18 +12,37 @@
                 <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Trang chủ</a></li>
                 <li class="breadcrumb-item"><a href="#">Nhà hàng</a></li>
                 <li class="breadcrumb-item active" aria-current="page">{{ restaurant.restaurant_name }}</li>
+
             </ol>
         </nav>
 
-        <h1 class="restaurant-title mt-2">{{ restaurant.restaurant_name }}</h1>
+        <div class="d-flex">
+             <h1 class="restaurant-title mt-2">{{ restaurant.restaurant_name }}</h1>
+        {% if current_user.is_authenticated %}
+        <button id="favorite-btn" class="btn btn-lg" data-restaurant-id="{{ restaurant.id }}">
+            {# Dùng if/else để quyết định icon ban đầu #}
+            {% if is_favorited %}
+                <i class="bi bi-heart-fill text-danger"></i> {# Trái tim đầy #}
+            {% else %}
+                <i class="bi bi-heart"></i> {# Trái tim rỗng #}
+            {% endif %}
+        </button>
+        </div>
+
         {% if restaurant.category %}
         <p class="text-muted fs-5">{{ restaurant.category.name }}</p>
         {% endif %}
 
         <div class="restaurant-meta-group mt-3">
-            <div class="restaurant-meta-item">
+            <div class="restaurant-meta-item d-flex align-items-center">
                 <i class="bi bi-star-fill text-warning"></i>
-                <span>4.4</span>
+
+                <span class="ms-1 fw-bold">{{ restaurant.star_average or 0 }}</span>
+
+                <a href="{{ url_for('restaurant_reviews', restaurant_id=restaurant.id) }}"
+                   class="btn btn-sm btn-outline-secondary ms-1">
+                    Xem đánh giá
+                </a>
             </div>
             <div class="restaurant-meta-item">
                 <i class="bi bi-clock"></i>
@@ -33,7 +52,11 @@
                 <i class="bi bi-dot"></i>
                 <span>1.155,7 km</span>
             </div>
+
+        {% endif %}
         </div>
+
+
 
         <div class="restaurant-meta-item mt-3 text-muted">
             <span>Giờ mở cửa</span>
@@ -385,4 +408,62 @@
         });
     });
 </script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const favButton = document.getElementById('favorite-btn');
+
+        if (favButton) {
+            favButton.addEventListener('click', function() {
+                const restaurantId = this.dataset.restaurantId;
+                const icon = this.querySelector('i');
+
+                // Gửi request đến API
+                fetch(`/api/toggle-favorite/${restaurantId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (data.status === 'added') {
+                            // Chuyển sang trái tim đầy
+                            icon.classList.remove('bi-heart');
+                            icon.classList.add('bi-heart-fill', 'text-danger');
+                            showToast('Đã thêm vào danh sách yêu thích!');
+                        } else {
+                            // Chuyển sang trái tim rỗng
+                            icon.classList.remove('bi-heart-fill', 'text-danger');
+                            icon.classList.add('bi-heart');
+                            showToast('Đã xóa khỏi danh sách yêu thích.');
+                        }
+                    } else {
+                        alert('Lỗi: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Đã có lỗi mạng xảy ra.');
+                });
+            });
+        }
+
+        // Hàm hiển thị thông báo nhỏ (toast)
+        function showToast(message) {
+            const toastContainer = document.createElement('div');
+            toastContainer.className = 'toast-notification show';
+            toastContainer.textContent = message;
+            document.body.appendChild(toastContainer);
+
+            setTimeout(() => {
+                toastContainer.classList.remove('show');
+                setTimeout(() => {
+                    document.body.removeChild(toastContainer);
+                }, 500);
+            }, 2500);
+        }
+    });
+    </script>
 {% endblock %}

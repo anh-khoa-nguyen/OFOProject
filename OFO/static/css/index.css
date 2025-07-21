@@ -187,3 +187,22 @@ body, html {
     border: 2px solid #F7665F;
     padding: 0.5rem;
     }
+
+    #geocoder-container .goongjs-ctrl-geocoder {
+    width: 100%;
+    min-width: 100%;
+    max-width: none; /* Quan trọng: Gỡ bỏ giới hạn chiều rộng mặc định */
+  }
+
+.mapboxgl-ctrl-geocoder--input {
+
+}
+.mapboxgl-ctrl-geocoder{
+    width: 100% !important;
+}
+
+.coordinates {
+background: rgba(0, 0, 0, 0.6); color: #fff; position: absolute;
+bottom: 10px; left: 10px; padding: 5px 10px; margin: 0;
+font-size: 11px; line-height: 18px; border-radius: 3px; z-index: 1000;
+}
