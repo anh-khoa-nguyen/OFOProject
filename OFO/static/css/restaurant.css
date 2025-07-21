@@ -240,7 +240,51 @@
 .btn-add-to-cart:hover {
     transform: scale(1.1);
 }
+.btn-add-to-dish_group {
+    background-color: #E91E63;
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
 
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 1.5rem;
+    line-height: 0;
+    padding-bottom: 2px;
+
+    border: none;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform 0.2s;
+}
+
+.btn-add-to-dish_group:hover {
+    transform: scale(1.1);
+}
+.product-card {
+    position: relative;
+}
+.btn-delete-group{
+    border: none;
+    color: #E91E63;
+    font-size: 18px;
+    background: white;
+    padding: 10px;
+
+}
+.btn-delete-dish {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: transparent;
+    border: none;
+    color: #E91E63;
+    font-size: 18px;
+    cursor: pointer;
+}
 /* Tùy chỉnh Offcanvas */
 .offcanvas {
     /* Đặt chiều rộng cho offcanvas */
@@ -334,4 +378,267 @@
 .btn-pink{
     background-color: #E91E63 !important;
     color: white !important;
+}
+/*Restaurant_main*/
+.btn-add-to-cart {
+    background-color: #E91E63;
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 1.5rem;
+    line-height: 0;
+    padding-bottom: 2px;
+
+    border: none;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform 0.2s;
+}
+
+.btn-add-to-cart:hover {
+    transform: scale(1.1);
+}
+.btn-add-to-dish_group {
+    background-color: #E91E63;
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 1.5rem;
+    line-height: 0;
+    padding-bottom: 2px;
+
+    border: none;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform 0.2s;
+}
+
+.btn-add-to-dish_group:hover {
+    transform: scale(1.1);
+}
+/* =================================================================== */
+/* ============= CSS HIỆN ĐẠI & CHUYÊN NGHIỆP CHO MODAL ============= */
+/* =================================================================== */
+
+/* 1. LỚP PHỦ VÀ CONTAINER CHÍNH */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+
+    /* Mặc định ẩn modal đi, chuẩn bị cho animation */
+    visibility: hidden;
+    opacity: 0;
+
+    /* Hiệu ứng chuyển động mượt mà cho việc ẩn/hiện */
+    transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.35s;
+
+    /* Dùng flexbox để căn giữa nội dung một cách hoàn hảo */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem; /* Chừa khoảng trống ở màn hình nhỏ */
+}
+
+/* Khi modal có class 'show', nó sẽ hiện ra */
+.modal.show {
+    display: flex !important;
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Lớp phủ màu tối phía sau */
+.modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* Một màu đen hơi ngả xanh, hiện đại hơn màu đen tuyền */
+    background-color: rgba(10, 25, 47, 0.7);
+    cursor: pointer;
+}
+
+
+/* 2. KHUNG NỘI DUNG CỦA MODAL */
+.modal-content {
+    position: relative;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: 520px;
+    padding: 2.5rem; /* Tăng padding để thoáng hơn */
+    z-index: 1001;
+    text-align: left;
+
+    /* Hiệu ứng xuất hiện từ trên xuống */
+    transform: translateY(-30px);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Khi modal hiện ra, nội dung sẽ trượt vào vị trí */
+.modal.show .modal-content {
+    transform: translateY(0);
+}
+
+
+/* 3. CÁC THÀNH PHẦN BÊN TRONG MODAL */
+
+/* Tiêu đề modal */
+.modal-content h2 {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 1.75rem; /* 28px */
+    font-weight: 600;
+    color: #1a202c; /* Màu chữ gần đen, dịu mắt */
+    margin-top: 0;
+    margin-bottom: 1.5rem; /* 24px */
+    padding-bottom: 1rem; /* 16px */
+    border-bottom: 1px solid #e2e8f0; /* Đường kẻ ngang mờ */
+    text-align: center;
+}
+
+/* Nút đóng (dấu X) */
+.close-modal {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 36px;
+    height: 36px;
+    font-size: 1.5rem;
+    line-height: 36px;
+    text-align: center;
+    color: #E91E63; /* Màu xám */
+    background-color: #f1f5f9; /* Nền xám nhạt */
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+
+/* Kiểu dáng cho form */
+.form-group {
+    margin-bottom: 1.75rem; /* Tăng khoảng cách */
+}
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #4a5568;
+}
+.form-group input[type="text"] {
+    display: block;
+    width: 100%;
+    padding: 0.875rem 1rem; /* 14px 16px */
+    font-size: 1rem;
+    color: #2d3748;
+    background-color: #f7fafc; /* Nền input hơi xám */
+    border: 2px solid #e2e8f0; /* Viền dày hơn một chút */
+    border-radius: 8px;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Vầng sáng khi focus vào ô input */
+.form-group input[type="text"]:focus {
+    outline: none;
+    border-color: #4299e1; /* Màu xanh dương hiện đại */
+    background-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+}
+
+/* Nút Submit */
+.btn-submit {
+    display: block;
+    width: 100%;
+    padding: 0.875rem 1rem;
+    border: none;
+    border-radius: 8px;
+    color: black;
+    background-color: #E91E63;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 4px 14px 0 rgba(49, 130, 206, 0.39);
+}
+.btn-submit:hover {
+    background-color: #E91E63; /* Đậm hơn khi hover */
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px 0 rgba(49, 130, 206, 0.5);
+}
+.add-dish-btn {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    display: inline-block;
+    background-color: #FFF0F5;
+    color: #E91E63;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background-color 0.2s ease-in-out;
+    margin: 10px;
+  }
+
+  .add-dish-btn:hover {
+    background-color:#F8BBD0;
+  }
+  //modal thêm món ăn
+  .modal-content h2 {
+    margin-top: 0;
+    margin-bottom: 25px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box; /* Quan trọng */
+}
+
+.btn-submit {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-submit:hover {
+    background-color: #0056b3;
 }
