@@ -1,0 +1,26 @@
+
+.navbar.bg-dark {
+    background-color: #FFC5D3 !important;
+    border-color: #FFC5D3 !important;
+}
+.navbar .nav-link {
+    color: black !important;
+}
+
+/* Khi hover vẫn là đen hoặc đậm hơn */
+.navbar .nav-link:hover {
+    color: white !important;
+}
+/* Đổi màu chữ trong navbar */
+.navbar-inverse .navbar-nav > li > a,
+.navbar-inverse .navbar-brand {
+    color: white !important;
+}
+
+/* Hover menu */
+.navbar-inverse .navbar-nav > li > a:hover {
+    color: #f0f0f0 !important;
+    background-color: #ff85c1 !important;
+}
+
+

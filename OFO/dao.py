@@ -4,10 +4,11 @@ import config
 import hashlib
 from  models import *
 from __init__ import db,app
-from sqlalchemy import func, event
+import cloudinary.uploader
+from sqlalchemy import func, event, text
 from sqlalchemy.orm import subqueryload, joinedload
 from geopy.distance import geodesic
-
+from flask import request, jsonify
 
 # Đăng nhập
 def auth_user(phone, password):
@@ -21,11 +22,15 @@ def get_user_by_id(user_id):
     return User.query.get(user_id)
 
 def add_user(name,phone,email,password,avatar=None):
- password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
- u = User(name=name,phone=phone,email=email,password=password)
+     password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
+     u = User(name=name,phone=phone,email=email,password=password)
+     if avatar:
+         res = cloudinary.uploader.upload(avatar)
+         u.avatar = res.get('secure_url')
 
- db.session.add(u)
- db.session.commit()
+
+     db.session.add(u)
+     db.session.commit()
 
 def load_categories(limit=8):
     """
@@ -242,8 +247,108 @@ def is_favorite(user_id, restaurant_id):
         # .any() là cách hiệu quả để kiểm tra sự tồn tại
         return user.favorite_restaurants.filter(Restaurant.id == restaurant_id).first() is not None
     return False
+#Load restaurant_main:
+def get_dish_groups_by_restaurant(restaurant_id):
+    return DishGroup.query.filter_by(restaurant_id=restaurant_id).all()
+def add_dishgroup(name, restaurant_id):
+    # Kiểm tra xem tên nhóm đã tồn tại (không phân biệt chữ hoa thường)
+    existing = db.session.query(DishGroup).filter(
+        func.lower(DishGroup.name) == name.lower()
+    ).first()
 
-def toggle_favorite(user_id, restaurant_id):
+    if existing:
+        return {'success': False, 'message': 'Tên nhóm món đã tồn tại'}
+
+    new_group = DishGroup(name=name, restaurant_id=restaurant_id)
+    db.session.add(new_group)
+    db.session.commit()
+    return {'success': True, 'message': 'Thêm nhóm món thành công'}
+def delete_dishgroup_by_id(group_id):
+    group = DishGroup.query.get(group_id)
+    if group:
+        db.session.delete(group)
+        db.session.commit()
+        return True
+    return False
+def add_dish(name, description, price, image_url, dish_group_id, restaurant_id):
+    try:
+        dish = Dish(
+            name=name,
+            description=description,
+            price=price,
+            image=image_url,
+            dish_group_id=dish_group_id,
+            restaurant_id=restaurant_id
+        )
+        db.session.add(dish)
+        db.session.commit()
+        return True
+    except Exception as e:
+        db.session.rollback()
+        print("❌ Lỗi khi thêm món ăn trong DAO:", e)
+        return False
+def update_dish(data, image_file=None):
+    try:
+        dish_id = int(data.get('dish_id'))
+        dish = Dish.query.get(dish_id)
+        if not dish:
+            return False, "Món ăn không tồn tại"
+
+        dish.name = data.get('name')
+        dish.description = data.get('description')
+        dish.price = float(data.get('price'))
+        dish.dish_group_id = int(data.get('dish_group_id'))
+        dish.restaurant_id = int(data.get('restaurant_id'))
+
+        if image_file:
+            filename = image_file.filename
+            save_path = os.path.join('static/image', filename)
+            os.makedirs('static/image', exist_ok=True)
+            image_file.save(save_path)
+            dish.image = f'image/{filename}'
+
+        db.session.commit()
+        return True, None
+    except Exception as e:
+        db.session.rollback()
+        return False, str(e)
+@app.route('/update_dish', methods=['POST'])
+def update_dish_route():
+    success, message = update_dish(request.form, request.files.get('image'))
+    return jsonify({'success': success, 'message': message if not success else 'Cập nhật thành công'})
+def delete_dish(dish_id):
+    try:
+        dish = Dish.query.get(dish_id)
+        if not dish:
+            return False, "Món ăn không tồn tại"
+        db.session.delete(dish)
+        db.session.commit()
+        return True, None
+    except Exception as e:
+        db.session.rollback()
+        return False, str(e)
+
+def add_restaurant(name, email, address, description, open_time, close_time, avatar, cover):
+    restaurant = Restaurant(
+        restaurant_name=name,
+        email=email,
+        address=address,
+        description=description,
+        open_time=open_time,
+        close_time=close_time,
+        image=avatar,  # dùng avatar làm ảnh đại diện
+        owner_user_id=1  # hoặc session['user_id'] nếu có đăng nhập
+    )
+    db.session.add(restaurant)
+    db.session.commit()
+    
+def authenticate_restaurant(email, password):
+    restaurant = Restaurant.query.filter_by(email=email).first()
+    if restaurant and check_password_hash(restaurant.password, password):
+        return restaurant
+    return None
+
+ def toggle_favorite(user_id, restaurant_id):
     """
     Thêm hoặc xóa một nhà hàng khỏi danh sách yêu thích của người dùng.
     Trả về 'added' nếu đã thêm, 'removed' nếu đã xóa.
