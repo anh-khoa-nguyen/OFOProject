@@ -354,7 +354,26 @@
     visibility: hidden;
     transition: opacity 0.5s, visibility 0.5s;
 }
+.toast-notifications {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #E91E63;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 25px;
+    z-index: 1050;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s, visibility 0.5s;
+}
+.toast-notifications.show {
+    opacity: 1;
+    visibility: visible;
+}
 .toast-notification.show {
     opacity: 1;
     visibility: visible;
 }
+
