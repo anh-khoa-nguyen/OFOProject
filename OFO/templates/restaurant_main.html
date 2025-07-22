@@ -6,18 +6,94 @@
 
 
 {% block content %}
+<style>
+    .restaurant-info-block .restaurant-management-nav {
+    width: 100%;
+    padding-bottom: 1rem;
+    margin-top: 1.5rem;
+    margin-bottom: 2rem;
+    text-align: left;
+}
+
+/* Selector này cụ thể hơn, sẽ ghi đè lên style mặc định */
+.restaurant-info-block .restaurant-management-nav ul {
+    display: inline-flex !important; /* Dùng !important để đảm bảo chiến thắng */
+    align-items: center;
+    list-style: none !important; /* Quan trọng: Xóa dấu chấm tròn */
+    padding: 0;
+    margin: 0;
+    gap: 1.5rem;
+}
+
+/* Selector này cụ thể hơn, sẽ ghi đè lên style mặc định */
+.restaurant-info-block .restaurant-management-nav li {
+    display: block !important; /* Bỏ qua 'display: list-item' mặc định */
+    padding-left: 1.5rem;
+    border-left: 1px solid #ced4da; /* Tạo dấu gạch đứng */
+}
+
+/* Mục đầu tiên không cần dấu gạch đứng bên trái */
+.restaurant-info-block .restaurant-management-nav li:first-child {
+    border-left: none;
+    padding-left: 0;
+}
+
+.restaurant-info-block .restaurant-management-nav a {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: #495057;
+    font-weight: 500;
+    font-size: 1.1rem;
+    transition: color 0.2s ease-in-out;
+}
+
+.restaurant-info-block .restaurant-management-nav a:hover,
+.restaurant-info-block .restaurant-management-nav a.active {
+    color: #E91E63; /* Màu xanh nổi bật */
+    font-weight: 700;
+}
+
+.restaurant-info-block .restaurant-management-nav a i {
+    margin-right: 8px;
+    font-size
+</style >
+
+
 <div class="container py-4">
 
     <div class="restaurant-info-block">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="#">Trang chủ</a></li>
-                <li class="breadcrumb-item"><a href="#">Nhà hàng</a></li>
-                <li class="breadcrumb-item active" aria-current="page">ToCoToCo - Tôn Đức Thắng</li>
-            </ol>
-        </nav>
+        <div class="restaurant-management-nav">
+    <ul>
+        <li>
+            <!-- Trang 'Thực đơn' đang active -->
+            <a href="{{ url_for('home', restaurant_id=restaurant.id) }}" class="active">
+                <i class="fas fa-utensils"></i>
+                <span>Thực Đơn</span>
+            </a>
+        </li>
+        <li>
+            <a href="#"> <!-- Thay bằng url_for('...') của bạn -->
+                <i class="fas fa-receipt"></i>
+                <span>Đơn Hàng</span>
+            </a>
+        </li>
+        <li>
+            <a href="#"> <!-- Thay bằng url_for('...') của bạn -->
+                <i class="fas fa-chart-line"></i>
+                <span>Doanh Thu</span>
+            </a>
+        </li>
+        <li>
+            <a href="#"> <!-- Thay bằng url_for('...') của bạn -->
+                <i class="fas fa-tags"></i>
+                <span>Khuyến Mãi</span>
+            </a>
+        </li>
+    </ul>
+</div>
 
-        <h1 class="restaurant-title mt-2">ToCoToCo - Tôn Đức Thắng</h1>
+        <h1 class="restaurant-title mt-2">{{ restaurant.restaurant_name }}</h1>
         <p class="text-muted fs-5">Trà sữa</p>
 
         <div class="restaurant-meta-group mt-3">
@@ -37,7 +113,7 @@
 
         <div class="restaurant-meta-item mt-3 text-muted">
             <span>Giờ mở cửa</span>
-            <strong class="text-dark ms-2">Hôm nay 09:00-22:45</strong>
+            <strong class="text-dark ms-2">Hôm nay {{ restaurant.open_time.strftime('%H:%M') }} - {{ restaurant.close_time.strftime('%H:%M') }}</strong>
         </div>
 
         <div class="promo-section restaurant-meta-item mt-3">
@@ -83,7 +159,7 @@
 
 
         <div class="row g-4">
-            {% for dish in group.dishes.all() %}
+            {% for dish in group.dishes %}
             <div class="col-lg-4 col-md-6 d-flex">
                 <div class="product-card w-100">
                     <button class="btn-delete-dish position-absolute top-0 end-0 m-2"
