@@ -1,7 +1,7 @@
 import datetime
 from datetime import time
 from sqlalchemy import (Column, Integer, String, Boolean, Float, ForeignKey,
-                        Enum, DateTime, Time, JSON)
+                        Enum, DateTime, Time, JSON, Numeric)
 from sqlalchemy.orm import relationship
 from flask_login import UserMixin
 from enum import Enum as PyEnum
@@ -56,7 +56,8 @@ class Restaurant(db.Model):
     category_id = Column(Integer, ForeignKey(Category.id), nullable=True)
     restaurant_name = Column(String(50), nullable=False)
     address = Column(String(100))
-    email = Column(String(50), unique=True)
+    lat = Column(Numeric(10, 7), nullable=True)
+    lng = Column(Numeric(10, 7), nullable=True)
     description = Column(String(100))
     image = Column(String(100),
                    default='https://res.cloudinary.com/dxxwcby8l/image/upload/v1647056401/ipmsmnxjydrhpo21xrd8.jpg')
@@ -272,46 +273,46 @@ if __name__ == '__main__':
         restaurant1 = Restaurant(owner_user_id=owner1.id,
                                  restaurant_name='Mì Trộn Tên Lửa - CMT8',
                                  address='111 Cách Mạng Tháng Tám, P. 1, Q. 3, TP.HCM',
-                                 email='mitrontenlua@email.com',
                                  description='Mì trộn độc đáo với các loại sốt nhà làm.',
                                  image='https://res.cloudinary.com/dq2jtbrda/image/upload/v1752910914/mitron_bbzzqc.jpg',
                                  category=cat_thucannhanh,
                                  # Thêm giờ mở/đóng cửa
                                  open_time=time(10, 0),  # 10:00 AM
-                                 close_time=time(22, 0))  # 10:00 PM
+                                 close_time=time(22, 0),
+                                 active=True)  # 10:00 PM,
 
         restaurant2 = Restaurant(owner_user_id=owner2.id,
                                  restaurant_name='Tiệm Cơm Nhà Trộn - Phú Nhuận',
                                  address='222 Phan Xích Long, P. 2, Q. Phú Nhuận, TP.HCM',
-                                 email='comnhatron@email.com',
                                  description='Cơm trộn Hàn Quốc chuẩn vị cho giới trẻ.',
                                  image='https://res.cloudinary.com/dq2jtbrda/image/upload/v1752910914/comtron_qhxxer.jpg',
                                  category=cat_comtam,
                                  # Thêm giờ mở/đóng cửa
                                  open_time=time(11, 0),  # 11:00 AM
-                                 close_time=time(21, 30))  # 09:30 PM
+                                 close_time=time(21, 30),
+                                 active=True)  # 09:30 PM
 
         restaurant3 = Restaurant(owner_user_id=owner2.id,
                                  restaurant_name='Jollibee - EC Tô Hiến Thành',
                                  address='333 Tô Hiến Thành, P. 13, Q. 10, TP.HCM',
-                                 email='jollibee.tht@email.com',
                                  description='Gà giòn vui vẻ, Mì Ý sốt bò bằm.',
                                  image='https://res.cloudinary.com/dq2jtbrda/image/upload/v1752910914/garan_mzz4tb.webp',
                                  category=cat_thitga,
                                  # Thêm giờ mở/đóng cửa
                                  open_time=time(9, 0),  # 09:00 AM
-                                 close_time=time(22, 45))  # 10:45 PM
+                                 close_time=time(22, 45),
+                                 active=True)  # 10:45 PM
 
         restaurant4 = Restaurant(owner_user_id=owner1.id,
                                  restaurant_name='Bánh Mì Huỳnh Gia - Lê Văn Lương',
                                  address='444 Lê Văn Lương, P. Tân Hưng, Q. 7, TP.HCM',
-                                 email='banhmihuynhgia@email.com',
                                  description='Bánh mì heo quay da giòn trứ danh.',
                                  image='https://res.cloudinary.com/dq2jtbrda/image/upload/v1752910913/banhmi_w70ph8.webp',
                                  category=cat_banhmi,
                                  # Thêm giờ mở/đóng cửa
                                  open_time=time(6, 30),  # 06:30 AM
-                                 close_time=time(20, 0))  # 08:00 PM
+                                 close_time=time(20, 0),
+                                 active=True)  # 08:00 PM
 
         # Khách hàng yêu thích nhà hàng
         customer1.favorite_restaurants.append(restaurant1)
@@ -426,7 +427,3 @@ if __name__ == '__main__':
 
         print("--- TẠO DỮ LIỆU THỬ NGHIỆM THÀNH CÔNG ---")
 
-
-
-#Thiếu Payment
-#Class Diagram Review
