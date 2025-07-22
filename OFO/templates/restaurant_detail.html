@@ -276,31 +276,89 @@
         function initializeOffcanvasLogic(dishData) {
             const optionInputs = offcanvasContentWrapper.querySelectorAll('input[type="radio"], input[type="checkbox"]');
 
-            // Hàm chính để cập nhật tổng giá tiền
-            function updateTotal() {
-                // 1. Lấy giá cơ bản của món ăn từ dữ liệu API
-                let basePrice = parseFloat(dishData.price);
+            function validateSelections() {
+                let allValid = true;
 
-                // 2. Tính tổng giá các tùy chọn đã chọn
+                dishData.option_groups.forEach(group => {
+                    if (!group.mandatory) return;
+
+                    const groupInputs = offcanvasContentWrapper.querySelectorAll(`input[name="group-${group.id}"]`);
+                    const selectedCount = [...groupInputs].filter(input => input.checked).length;
+
+                    if (selectedCount !== group.max_selection) {
+                        allValid = false;
+                    }
+                });
+
+                return allValid;
+            }
+            function showToast(message, duration = 3000) {
+                let toast = document.querySelector('.toast-notifications');
+
+                if (!toast) {
+                    toast = document.createElement('div');
+                    toast.className = 'toast-notifications';
+                    document.body.appendChild(toast);
+                }
+
+                toast.textContent = message;
+                toast.classList.add('show');
+
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, duration);
+            }
+
+            function updateTotal() {
+                let basePrice = parseFloat(dishData.price);
                 let optionsPrice = 0;
+
                 optionInputs.forEach(input => {
                     if (input.checked) {
                         optionsPrice += parseFloat(input.value);
                     }
                 });
 
-                // 3. Lấy số lượng
                 const quantity = parseInt(quantityInput.value);
-
-                // 4. Tính tổng cuối cùng
                 const total = (basePrice + optionsPrice) * quantity;
 
-                // 5. Cập nhật nội dung nút "Thêm vào giỏ hàng"
                 addToBasketBtn.textContent = `Thêm vào giỏ - ${formatCurrency(total)} ₫`;
-                addToBasketBtn.disabled = false;
+                addToBasketBtn.disabled = !validateSelections();
             }
+<!--            offcanvasElement.addEventListener('show.bs.offcanvas', () => {-->
+<!--                addToCartButton.disabled = true;-->
+<!--                validateOptions(); // Gọi validate khi mở-->
+<!--            });-->
+<!--        -->
+<!--            // NEW: remove backdrop nếu nó vẫn còn tồn tại-->
+<!--            offcanvasElement.addEventListener('hidden.bs.offcanvas', () => {-->
+<!--                const backdrop = document.querySelector('.offcanvas-backdrop');-->
+<!--                if (backdrop) {-->
+<!--                    backdrop.remove();-->
+<!--                    document.body.classList.remove('offcanvas-backdrop', 'modal-open'); // phòng trường hợp bị dính class cũ-->
+<!--                }-->
+<!--            });-->
 
-            // Gán sự kiện cho tất cả các input tùy chọn (radio, checkbox)
+            // Chặn chọn quá max_selection với checkbox
+            dishData.option_groups.forEach(group => {
+                if (group.max_selection > 1) {
+                    const groupInputs = offcanvasContentWrapper.querySelectorAll(`input[name="group-${group.id}"]`);
+
+                    groupInputs.forEach(input => {
+                        input.addEventListener('change', () => {
+                            const selected = [...groupInputs].filter(i => i.checked);
+                            if (selected.length > group.max_selection) {
+                                input.checked = false;
+                                showToast(`Bạn chỉ được chọn tối đa ${group.max_selection} mục trong nhóm "${group.name}"`);
+
+                            }
+                            updateTotal();
+                        });
+                    });
+                }
+            });
+
+            // Gán sự kiện update lại total
             optionInputs.forEach(input => input.addEventListener('change', updateTotal));
 
             // Gán sự kiện cho nút tăng/giảm số lượng
@@ -316,14 +374,16 @@
                 }
             };
 
-            // Gọi updateTotal() một lần để tính giá ban đầu
+            // Tính giá lần đầu
             updateTotal();
         }
+
 
         // Lắng nghe sự kiện khi offcanvas sắp được hiển thị
         offcanvasElement.addEventListener('show.bs.offcanvas', async function (event) {
             const button = event.relatedTarget;
             const dishId = button.dataset.dishId;
+
 
             if (!dishId) return;
 
