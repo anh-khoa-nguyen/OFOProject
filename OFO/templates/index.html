@@ -2,6 +2,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}"/>
     <script src="https://cdn.jsdelivr.net/npm/@goongmaps/goong-js@1.0.9/dist/goong-js.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/@goongmaps/goong-js@1.0.9/dist/goong-js.css" rel="stylesheet"/>
+
 </head>
 <link rel="stylesheet" href="https://unpkg.com/@geoapify/geocoder-autocomplete/styles/minimal.css">
 
@@ -9,11 +10,12 @@
 
 {% block content %}
 <div class="bg-full"
-     style="background-image: url('{{ url_for('static', filename='images/cookie.png') }}'); height: 50vh;">
+     style="background-image: url('{{ url_for('static', filename='images/cookie.png') }}'); height: 50vh;"
+     data-search-url="{{ url_for('search') }}">
     <!-- Overlay Form -->
     <div class="overlay-form">
-        <h6 class="text-muted mb-1">Chào buổi sáng</h6>
-        <h2 class="fw-bold mb-4">Where should we deliver your food today?</h2>
+        <h6 class="text-muted mb-1">Chào {{ greeting }}</h6>
+        <h2 class="fw-bold mb-3 lh-5" id="slogan" style="line-height: 1.3;">{{ random_slogan }}</h2>
         </span>
         {% if delivery_address and delivery_address != '...' %}
         <div class="input-group mb-3">
@@ -30,6 +32,9 @@
                 <i class="bi bi-map"></i>
             </button>
         </div>
+
+        <div id="address-error-message" class="text-danger fw-medium mb-3 d-none"></div>
+
         {# Hiển thị nút "Xác nhận" #}
         <button id="confirm-address-btn" class="btn btn-pink w-100">Xác nhận</button>
         {% endif %}
@@ -37,7 +42,14 @@
 </div>
 
 <div class="container py-4">
-    <h4 class="fw-bold mb-4">Ưu đãi Kymie Food tại <span class="text-success">{{ delivery_address }}</span></h4>
+    <h4 class="fw-bold mb-4">
+        {% if delivery_address and delivery_address != '...' %}
+        Ưu đãi Kymie Food tại <span class="text-success">{{ delivery_address }}</span>
+        {% else %}
+        <i class="bi bi-patch-check-fill"></i> <span class="title-highlight-red">Top 10</span> nhà hàng <span
+            class="title-highlight-green">tuyển chọn</span>
+        {% endif %}
+    </h4>
 
     <div class="promo-carousel-wrapper position-relative">
         <!-- Nút trái -->
@@ -60,11 +72,13 @@
                         <p class="text-secondary-small mb-1">{{ restaurant.category.name if restaurant.category else
                             'Nhà hàng' }}</p>
                         <div class="d-flex align-items-center mb-2 rating">
-                            <i class="bi bi-star-fill me-1"></i> 4.6
+                            <i class="bi bi-star-fill me-1"></i> {{restaurant.star_average}}
+                            {% if restaurant.delivery_time == '' and restaurant.distance_km == ''%}
                             <span class="mx-2">·</span>
-                            <i class="bi bi-clock me-1"></i> 15 phút
+                            <i class="bi bi-clock me-1"></i> {{ restaurant.delivery_time }} phút
                             <span class="mx-2">·</span>
-                            0.8 km
+                            {{ restaurant.distance_km }} km
+                            {% endif %}
                         </div>
                         <p class="offer"><i class="bi bi-tag"></i> Giảm 1.500₫ một vài món nhất định</p>
                     </div>
@@ -81,7 +95,13 @@
         </button>
         <!-- Xem tất cả -->
         <div class="text-center mt-4 see-all">
-            <a href="#" class="text-muted text-decoration-none fw-semibold">See all promotions</a>
+            <a href="javascript:void(0);"
+               id="see-all-btn"
+               class="text-muted text-decoration-none fw-semibold"
+               data-has-address="{% if delivery_address and delivery_address != '...' %}true{% else %}false{% endif %}"
+               data-search-url="{{ url_for('search') }}">
+                Nhiều hơn nữa . . .
+            </a>
         </div>
     </div>
 
@@ -107,26 +127,6 @@
     </div>
 </div>
 
-<div class="modal fade" id="mapModal" tabindex="-1" aria-labelledby="mapModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="mapModalLabel">Chọn địa chỉ trên bản đồ</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body position-relative">
-                <div id="map-modal-container" style="height: 450px; width: 100%;"></div>
-                <pre id="coordinates" class="coordinates"></pre>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                <button type="button" class="btn btn-primary" id="select-address-from-map-btn" disabled>Chọn địa chỉ
-                    này
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
 <script>
     const carousel = document.getElementById('carousel');
     const arrowLeft = document.getElementById('arrowLeft');
@@ -156,201 +156,45 @@
     window.addEventListener('resize', updateArrows);
 </script>
 
+<script>
+    const SEARCH_URL = "{{ url_for('search') }}";
+</script>
 
-<!-- 1. Thư viện Goong Maps chính (vẫn cần thiết) -->
-<script src='https://cdn.jsdelivr.net/npm/@goongmaps/goong-js@1.0.9/dist/goong-js.js'></script>
-<link href='https://cdn.jsdelivr.net/npm/@goongmaps/goong-js@1.0.9/dist/goong-js.css' rel='stylesheet'/>
-
-<!-- 2. Plugin Goong Geocoder (đây là phần quan trọng nhất) -->
-<script src="https://cdn.jsdelivr.net/npm/@goongmaps/goong-geocoder@1.1.1/dist/goong-geocoder.min.js"></script>
-<link href="https://cdn.jsdelivr.net/npm/@goongmaps/goong-geocoder@1.1.1/dist/goong-geocoder.css" rel="stylesheet"
-      type="text/css"/>
-<link href="https://api.mapbox.com/mapbox-gl-js/v3.13.0/mapbox-gl.css" rel="stylesheet">
-<script src="https://api.mapbox.com/mapbox-gl-js/v3.13.0/mapbox-gl.js"></script>
-
-<!-- 3. Promise polyfill script (cần thiết cho một số trình duyệt) -->
-<script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.auto.min.js"></script>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      // --- PHẦN 1: XỬ LÝ GEOCODER CHÍNH ---
-      const goongApiKey = 'Tsvr8oOdFQgjgZnhXAp5Xm0es9BF6inVU9mHNY50';
-      let selectedAddress = null;
-      let selectedLngLat = null; // Biến mới để lưu tọa độ
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- LOGIC CHO NÚT "NHIỀU HƠN NỮA" ---
 
-      const geocoderContainer = document.getElementById('geocoder-container');
-      if (geocoderContainer) {
-          const geocoder = new GoongGeocoder({
-            accessToken: goongApiKey,
-            proximity: { longitude: 106.660172, latitude: 10.762622 },
-            countries: 'vn',
-            placeholder: 'Nhập địa chỉ của bạn...',
-            debounceSearch: 500
-          });
-          geocoder.addTo('#geocoder-container');
+        const seeAllBtn = document.getElementById('see-all-btn');
 
-          const inputElement = document.querySelector('#geocoder-container .goong-geocoder--input');
-          if (inputElement) {
-              inputElement.addEventListener('change', function(event) {
-                  selectedAddress = event.target.value;
-              });
-          }
+        if (seeAllBtn) {
+            seeAllBtn.addEventListener('click', function(event) {
+                // Ngăn hành vi mặc định của thẻ <a>
+                event.preventDefault();
 
-          // Lắng nghe sự kiện 'result' từ geocoder chính
-          geocoder.on('result', function(e) {
-                // Đối tượng 'e' chính là đối tượng 'result' mà chúng ta cần
-                if (e) {
-                console.log(e);
-                    // SỬA LẠI: Bỏ '.result' ở đầu
-                    selectedAddress = e.formatted_address;
+                // Lấy các phần tử cần thiết cho việc báo lỗi và cuộn trang
+                const slogan = document.getElementById('slogan');
 
-                    // SỬA LẠI: Bỏ '.result' ở đầu
-                    if (e.geometry && e.geometry.location) {
-                        selectedLngLat = {
-                            lat: e.geometry.location.lat,
-                            lng: e.geometry.location.lng
-                        };
-                    }
-                    console.log("Đã chọn (đã sửa):", selectedAddress, selectedLngLat);
-                }
-            });
+                // Đọc trạng thái địa chỉ từ thuộc tính data-* mà Jinja đã in ra
+                const hasAddress = this.dataset.hasAddress === 'true';
 
-          geocoder.on('clear', () => {
-              selectedAddress = null;
-              selectedLngLat = null;
-              console.log("Đã xóa địa chỉ.");
-          });
-
-          const confirmButton = document.getElementById('confirm-address-btn');
-            confirmButton.addEventListener('click', function() {
-                if (selectedAddress && selectedLngLat) {
-                    fetch('/api/set-address', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            address: selectedAddress,
-                            lat: selectedLngLat.lat,
-                            lng: selectedLngLat.lng
-                        })
-                    }).then(res => res.json()).then(data => {
-                        if (data.success) window.location.reload();
-                        else alert('Lỗi: ' + data.message);
-                    }).catch(err => alert("Lỗi mạng."));
+                if (hasAddress) {
+                    // TRƯỜNG HỢP 1: Đã có địa chỉ -> Chuyển đến trang tìm kiếm
+                    const searchUrl = this.dataset.searchUrl;
+                    window.location.href = searchUrl;
                 } else {
-                    alert("Vui lòng nhập và chọn một địa chỉ từ danh sách gợi ý.");
+                    // TRƯỜNG HỢP 2: Chưa có địa chỉ -> Báo lỗi và cuộn lên
+
+                    // 1. Hiển thị thông báo lỗi
+                    slogan.innerText = 'Cậu đang ở đâu á, để tớ gợi ý những quán xịn xò nhất quanh đây nha! ✨';
+                    slogan.classList.remove('d-none'); // Hiện thông báo
+
+                    // 2. Cuộn màn hình lên đầu form nhập địa chỉ một cách mượt mà
+                    if (slogan) {
+                        slogan.scrollIntoView({ behavior: 'smooth' });
+                    }
                 }
             });
-      }
-
-      const mapModal = document.getElementById('mapModal');
-      let map = null;
-      let mapInitialized = false;
-      let mapSelectedAddress = null;
-      let mapSelectedLngLat = null;
-      const selectFromMapBtn = document.getElementById('select-address-from-map-btn');
-      const coordinatesDisplay = document.getElementById('coordinates');
-
-      // Hàm Reverse Geocode: Chuyển tọa độ thành địa chỉ
-      async function reverseGeocode(lngLat) {
-          selectFromMapBtn.disabled = true;
-          selectFromMapBtn.textContent = 'Đang tìm địa chỉ...';
-          try {
-              const response = await fetch(`https://rsapi.goong.io/Geocode?latlng=${lngLat.lat},${lngLat.lng}&api_key=${goongApiKey}`);
-              const data = await response.json();
-              if (data.status === "OK" && data.results.length > 0) {
-                  return data.results[0].formatted_address;
-              } else {
-                  throw new Error('Không tìm thấy địa chỉ cho vị trí này.');
-              }
-          } catch (error) {
-              console.error(error);
-              alert(error.message);
-              return null;
-          }
-      }
-
-      // Lắng nghe sự kiện khi modal BẮT ĐẦU được mở
-      mapModal.addEventListener('show.bs.modal', function () {
-          if (!mapInitialized) {
-              goongjs.accessToken = 'xhiqMbwYAeMTkmNmS5n1EB2yGAWk9YGDOFVPfpne';
-              map = new goongjs.Map({
-                  container: 'map-modal-container',
-                  style: 'https://tiles.goong.io/assets/goong_map_web.json',
-                  center: [106.660172, 10.762622],
-                  zoom: 13
-              });
-
-              // Thêm nút định vị GPS
-              const geolocate = new goongjs.GeolocateControl({
-                  positionOptions: { enableHighAccuracy: true },
-                  trackUserLocation: true
-              });
-              map.addControl(geolocate);
-
-              // Thêm ghim kéo thả (Draggable Marker)
-              const marker = new goongjs.Marker({ draggable: true })
-                  .setLngLat([106.660172, 10.762622])
-                  .addTo(map);
-
-              // Thêm ô tìm kiếm vào bản đồ
-              const mapGeocoder = new GoongGeocoder({
-                  accessToken: 'PxNaGKg1NIWUJsFT3DMBkqaDspx5VvdW9CePVHq1',
-                  goongjs: goongjs
-              });
-              map.addControl(mapGeocoder);
-
-              // Hàm cập nhật trạng thái sau khi có tọa độ
-              async function updateAddressFromLngLat(lngLat) {
-                  coordinatesDisplay.innerHTML = `Kinh độ: ${lngLat.lng.toFixed(6)}<br />Vĩ độ: ${lngLat.lat.toFixed(6)}`;
-                  const address = await reverseGeocode(lngLat);
-                  if (address) {
-                      mapSelectedAddress = address;
-                      mapSelectedLngLat = lngLat; // LƯU TỌA ĐỘ
-                      selectFromMapBtn.disabled = false;
-                      selectFromMapBtn.textContent = `Chọn: ${address.substring(0, 25)}...`;
-                  }
-              }
-
-              marker.on('dragend', () => updateAddressFromLngLat(marker.getLngLat()));
-              geolocate.on('geolocate', (e) => {
-                  const coords = { lng: e.coords.longitude, lat: e.coords.latitude };
-                  marker.setLngLat([coords.lng, coords.lat]);
-                  updateAddressFromLngLat(coords);
-              });
-
-              mapGeocoder.on('result', (e) => {
-                  if (e.result.geometry && e.result.geometry.coordinates) {
-                      const coords = { lng: e.result.geometry.coordinates[0], lat: e.result.geometry.coordinates[1] };
-                      marker.setLngLat(e.result.geometry.coordinates);
-                      updateAddressFromLngLat(coords);
-                  }
-              });
-              mapInitialized = true;
-          }
-      });
-
-      // Lắng nghe sự kiện khi modal ĐÃ HIỂN THỊ XONG
-      mapModal.addEventListener('shown.bs.modal', () => { if (map) map.resize(); });
-
-
-      // Xử lý khi nhấn nút "Chọn địa chỉ này" trong modal
-        selectFromMapBtn.addEventListener('click', function() {
-            if (mapSelectedAddress && mapSelectedLngLat) {
-                const mainInputElement = document.querySelector('#geocoder-container .goong-geocoder--input');
-                if (mainInputElement) {
-                    mainInputElement.value = mapSelectedAddress;
-                }
-                // Cập nhật cả địa chỉ và tọa độ cho form chính
-                selectedAddress = mapSelectedAddress;
-                selectedLngLat = mapSelectedLngLat;
-
-                const modalInstance = bootstrap.Modal.getInstance(mapModal);
-                modalInstance.hide();
-            }
-        });
+        }
     });
-</script>
-{% endblock %}
-
-
+    </script>{% endblock %}

@@ -7,10 +7,37 @@
                      style="height: 50px;">
             </a>
 
-            <div class="input-group mx-5" style="width: 350px;">
-            <span class="input-group-text"><i class="bi bi-geo-alt-fill text-danger"></i></span>
-            <input id="addressInput" type="text" class="form-control" placeholder="Nhập địa chỉ...">
-        </div>
+            <!-- Thanh địa chỉ chỉ hiển thị ở trang index -->
+            {% if request.endpoint in ['login_view', 'register', 'preregister', 'resregister', 'reslogin', 'index'] %}
+
+            {% else %}
+
+            <div class="address-display-header mx-3" style="width: 350px;">
+                {% if delivery_address and delivery_address != '...' %}
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-geo-alt-fill text-danger"></i></span>
+                    {# Hiển thị một ô input tĩnh, bị vô hiệu hóa với giá trị là địa chỉ đã lưu #}
+                    <input type="text" class="form-control" value="{{ delivery_address }}" disabled>
+                    <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal"
+                        data-bs-target="#mapModal">
+                    <i class="bi bi-map"></i>
+                </button>
+                </div>
+
+                {% else %}
+                <div class="input-group" id="goong_search_container">
+                    <span class="input-group-text"><i class="bi bi-geo-alt-fill text-danger"></i></span>
+                    <div id="geocoder-container" style="flex-grow: 1;"></div>
+                    <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal"
+                            data-bs-target="#mapModal">
+                        <i class="bi bi-map"></i>
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+
+
+            {% endif %}
 
             <!-- Spacer to push controls to the right -->
             <div class="ms-auto d-flex align-items-center">
@@ -24,7 +51,8 @@
 
                 {% if current_user.is_authenticated %}
                 <!-- Login/Register Button -->
-                <a href="{% if current_user.role.name == 'ADMIN' %}{{ url_for('admin.index') }}{% else %}{{ url_for('index') }}{% endif %}" class="btn btn-custom-light me-2">
+                <a href="{% if current_user.role.name == 'ADMIN' %}{{ url_for('admin.index') }}{% else %}{{ url_for('index') }}{% endif %}"
+                   class="btn btn-custom-light me-2">
                     <img src="{{ current_user.avatar }}" width="25" class="rounded-circle">
                     Chào {{ current_user.name }}
                 </a>
@@ -39,7 +67,6 @@
                     Đăng nhập/Đăng ký
                 </a>
                 {% endif %}
-
 
 
                 <!-- Language Dropdown -->
@@ -59,3 +86,5 @@
         </nav>
     </div>
 </header>
+
+

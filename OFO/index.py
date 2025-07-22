@@ -11,13 +11,55 @@ import cloudinary.uploader
 @app.route("/", methods=['GET','POST'])
 def index():
     categories = dao.load_categories(8)
-    random_restaurants = dao.load_random_restaurants(limit=10)
-    return render_template('index.html', categories=categories, restaurants=random_restaurants)
+
+    delivery_address = session.get('delivery_address')
+    user_lat = session.get('delivery_latitude')
+    user_lng = session.get('delivery_longitude')
+
+    if delivery_address:
+        restaurants_to_show = dao.load_random_restaurants(
+            limit=10,
+            user_lat=user_lat,
+            user_lng=user_lng
+        )
+    else:
+        restaurants_to_show = dao.get_top_rated_restaurants(limit=10)
+
+    return render_template('index.html', categories=categories, restaurants=restaurants_to_show)
 
 @app.route('/search')
 def search():
-    categories = dao.load_categories(8)
-    return render_template('tim-kiem.html', categories=categories)
+    """
+    Route tìm kiếm chính, xử lý cả tìm kiếm theo vị trí và danh mục.
+    """
+    # Lấy các tham số từ URL và session
+    category_name = request.args.get('category_name')
+    user_lat = session.get('delivery_latitude')
+    user_lng = session.get('delivery_longitude')
+
+    # Gọi hàm DAO nâng cao
+    restaurants_found = dao.search_restaurants(
+        category_name=category_name,
+        user_lat=user_lat,
+        user_lng=user_lng,
+        radius_km=10 # Bạn có thể thay đổi bán kính ở đây
+    )
+
+    all_categories = dao.load_categories()
+    searched_category = dao.get_category_by_name(category_name) if category_name else None
+
+    return render_template('tim-kiem.html',
+                           restaurants=restaurants_found,
+                           categories=all_categories,
+                           searched_category=searched_category)
+
+@app.route('/search/<string:category_name>')
+def search_by_category(category_name):
+    """
+    Route cũ này giờ sẽ chuyển hướng đến route tìm kiếm chính.
+    Điều này đảm bảo các link cũ không bị hỏng.
+    """
+    return redirect(url_for('search', category_name=category_name))
 
 @app.route('/restaurant/<int:restaurant_id>')
 def restaurant_detail(restaurant_id):
@@ -74,22 +116,6 @@ def get_dish_options_api(dish_id):
     except Exception as e:
         print(f"Lỗi tại API get_dish_options_api: {e}")
         return jsonify({'error': 'Lỗi hệ thống'}), 500
-
-
-@app.route('/search/<string:category_name>')
-def search_by_category(category_name):
-    restaurants_found = dao.search_restaurants(category_name=category_name)
-
-    # Lấy tất cả các danh mục để hiển thị trong thanh cuộn
-    all_categories = dao.load_categories()
-
-    # Lấy đối tượng danh mục đã tìm kiếm để hiển thị tiêu đề
-
-    # Render template tim-kiem.html và truyền dữ liệu vào
-    return render_template('tim-kiem.html',
-                           restaurants=restaurants_found,
-                           categories=all_categories,
-                         )
 
 @app.route('/rating')
 def rating():
@@ -231,6 +257,8 @@ def inject_delivery_address():
     Làm cho các biến địa chỉ có sẵn trong tất cả các template.
     """
     return dict(
+        greeting=dao.get_greeting(),
+        random_slogan=dao.get_random_slogan(),
         delivery_address=session.get('delivery_address', '...'),
         delivery_latitude=session.get('delivery_latitude'),
         delivery_longitude=session.get('delivery_longitude')

@@ -7,6 +7,7 @@ from __init__ import db,app
 import cloudinary.uploader
 from sqlalchemy import func, event, text
 from sqlalchemy.orm import subqueryload, joinedload
+from geopy.distance import geodesic
 from flask import request, jsonify
 import traceback
 
@@ -45,14 +46,44 @@ def load_categories(limit=8):
         query = query.limit(limit)
     return query.all()
 
-def load_random_restaurants(limit=10):
+
+def load_random_restaurants(limit=10, user_lat=None, user_lng=None):
     """
-    Lấy một danh sách nhà hàng ngẫu nhiên từ CSDL.
-    Sử dụng func.random() cho SQLite/PostgreSQL hoặc func.rand() cho MySQL.
+    Lấy danh sách nhà hàng ngẫu nhiên.
+    Nếu tọa độ người dùng được cung cấp, tính toán và thêm khoảng cách (distance_km)
+    vào mỗi đối tượng nhà hàng.
     """
-    # Chỉnh func.rand() nếu bạn dùng MySQL, func.random() cho các DB khác
-    query = Restaurant.query.order_by(func.random()).limit(limit)
-    return query.all()
+    # Lấy danh sách nhà hàng ngẫu nhiên từ CSDL
+    restaurants = Restaurant.query.order_by(func.random()).limit(limit).all()
+
+    # Chỉ tính khoảng cách nếu có tọa độ của người dùng
+    if user_lat is not None and user_lng is not None:
+        user_location = (user_lat, user_lng)
+
+        for restaurant in restaurants:
+            # Thêm thuộc tính mới để lưu thời gian giao hàng
+            restaurant.distance_km = None
+            restaurant.delivery_time = None
+
+            if restaurant.lat and restaurant.lng:
+                restaurant_location = (float(restaurant.lat), float(restaurant.lng))
+
+                # Tính khoảng cách
+                distance = geodesic(user_location, restaurant_location).km
+                restaurant.distance_km = round(distance, 1)
+
+                # ===================================================================
+                # ÁP DỤNG CÔNG THỨC TÍNH THỜI GIAN GIAO HÀNG
+                # Công thức: 10 phút (lấy hàng) + (số km * 5 phút)
+                # ===================================================================
+                pickup_time = 10
+                time_per_km = 5
+                estimated_time = pickup_time + (restaurant.distance_km * time_per_km)
+
+                # Làm tròn đến số nguyên gần nhất và gán vào thuộc tính mới
+                restaurant.delivery_time = round(estimated_time)
+
+    return restaurants
 
 def get_restaurant_by_id(restaurant_id):
     """
@@ -79,19 +110,42 @@ def get_dish_with_options(dish_id):
 
     return dish
 
-def search_restaurants(category_name=None):
-    """
-    Tìm kiếm danh sách nhà hàng.
-    Nếu có category_id, sẽ lọc theo danh mục đó.
-    Nếu không, sẽ trả về tất cả nhà hàng.
-    """
-    query = Restaurant.query
 
+def search_restaurants(category_name=None, user_lat=None, user_lng=None, radius_km=10):
+    """
+    Tìm kiếm nhà hàng nâng cao, có thể lọc theo tên danh mục và bán kính.
+    """
+    # Bắt đầu với việc lấy tất cả nhà hàng đang hoạt động
+    query = Restaurant.query.filter_by(active=True)
+
+    # Lọc theo danh mục NẾU có cung cấp
     if category_name:
-        # Join với bảng Category và lọc theo Category.name
         query = query.join(Category).filter(Category.name == category_name)
 
-    return query.all()
+    all_restaurants = query.all()
+
+    # Lọc theo khoảng cách NẾU có tọa độ người dùng
+    if user_lat is not None and user_lng is not None:
+        user_location = (float(user_lat), float(user_lng))
+
+        restaurants_in_radius = []
+
+        print(all_restaurants)
+        for restaurant in all_restaurants:
+            if restaurant.lat and restaurant.lng:
+                restaurant_location = (float(restaurant.lat), float(restaurant.lng))
+                distance = geodesic(user_location, restaurant_location).km
+
+                # Chỉ thêm nhà hàng vào kết quả nếu nó nằm trong bán kính
+                if distance <= radius_km:
+                    # Gán khoảng cách và thời gian giao hàng vào đối tượng
+                    restaurant.distance_km = round(distance, 1)
+                    restaurant.delivery_time_minutes = round(10 + (distance * 5))
+                    restaurants_in_radius.append(restaurant)
+
+        return restaurants_in_radius
+
+    return all_restaurants
 
 
 def add_review(order_id, star, comment, image_urls=None):
