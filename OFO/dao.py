@@ -9,6 +9,39 @@ from sqlalchemy import func, event, text
 from sqlalchemy.orm import subqueryload, joinedload
 from geopy.distance import geodesic
 from flask import request, jsonify
+from zoneinfo import ZoneInfo
+import random
+
+def get_greeting():
+    """Lấy lời chào (sáng, trưa, chiều, tối) theo giờ Việt Nam."""
+    hour = datetime.datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).hour
+    if 5 <= hour < 11:
+        return "buổi sáng"
+    elif 11 <= hour < 14:
+        return "buổi trưa"
+    elif 14 <= hour < 18:
+        return "buổi chiều"
+    else:
+        return "buổi tối"
+
+def get_random_slogan():
+    """
+    Đọc file JSON và lấy một câu slogan chào mừng ngẫu nhiên.
+    """
+    # Tạo đường dẫn tuyệt đối đến file JSON
+    file_path = os.path.join(app.static_folder, 'json', 'greeting_content.json')
+    try:
+        # Mở và đọc file với encoding utf-8 để hỗ trợ tiếng Việt
+        with open(file_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            slogans = data.get("greetings", [])
+            if slogans:
+                return random.choice(slogans)
+    except Exception as e:
+        print(f"Lỗi khi đọc file greeting: {e}")
+
+    # Trả về một câu mặc định nếu có lỗi xảy ra
+    return "Bạn ơi, bạn đang ở đâu zậy?"
 
 # Đăng nhập
 def auth_user(phone, password):
@@ -42,6 +75,31 @@ def load_categories(limit=8):
         query = query.limit(limit)
     return query.all()
 
+
+def _distance_and_time(restaurants, user_lat, user_lng):
+    """
+    Hàm phụ trợ: Nhận vào một danh sách nhà hàng và tọa độ người dùng,
+    tính toán và thêm thuộc tính .distance_km và .delivery_time_minutes.
+    """
+    # Chỉ thực hiện nếu có đầy đủ thông tin
+    if not all([restaurants, user_lat is not None, user_lng is not None]):
+        return restaurants  # Trả về danh sách gốc nếu thiếu thông tin
+
+    try:
+        user_location = (float(user_lat), float(user_lng))
+        for restaurant in restaurants:
+            restaurant.distance_km = None
+            restaurant.delivery_time_minutes = None  # Đổi tên cho rõ ràng
+
+            if restaurant.lat and restaurant.lng:
+                restaurant_location = (float(restaurant.lat), float(restaurant.lng))
+                distance = geodesic(user_location, restaurant_location).km
+                restaurant.distance_km = round(distance, 1)
+                restaurant.delivery_time_minutes = round(10 + (distance * 5))
+    except (ValueError, TypeError) as e:
+        print(f"Lỗi khi xử lý tọa độ: {e}. Bỏ qua tính toán.")
+
+    return restaurants
 
 def load_random_restaurants(limit=10, user_lat=None, user_lng=None):
     """
@@ -78,6 +136,33 @@ def load_random_restaurants(limit=10, user_lat=None, user_lng=None):
 
                 # Làm tròn đến số nguyên gần nhất và gán vào thuộc tính mới
                 restaurant.delivery_time = round(estimated_time)
+
+    return restaurants
+
+def get_top_rated_restaurants(limit=10):
+    """
+    Lấy danh sách các nhà hàng được đánh giá cao nhất.
+    Tiêu chí:
+    1. Đang hoạt động (active=True).
+    2. Điểm trung bình từ 4.6 trở lên.
+    3. Sắp xếp theo số lượng đánh giá giảm dần.
+    4. Giới hạn ở top 10.
+    """
+    # Câu query này sẽ join Restaurant với Review, đếm số review,
+    # sau đó lọc và sắp xếp.
+    top_restaurants_query = db.session.query(
+        Restaurant,
+        func.count(Review.id).label('review_count')
+    ).outerjoin(Review, Restaurant.id == Review.restaurant_id) \
+        .filter(Restaurant.active == True) \
+        .filter(Restaurant.star_average >= 4.6) \
+        .group_by(Restaurant.id) \
+        .order_by(func.count(Review.id).desc()) \
+        .limit(limit)
+
+    # Query trên trả về một danh sách các tuple (Restaurant, review_count).
+    # Chúng ta chỉ cần lấy đối tượng Restaurant.
+    restaurants = [restaurant for restaurant, count in top_restaurants_query.all()]
 
     return restaurants
 
@@ -342,13 +427,13 @@ def add_restaurant(name, email, address, description, open_time, close_time, ava
     db.session.add(restaurant)
     db.session.commit()
     
-def authenticate_restaurant(email, password):
-    restaurant = Restaurant.query.filter_by(email=email).first()
-    if restaurant and check_password_hash(restaurant.password, password):
-        return restaurant
-    return None
+# def authenticate_restaurant(email, password):
+#     restaurant = Restaurant.query.filter_by(email=email).first()
+#     if restaurant and check_password_hash(restaurant.password, password):
+#         return restaurant
+#     return None
 
- def toggle_favorite(user_id, restaurant_id):
+def toggle_favorite(user_id, restaurant_id):
     """
     Thêm hoặc xóa một nhà hàng khỏi danh sách yêu thích của người dùng.
     Trả về 'added' nếu đã thêm, 'removed' nếu đã xóa.
