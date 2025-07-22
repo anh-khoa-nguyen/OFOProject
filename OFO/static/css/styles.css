@@ -77,3 +77,17 @@ header .navbar {
     content: "•";
     margin: 0 0.5rem;
 }
+
+/* Ghi đè quy tắc của Bootstrap để nút bản đồ trên header không bị xám đi */
+.address-display-header .input-group .form-control:disabled ~ .btn.btn-outline-secondary {
+  opacity: 1; /* Luôn hiển thị rõ ràng */
+  pointer-events: auto; /* Luôn cho phép click */
+  border-color: #ced4da;  /* Đảm bảo viền có màu chuẩn */
+  background: #DC3545;
+  color: white;
+}
+
+/* (Tùy chọn) Thêm hiệu ứng hover để người dùng biết nút vẫn hoạt động */
+.address-display-header .input-group .btn.btn-outline-secondary:hover {
+    background-color: #fff;  /* Một màu xám nhạt khi hover */
+}

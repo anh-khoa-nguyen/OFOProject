@@ -12,16 +12,20 @@ import cloudinary.uploader
 def index():
     categories = dao.load_categories(8)
 
+    delivery_address = session.get('delivery_address')
     user_lat = session.get('delivery_latitude')
     user_lng = session.get('delivery_longitude')
 
-    random_restaurants = dao.load_random_restaurants(
-        limit=10,
-        user_lat=user_lat,
-        user_lng=user_lng
-    )
-    print(random_restaurants)
-    return render_template('index.html', categories=categories, restaurants=random_restaurants)
+    if delivery_address:
+        restaurants_to_show = dao.load_random_restaurants(
+            limit=10,
+            user_lat=user_lat,
+            user_lng=user_lng
+        )
+    else:
+        restaurants_to_show = dao.get_top_rated_restaurants(limit=10)
+
+    return render_template('index.html', categories=categories, restaurants=restaurants_to_show)
 
 @app.route('/search')
 def search():
@@ -253,6 +257,8 @@ def inject_delivery_address():
     Làm cho các biến địa chỉ có sẵn trong tất cả các template.
     """
     return dict(
+        greeting=dao.get_greeting(),
+        random_slogan=dao.get_random_slogan(),
         delivery_address=session.get('delivery_address', '...'),
         delivery_latitude=session.get('delivery_latitude'),
         delivery_longitude=session.get('delivery_longitude')

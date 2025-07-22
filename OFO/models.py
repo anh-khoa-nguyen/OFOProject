@@ -65,7 +65,7 @@ class Restaurant(db.Model):
     close_time = Column(Time)
     status = Column(Boolean, default=True)
     active = Column(Boolean, default=False)
-    star_average = Column(Float)
+    star_average = Column(Float, default=0)
 
     created_date = Column(DateTime, default=datetime.datetime.now)
 
