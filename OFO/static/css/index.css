@@ -206,3 +206,15 @@ background: rgba(0, 0, 0, 0.6); color: #fff; position: absolute;
 bottom: 10px; left: 10px; padding: 5px 10px; margin: 0;
 font-size: 11px; line-height: 18px; border-radius: 3px; z-index: 1000;
 }
+
+.title-highlight-red {
+  color: #E54D42; /* Một màu đỏ cam, màu của tương ớt, ấm áp */
+}
+
+.title-highlight-green {
+  color: #2A9D8F; /* Một màu xanh mòng két, cảm giác tươi mới, cao cấp */
+}
+
+.bi-patch-check-fill{
+    color: #FFBF00;
+}

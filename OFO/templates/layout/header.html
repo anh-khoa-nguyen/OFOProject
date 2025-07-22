@@ -8,13 +8,34 @@
             </a>
 
             <!-- Thanh địa chỉ chỉ hiển thị ở trang index -->
-            {% if request.endpoint  in ['login_view', 'register', 'preregister', 'resregister', 'reslogin'] %}
+            {% if request.endpoint in ['login_view', 'register', 'preregister', 'resregister', 'reslogin', 'index'] %}
 
             {% else %}
-            <div class="input-group mx-5" style="width: 350px;">
-                <span class="input-group-text"><i class="bi bi-geo-alt-fill text-danger"></i></span>
-                <input id="addressInput" type="text" class="form-control" placeholder="Nhập địa chỉ...">
+
+            <div class="address-display-header mx-3" style="width: 350px;">
+                {% if delivery_address and delivery_address != '...' %}
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-geo-alt-fill text-danger"></i></span>
+                    {# Hiển thị một ô input tĩnh, bị vô hiệu hóa với giá trị là địa chỉ đã lưu #}
+                    <input type="text" class="form-control" value="{{ delivery_address }}" disabled>
+                    <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal"
+                        data-bs-target="#mapModal">
+                    <i class="bi bi-map"></i>
+                </button>
+                </div>
+
+                {% else %}
+                <div class="input-group" id="goong_search_container">
+                    <span class="input-group-text"><i class="bi bi-geo-alt-fill text-danger"></i></span>
+                    <div id="geocoder-container" style="flex-grow: 1;"></div>
+                    <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal"
+                            data-bs-target="#mapModal">
+                        <i class="bi bi-map"></i>
+                    </button>
+                </div>
+                {% endif %}
             </div>
+
 
             {% endif %}
 
@@ -65,3 +86,5 @@
         </nav>
     </div>
 </header>
+
+
