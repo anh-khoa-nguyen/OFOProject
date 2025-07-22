@@ -1,3 +1,5 @@
+/* static/css/Restaurant/Register.css - PHIÊN BẢN ĐÃ SỬA */
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -7,8 +9,8 @@
 body {
     font-family: 'Be Vietnam Pro', sans-serif;
     background-color: #f0f2f5;
-
 }
+
 .signup-page {
     padding: 60px 20px;
 }
@@ -31,15 +33,22 @@ h1 {
     margin-bottom: 25px;
 }
 
-form {
+/* --- LOGIC BỐ CỤC MỚI --- */
+#register-form {
     display: flex;
-    gap: 30px;
+    flex-direction: column; /* Xếp các phần tử con theo chiều dọc */
+}
+
+.form-columns-wrapper {
+    display: flex;
+    gap: 30px; /* Khoảng cách giữa 2 cột */
 }
 
 .form-column {
-    flex: 1;
+    flex: 1; /* Mỗi cột chiếm 1 nửa không gian */
 }
 
+/* ----------------------- */
 
 h3 {
     font-size: 20px;
@@ -48,15 +57,11 @@ h3 {
     margin-bottom: 20px;
 }
 
-.column-title-blue {
-    color: #4A55A2;
-    border-bottom: 3px solid #4A55A2;
-}
+.column-title-blue,
 .column-title-green {
     color: #4A55A2;
     border-bottom: 3px solid #4A55A2;
 }
-
 
 .input-group {
     margin-bottom: 16px;
@@ -103,7 +108,6 @@ h3 {
     padding-right: 50px;
 }
 
-
 .input-wrapper input:focus,
 .input-wrapper textarea:focus {
     outline: none;
@@ -143,12 +147,22 @@ h3 {
     background-color: #f0f8ff;
 }
 
+.button-wrapper {
+    padding: 3px;
+    background: linear-gradient(60deg, #e73c7e, #ee7752, #a166ab, #5073b8);
+    background-size: 300% 300%;
+    animation: animatedgradient 3s ease alternate infinite;
+    border-radius: 5px;
+    margin-top: 25px; /* Tạo khoảng cách với các input ở trên */
+}
+
+@keyframes animatedgradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
 .signup-button {
-    width: 100%;
-    padding: 14px;
-    color: #fff;
-
-
     width: 100%;
     padding: 15px;
     background-color: #000;
@@ -159,53 +173,86 @@ h3 {
     font-family: 'Patrick Hand', sans-serif;
     transition: background-color 0.3s ease;
 }
+
 .signup-button:hover {
- background-color: #222;}
-
-.bottom-link {
-    text-align: center;
-    margin-top: 16px;
-    font-size: 15px;
-    color: #606770;
-}
-.bottom-link a {
-    color: #007bff;
-    font-weight: 600;
-    text-decoration: none;
-}
-.bottom-link a:hover {
-    text-decoration: underline;
-}
-.button-wrapper {
-    padding: 3px;
-    background: linear-gradient(60deg, #e73c7e, #ee7752, #a166ab, #5073b8);
-    background-size: 300% 300%;
-    animation: animatedgradient 3s ease alternate infinite;
-    border-radius: 5px;
-}
-
-@keyframes animatedgradient {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+    background-color: #222;
 }
 
 .bottom-link {
     text-align: center;
     margin-top: 25px;
-}
-
-.bottom-link p {
-    font-size: 1em;
-    color: #555;
+    font-size: 15px;
+    color: #606770;
 }
 
 .bottom-link a {
-    color: #000;
+    color: #007bff;
+    font-weight: 600;
     text-decoration: none;
-    font-weight: bold;
 }
 
 .bottom-link a:hover {
     text-decoration: underline;
+}
+.input-error {
+    border: 2px solid red;
+    background-color: #fff0f0;
+}
+
+.error-message {
+    color: red;
+    font-size: 0.9em;
+    margin-top: 4px;
+    margin-left: 4px;
+}
+.input-wrapper select {
+    /* 1. Ẩn giao diện mặc định (bao gồm mũi tên gốc) */
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    /* 2. Copy toàn bộ style từ input để đồng bộ */
+    width: 100%;
+    border: 1px solid #dddfe2;
+    background-color: #f5f6f7;
+    border-radius: 12px;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 16px;
+    color: #1c1e21;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+
+    /* 3. Padding cho icon trái và mũi tên phải */
+    padding: 14px 50px;
+}
+
+/* --- Style cho placeholder --- */
+.input-wrapper select:invalid {
+    color: #606770;
+}
+
+/* --- Hiệu ứng focus --- */
+.input-wrapper select:focus {
+    outline: none;
+    border-color: #007bff;
+    background-color: #fff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2);
+}
+
+/* --- TẠO MŨI TÊN CHEVRON TÙY CHỈNH BẰNG ICON SVG --- */
+/* Mũi tên ở trạng thái bình thường (màu xám) */
+.input-wrapper:has(select)::after {
+    content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%238a8d91' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none; /* Cho phép click xuyên qua */
+    transition: content 0.2s ease-in-out; /* Hiệu ứng chuyển đổi màu */
+}
+
+/* ĐỔI MÀU MŨI TÊN KHI HOVER HOẶC FOCUS (màu xanh) */
+.input-wrapper:has(select):hover::after,
+.input-wrapper:has(select:focus)::after {
+    content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%23007bff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
 }
