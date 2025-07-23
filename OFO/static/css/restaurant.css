@@ -642,6 +642,7 @@
 
 .btn-submit:hover {
     background-color: #0056b3;
+}
 
 .btn-sm{
     border-radius: 15px !important;
@@ -683,4 +684,43 @@
     opacity: 1;
     visibility: visible;
 }
+.product-card-unavailable {
+    /* Làm mờ toàn bộ card */
+    opacity: 0.6;
+
+    /* Chuyển hình ảnh và màu sắc sang tông xám */
+    filter: grayscale(80%);
+
+    /* Vô hiệu hóa tất cả các sự kiện click, hover bên trong card */
+    pointer-events: none;
+
+    /* (Tùy chọn) Thêm một lớp phủ để có chữ "Tạm hết" */
+    position: relative; /* Cần thiết cho lớp phủ */
+}
+
+/* (Tùy chọn) Lớp phủ hiển thị chữ "Tạm hết" */
+.product-card-unavailable::after {
+    content: 'Tạm hết';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-15deg);
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 1.1rem;
+    z-index: 10;
+}
+
+header.header-hidden {
+    transform: translateY(-100%);
+    transition: transform 0.3s ease-in-out;
+}
+
+header {
+    transition: transform 0.3s ease-in-out;
+}
+
 

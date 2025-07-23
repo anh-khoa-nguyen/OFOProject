@@ -60,30 +60,30 @@
         <div class="scrolling-wrapper d-flex overflow-hidden flex-nowrap" id="carousel">
             {% if restaurants %}
             {% for restaurant in restaurants %}
-            <a href="{{ url_for('restaurant_detail', restaurant_id=restaurant.id) }}"
-               class="text-decoration-none text-dark">
-                <div class="card card-promo">
-                    <div class="position-relative">
-                        <img src="{{ restaurant.image }}" class="img-food" alt="{{ restaurant.restaurant_name }}">
-                        <div class="promo-tag">Promo</div>
-                    </div>
-                    <div class="card-body px-3">
-                        <p class="restaurant-title">{{ restaurant.restaurant_name }}</p>
-                        <p class="text-secondary-small mb-1">{{ restaurant.category.name if restaurant.category else
-                            'Nhà hàng' }}</p>
-                        <div class="d-flex align-items-center mb-2 rating">
-                            <i class="bi bi-star-fill me-1"></i> {{restaurant.star_average}}
-                            {% if restaurant.delivery_time == '' and restaurant.distance_km == ''%}
-                            <span class="mx-2">·</span>
-                            <i class="bi bi-clock me-1"></i> {{ restaurant.delivery_time }} phút
-                            <span class="mx-2">·</span>
-                            {{ restaurant.distance_km }} km
-                            {% endif %}
+            <div class="card card-promo">
+                <a href="{{ url_for('restaurant_detail', restaurant_id=restaurant.id) }}"
+                   class="text-decoration-none text-dark">
+                        <div class="position-relative">
+                            <img src="{{ restaurant.image }}" class="img-food" alt="{{ restaurant.restaurant_name }}">
+                            <div class="promo-tag">Promo</div>
                         </div>
-                        <p class="offer"><i class="bi bi-tag"></i> Giảm 1.500₫ một vài món nhất định</p>
-                    </div>
-                </div>
-            </a>
+                        <div class="card-body px-3">
+                            <p class="restaurant-title">{{ restaurant.restaurant_name }}</p>
+                            <p class="text-secondary-small mb-1">{{ restaurant.category.name if restaurant.category else
+                                'Nhà hàng' }}</p>
+                            <div class="d-flex align-items-center mb-2 rating">
+                                <i class="bi bi-star-fill me-1"></i> {{restaurant.star_average}}
+                                <span class="mx-2">·</span>
+                                <i class="bi bi-clock me-1"></i> {{ restaurant.delivery_time }} phút
+                                {% if restaurant.distance_km is not none %}
+                                <span class="mx-2">·</span>
+                                {{ restaurant.distance_km }} km
+                                {% endif %}
+                            </div>
+                            <p class="offer"><i class="bi bi-tag"></i> Giảm 1.500₫ một vài món nhất định</p>
+                        </div>
+                </a>
+            </div>
             {% endfor %}
             {% else %}
             <p class="text-center p-3">Không có nhà hàng nào để hiển thị.</p>

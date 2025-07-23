@@ -1,4 +1,4 @@
-import os
+import os, json
 from __init__ import app, db, login
 import dao
 from flask_login import login_user, logout_user, login_required, current_user
@@ -27,6 +27,8 @@ def index():
 
     return render_template('index.html', categories=categories, restaurants=restaurants_to_show)
 
+
+
 @app.route('/search')
 def search():
     """
@@ -37,22 +39,41 @@ def search():
     user_lat = session.get('delivery_latitude')
     user_lng = session.get('delivery_longitude')
 
-    # Gọi hàm DAO nâng cao
-    restaurants_found = dao.search_restaurants(
+    print( user_lat)
+    print(user_lng)
+
+    # Gọi hàm DAO mới, nó sẽ trả về một tuple gồm 2 danh sách
+    nearby_restaurants, other_restaurants = dao.search_and_classify_restaurants(
         category_name=category_name,
         user_lat=user_lat,
         user_lng=user_lng,
-        radius_km=10 # Bạn có thể thay đổi bán kính ở đây
+        radius_km=10
     )
+
+    other_restaurants_data = [
+        {
+            "id": r.id,
+            "name": r.restaurant_name,
+            "image": r.image,
+            "category": r.category.name if r.category else 'Nhà hàng',
+            "stars": r.star_average or 'Mới',
+            "time": r.delivery_time_minutes,
+            "distance": r.distance_km,
+            # Rất quan trọng: phải có dữ liệu này để bộ lọc realtime hoạt động
+            "dish_names": '|'.join([d.name for d in r.dishes]).lower()
+        } for r in other_restaurants
+    ]
 
     all_categories = dao.load_categories()
     searched_category = dao.get_category_by_name(category_name) if category_name else None
 
     return render_template('tim-kiem.html',
-                           restaurants=restaurants_found,
+                           nearby_restaurants=nearby_restaurants,
+                           other_restaurants=other_restaurants,
+                           # Truyền dữ liệu JSON cho JavaScript
+                           other_restaurants_json=json.dumps(other_restaurants_data),
                            categories=all_categories,
                            searched_category=searched_category)
-
 @app.route('/search/<string:category_name>')
 def search_by_category(category_name):
     """
@@ -130,9 +151,9 @@ def rating_page(order_id):
     if not order:
         flash("Đơn hàng không tồn tại!", "danger")
         return redirect(url_for('index'))
-    # if order.user_id != current_user.id:
-    #     flash("Bạn không có quyền đánh giá đơn hàng này.", "danger")
-    #     return redirect(url_for('index'))
+    if order.user_id != current_user.id:
+        flash("Bạn không có quyền đánh giá đơn hàng này.", "danger")
+        return redirect(url_for('index'))
     if order.review:
         flash("Đơn hàng này đã được bạn đánh giá rồi.", "info")
         return redirect(url_for('restaurant_detail', restaurant_id=order.restaurant_id))
