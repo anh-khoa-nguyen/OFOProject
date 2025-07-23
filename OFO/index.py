@@ -12,16 +12,20 @@ import cloudinary.uploader
 def index():
     categories = dao.load_categories(8)
 
+    delivery_address = session.get('delivery_address')
     user_lat = session.get('delivery_latitude')
     user_lng = session.get('delivery_longitude')
 
-    random_restaurants = dao.load_random_restaurants(
-        limit=10,
-        user_lat=user_lat,
-        user_lng=user_lng
-    )
-    print(random_restaurants)
-    return render_template('index.html', categories=categories, restaurants=random_restaurants)
+    if delivery_address:
+        restaurants_to_show = dao.load_random_restaurants(
+            limit=10,
+            user_lat=user_lat,
+            user_lng=user_lng
+        )
+    else:
+        restaurants_to_show = dao.get_top_rated_restaurants(limit=10)
+
+    return render_template('index.html', categories=categories, restaurants=restaurants_to_show)
 
 
 
@@ -274,6 +278,8 @@ def inject_delivery_address():
     Làm cho các biến địa chỉ có sẵn trong tất cả các template.
     """
     return dict(
+        greeting=dao.get_greeting(),
+        random_slogan=dao.get_random_slogan(),
         delivery_address=session.get('delivery_address', '...'),
         delivery_latitude=session.get('delivery_latitude'),
         delivery_longitude=session.get('delivery_longitude')
@@ -298,8 +304,13 @@ def login_view():
             login_user(u)
             if u.role == UserRole.ADMIN:
                 return redirect('/admin/')
+            elif u.role == UserRole.RESTAURANT:
+                restaurant = dao.get_restaurant_by_user_id(u.id)
+                session['restaurant_id'] = restaurant.id
+                return redirect(f"/restaurante/{restaurant.id}")
             else:
                 return redirect('/')
+
         else:
             error = "Tên đăng nhập hoặc mật khẩu không đúng."
             return render_template('login.html', error=error)
@@ -308,6 +319,7 @@ def login_view():
 @app.route("/logout")
 def logout_process():
     logout_user()
+    session.pop('restaurant_id', None)
     return redirect('/login')
 
 
@@ -373,23 +385,27 @@ def register():
 
 #Restaurant
 @app.route('/resregister')
-def resregister():
-    return render_template('Restaurant/ResRegister.html')
+
+def render_registration_page():
+    """Hiển thị trang đăng ký và truyền danh sách category."""
+    categories = dao.get_categories()
+    return render_template('Restaurant/ResRegister.html', categories=categories)
 
 @app.route('/reslogin')
 def reslogin():
     return render_template('Restaurant/ResLogin.html')
-@app.route('/restaurant')
-def home():
-    restaurant_id = 1  # Hoặc lấy theo session, hoặc query param
+
+@app.route('/restaurante/<int:restaurant_id>')
+def home(restaurant_id):
+    restaurant= dao.get_restaurant_by_id(restaurant_id)
     dish_groups = dao.get_dish_groups_by_restaurant(restaurant_id)
-    print("Dish groups:", dish_groups)
-    return render_template('restaurant_main.html',restaurant=restaurant_id, dish_groups=dish_groups,)
+    return render_template('restaurant_main.html',restaurant=restaurant, dish_groups=dish_groups,)
+
 @app.route('/add_dishgroup', methods=['POST'])
 def add_dishgroup_route():
     data = request.get_json()
     name = data.get('name')
-    restaurant_id = 1#data.get('restaurant_id')
+    restaurant_id = session.get('restaurant_id')
 
     result = dao.add_dishgroup(name, restaurant_id)
     if result['success']:
@@ -443,45 +459,92 @@ def delete_dish_route():
         return jsonify({'success': success, 'message': message})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
+
+#ĐĂNG KÍ NHÀ HÀNG
 @app.route('/register_restaurant', methods=['POST'])
-def register_restaurant():
+def handle_restaurant_registration():
+    """
+    API endpoint xử lý đăng ký nhà hàng.
+    Đã được sửa lại để lấy và lưu đầy đủ thông tin.
+    """
     try:
-        name = request.form.get('res-name')
-        email = request.form.get('email')
-        password = request.form.get('password')
-        confirm_password = request.form.get('confirm-password')
+        # 1. Lấy dữ liệu từ form-data (ĐÃ BỔ SUNG)
+        form_data = request.form
+        username = form_data.get('username')
+        email = form_data.get('email')
+        phone = form_data.get('phone')  # <- THÊM MỚI
+        password = form_data.get('password')
+        confirm_password = form_data.get('confirm-password')
+
+        res_name = form_data.get('res-name')
+        address = form_data.get('address')
+        description = form_data.get('description')
+        open_time = form_data.get('open-time')
+        close_time = form_data.get('close-time')
+        category_id = form_data.get('category_id')  # <- THÊM MỚI
+
+        # 2. Lấy file từ request.files
+        avatar_file = request.files.get('avatar')
+        cover_file = request.files.get('cover')
+
+        # 3. Xác thực dữ liệu ở phía server (ĐÃ CẬP NHẬT)
+        required_fields = {
+            "Tên người dùng": username, "Email": email, "Số điện thoại": phone,
+            "Mật khẩu": password, "Tên nhà hàng": res_name, "Địa chỉ": address,
+            "Giờ mở cửa": open_time, "Giờ đóng cửa": close_time, "Loại hình": category_id
+        }
+        for field_name, value in required_fields.items():
+            if not value:
+                return jsonify({'success': False, 'message': f'Vui lòng cung cấp thông tin "{field_name}".'}), 400
 
         if password != confirm_password:
-            return jsonify({'success': False, 'message': 'Mật khẩu không khớp'})
+            return jsonify({'success': False, 'message': 'Mật khẩu xác nhận không khớp.'}), 400
 
-        # xử lý file ảnh
-        avatar = request.files.get('avatar')
-        cover = request.files.get('cover')
+        # 4. Xử lý upload file lên Cloudinary (giữ nguyên)
+        avatar_url = None
+        if avatar_file:
+            upload_result = cloudinary.uploader.upload(avatar_file)
+            avatar_url = upload_result.get('secure_url')
+        cover_url = None
+        if cover_file:
+            upload_result = cloudinary.uploader.upload(cover_file)
+            cover_url = upload_result.get('secure_url')
 
-        avatar_path = None
-        cover_path = None
-
-        if avatar:
-            avatar_path = os.path.join('static/image', avatar.filename)
-            avatar.save(avatar_path)
-        if cover:
-            cover_path = os.path.join('static/image', cover.filename)
-            cover.save(cover_path)
-
-        dao.add_restaurant(
-            name=name,
+        # 5. Gọi hàm DAO để lưu vào database (ĐÃ CẬP NHẬT ĐẦY ĐỦ)
+        # Sử dụng lại cấu trúc trả về (success, result) để xử lý lỗi tốt hơn
+        success, result = dao.register_restaurant_and_user(
+            username=username,
             email=email,
-            address=request.form.get('address'),
-            description=request.form.get('description'),
-            open_time=request.form.get('open-time'),
-            close_time=request.form.get('close-time'),
-            avatar=avatar.filename if avatar else None,
-            cover=cover.filename if cover else None
+            password=password,
+            phone=phone,  # <- TRUYỀN VÀO
+            res_name=res_name,
+            address=address,
+            description=description,
+            open_time=open_time,
+            close_time=close_time,
+            category_id=category_id,  # <- TRUYỀN VÀO
+            avatar_url=avatar_url,
+            cover_url=cover_url
         )
 
-        return jsonify({'success': True})
-    except Exception as ex:
-        return jsonify({'success': False, 'message': f'Đăng ký thất bại: {str(ex)}'})
+        # 6. Trả kết quả về cho client
+        if success:
+            new_user = result
+            return jsonify({
+                'success': True,
+                'message': f'Tài khoản {new_user.name} và nhà hàng {res_name} đã được tạo thành công!'
+            }), 201
+        else:
+            # result ở đây là thông báo lỗi cụ thể (ví dụ: "Email đã tồn tại")
+            error_message = result
+            return jsonify({
+                'success': False,
+                'message': error_message
+            }), 409  # 409 Conflict
+
+    except Exception as e:
+        print(f"Lỗi nghiêm trọng khi đăng ký: {e}")
+        return jsonify({'success': False, 'message': 'Có lỗi xảy ra ở phía máy chủ.'}), 500
 @app.route("/tim-kiem")
 def tim_kiem():
     return render_template('tim-kiem.html')

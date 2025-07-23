@@ -38,8 +38,6 @@ favorite_restaurants = db.Table('favorite_restaurants',
                                 Column('user_id', Integer, ForeignKey('user.id'), primary_key=True),
                                 Column('restaurant_id', Integer, ForeignKey('restaurant.id'), primary_key=True)
                                 )
-
-
 class Category(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(50), nullable=False, unique=True)
@@ -103,16 +101,30 @@ class Dish(db.Model):
     image = Column(String(100), default="https://res.cloudinary.com/dq2jtbrda/image/upload/v1752912326/tocotrachieu_uqllag.webp")
 
     group = relationship('DishGroup', back_populates='dishes')
-    option_groups = relationship('DishOptionGroup', backref='dish', lazy=True)
+    option_groups = relationship('DishOptionGroup',
+                                 secondary='dish_has_option_groups',
+                                 lazy='subquery',
+                                 backref=db.backref('dishes', lazy=True))
 
+dish_has_option_groups = db.Table('dish_has_option_groups',
+    db.Column('dish_id', Integer, ForeignKey('dish.id'), primary_key=True),
+    db.Column('dish_option_group_id', Integer, ForeignKey('dish_option_group.id'), primary_key=True)
+)
 
 class DishOptionGroup(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)
-    dish_id = Column(Integer, ForeignKey(Dish.id), nullable=False)
+    restaurant_id = Column(Integer, ForeignKey(Restaurant.id), nullable=False, index=True)
     name = Column(String(50), nullable=False)
     mandatory = Column(Boolean, default=False)
     max = Column(Integer)
     options = relationship('DishOption', backref='dish_option_group', lazy=True)
+
+class DishOption(db.Model):
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    option_group_id = Column(Integer, ForeignKey(DishOptionGroup.id), nullable=False)
+    name = Column(String(50), nullable=False)
+    price = Column(Float, default=0)
+
 
 
 class Cart(db.Model):
@@ -120,7 +132,6 @@ class Cart(db.Model):
     user_id = Column(Integer, ForeignKey(User.id), nullable=False)
     restaurant_id = Column(Integer, ForeignKey(Restaurant.id), nullable=False)
     items = relationship('CartItem', backref='cart', lazy=True, cascade="all, delete-orphan")
-
 
 class CartItem(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -132,14 +143,6 @@ class CartItem(db.Model):
     selected_options = relationship('DishOption', secondary='cart_item_option', backref='cart_item',
                                     lazy='joined'
                                     )
-
-
-class DishOption(db.Model):
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    option_group_id = Column(Integer, ForeignKey(DishOptionGroup.id), nullable=False)
-    name = Column(String(50), nullable=False)
-    price = Column(Float, default=0)
-
 
 class CartItemOption(db.Model):
     cart_item_id = Column(Integer, ForeignKey(CartItem.id), primary_key=True, nullable=False)
@@ -216,7 +219,6 @@ Order.vouchers = relationship('Voucher', secondary=voucher_applied, lazy='subque
                               backref=db.backref('orders_applied', lazy=True))
 
 if __name__ == '__main__':
-    # Lệnh này cần chạy trong ngữ cảnh của ứng dụng Flask
     with app.app_context():
         db.drop_all()
         db.create_all()
@@ -225,8 +227,6 @@ if __name__ == '__main__':
         # --- Bắt đầu tạo dữ liệu ---
 
         # 1. TẠO NGƯỜI DÙNG
-        # Sử dụng werkzeug để băm mật khẩu, an toàn hơn MD5 rất nhiều.
-        # Cần: pip install Werkzeug
         import hashlib  # Sử dụng thuật toán băm
 
         # Tạo người dùng Admin
@@ -256,6 +256,7 @@ if __name__ == '__main__':
         db.session.add_all([admin_user, owner1, owner2, customer1, customer2,customer3,customer4,customer5])
         db.session.commit()
 
+        #=====================================================================================================================
         # 1. Tạo các Category
         cat_hutieu = Category(name='Hủ tiếu',
                               image='https://res.cloudinary.com/dq2jtbrda/image/upload/v1752910881/hutieu_dashlv.jpg')
@@ -286,7 +287,8 @@ if __name__ == '__main__':
             [cat_hutieu, cat_trasua, cat_thucannhanh, cat_comtam, cat_banhmi, cat_chao, cat_thitga, cat_pizza,cat_amthucviet,cat_monnhat,cat_cafe])
         db.session.commit()
 
-        # 2. TẠO NHÀ HÀNG
+        #=====================================================================================================================
+        # 2. TẠO NHÀ HÀNG (PROFILE)
         restaurant1 = Restaurant(owner_user_id=owner1.id,
                                  restaurant_name='Mì Trộn Tên Lửa - CMT8',
                                  address='111 Cách Mạng Tháng Tám, P. 1, Q. 3, TP.HCM',
@@ -519,7 +521,8 @@ if __name__ == '__main__':
                                   close_time=time(22, 0),
                                   active=True)
 
-        # Khách hàng yêu thích nhà hàng
+        #=====================================================================================================================
+        # 3. KHÁCH YÊU THÍCH NHÀ HÀNG
         customer1.favorite_restaurants.append(restaurant1)
         customer1.favorite_restaurants.append(restaurant2)
         customer2.favorite_restaurants.append(restaurant3)
@@ -527,39 +530,69 @@ if __name__ == '__main__':
         db.session.add_all([restaurant1, restaurant2, restaurant3, restaurant4,restaurant5,restaurant6,restaurant7,restaurant8,restaurant9,restaurant10,restaurant11,restaurant12,restaurant13,restaurant14,restaurant15,restaurant16,restaurant17,restaurant18,restaurant19])
         db.session.commit()
 
+        #=====================================================================================================================
+        # 10. Tạo DishGroup cho nhà hàng đó
+        group_com_chinh = DishGroup(name='Món Cơm Chính', restaurant_id=restaurant1.id)
+        group_canh = DishGroup(name='Các Món Canh', restaurant_id=restaurant1.id)
+        db.session.add_all([group_com_chinh, group_canh])
+        db.session.commit()
+
+        #=====================================================================================================================
+        # 4. TẠO MÓN ĂN CHO NHÀ HÀNG
         dish1_1 = Dish(restaurant_id=restaurant1.id,
                        name='Cơm tấm sườn',
                        price=35000,
-                       description='Một miếng sườn cốt lết nướng thơm lừng trên than hồng, ăn kèm với cơm tấm nóng hổi, mỡ hành và nước mắm chua ngọt.')
-
+                       description='Một miếng sườn cốt lết nướng thơm lừng trên than hồng, ăn kèm với cơm tấm nóng hổi, mỡ hành và nước mắm chua ngọt.',
+                       group=group_com_chinh)
         dish1_2 = Dish(restaurant_id=restaurant1.id,
                        name='Cơm tấm bì chả',
                        price=30000,
-                       description='Sự kết hợp hoàn hảo giữa bì heo thái sợi giòn dai và chả trứng hấp mềm mịn, béo ngậy.')
+                       description='Sự kết hợp hoàn hảo giữa bì heo thái sợi giòn dai và chả trứng hấp mềm mịn, béo ngậy.',
+                       group=group_com_chinh)
 
         dish1_3 = Dish(restaurant_id=restaurant1.id,
                        name='Canh khổ qua',
                        price=10000,
-                       description='Canh khổ qua dồn thịt thanh mát, giải nhiệt, vị đắng nhẹ đặc trưng, tốt cho sức khỏe.')
+                       description='Canh khổ qua dồn thịt thanh mát, giải nhiệt, vị đắng nhẹ đặc trưng, tốt cho sức khỏe.',
+                       group=group_canh)
 
-        # Món ăn cho nhà hàng 2
         dish2_1 = Dish(restaurant_id=restaurant2.id, name='Bún bò đặc biệt', price=55000)
         dish2_2 = Dish(restaurant_id=restaurant2.id, name='Bún bò giò nạm', price=45000)
 
         db.session.add_all([dish1_1, dish1_2, dish1_3, dish2_1, dish2_2])
         db.session.commit()
 
-        # Tùy chọn cho món ăn (ví dụ: thêm trứng cho cơm tấm)
-        option_group1 = DishOptionGroup(dish_id=dish1_1.id, name='Thêm topping', mandatory=False)
-        db.session.add(option_group1)
+        #=====================================================================================================================
+        # 5. TẠO OPTION GROUP --> GÁN CHO MÓN ĂN CÓ GROUP OPTION --> TẠO CÁC OPTION CON CỦA OPTION GROUP
+        og1 = DishOptionGroup(restaurant_id=restaurant1.id, name='Đường', mandatory=True, max=1)
+        og2 = DishOptionGroup(restaurant_id=restaurant1.id, name='Đá', mandatory=True, max=1)
+        og3 = DishOptionGroup(restaurant_id=restaurant1.id, name='Toping', mandatory=True, max=5)
+        db.session.add_all([og1, og2, og3])
         db.session.commit()
 
-        option1_1 = DishOption(option_group_id=option_group1.id, name='Trứng ốp la', price=5000)
-        option1_2 = DishOption(option_group_id=option_group1.id, name='Lạp xưởng', price=7000)
-        db.session.add_all([option1_1, option1_2])
+        #Gán món ăn có DishOptionGroup
+        dish1_1.option_groups.append(og1)
+        dish1_1.option_groups.append(og2)
+        dish1_1.option_groups.append(og3)
+
+        #Tạo DishOption
+        dish_op1 = DishOption(option_group_id=og1.id, name='50% đường', price=0)
+        dish_op2 = DishOption(option_group_id=og1.id, name='70% đường', price=0)
+        dish_op3 = DishOption(option_group_id=og1.id, name='100% đường', price=0)
+
+        dish_op4 = DishOption(option_group_id=og2.id, name='50% đá', price=0)
+        dish_op5 = DishOption(option_group_id=og2.id, name='100% đá', price=0)
+        dish_op6 = DishOption(option_group_id=og2.id, name='Đá riêng', price=0)
+
+        dish_op7 = DishOption(option_group_id=og3.id, name='Trân châu trắng', price=5000)
+        dish_op8 = DishOption(option_group_id=og3.id, name='Trân châu đen', price=5000)
+        dish_op9 = DishOption(option_group_id=og3.id, name='Thạch dừa', price=5000)
+
+        db.session.add_all([dish_op1, dish_op2, dish_op3, dish_op4, dish_op5, dish_op6, dish_op7, dish_op8, dish_op9])
         db.session.commit()
 
-        # 4. TẠO VOUCHER
+        #=====================================================================================================================
+        # 6. TẠO VOUCHER
         voucher1 = Voucher(code='GIAM10K', name='Giảm 10k cho đơn từ 50k', percent=0, limit=10000, min=50000, max=10000,
                            start_date=datetime.datetime.now(),
                            end_date=datetime.datetime.now() + datetime.timedelta(days=30))
@@ -569,7 +602,8 @@ if __name__ == '__main__':
         db.session.add_all([voucher1, voucher2])
         db.session.commit()
 
-        # 5. TẠO ĐƠN HÀNG VÀ CHI TIẾT ĐƠN HÀNG
+        #=====================================================================================================================
+        # 7. TẠO ĐƠN HÀNG VÀ CHI TIẾT ĐƠN HÀNG
         # Đơn hàng 1 của customer1 tại restaurant1
         order1_subtotal = dish1_1.price + dish1_3.price  # Cơm tấm sườn + Canh khổ qua
         order1_discount = voucher1.limit
@@ -865,6 +899,7 @@ if __name__ == '__main__':
         ])
 
         db.session.commit()
+
 
         print("--- TẠO DỮ LIỆU THỬ NGHIỆM THÀNH CÔNG ---")
 

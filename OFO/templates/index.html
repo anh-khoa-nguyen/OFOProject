@@ -14,8 +14,8 @@
      data-search-url="{{ url_for('search') }}">
     <!-- Overlay Form -->
     <div class="overlay-form">
-        <h6 class="text-muted mb-1">Chào buổi sáng</h6>
-        <h2 class="fw-bold mb-4">Where should we deliver your food today?</h2>
+        <h6 class="text-muted mb-1">Chào {{ greeting }}</h6>
+        <h2 class="fw-bold mb-3 lh-5" id="slogan" style="line-height: 1.3;">{{ random_slogan }}</h2>
         </span>
         {% if delivery_address and delivery_address != '...' %}
         <div class="input-group mb-3">
@@ -32,6 +32,9 @@
                 <i class="bi bi-map"></i>
             </button>
         </div>
+
+        <div id="address-error-message" class="text-danger fw-medium mb-3 d-none"></div>
+
         {# Hiển thị nút "Xác nhận" #}
         <button id="confirm-address-btn" class="btn btn-pink w-100">Xác nhận</button>
         {% endif %}
@@ -39,7 +42,14 @@
 </div>
 
 <div class="container py-4">
-    <h4 class="fw-bold mb-4">Ưu đãi Kymie Food tại <span class="text-success">{{ delivery_address }}</span></h4>
+    <h4 class="fw-bold mb-4">
+        {% if delivery_address and delivery_address != '...' %}
+        Ưu đãi Kymie Food tại <span class="text-success">{{ delivery_address }}</span>
+        {% else %}
+        <i class="bi bi-patch-check-fill"></i> <span class="title-highlight-red">Top 10</span> nhà hàng <span
+            class="title-highlight-green">tuyển chọn</span>
+        {% endif %}
+    </h4>
 
     <div class="promo-carousel-wrapper position-relative">
         <!-- Nút trái -->
@@ -85,7 +95,13 @@
         </button>
         <!-- Xem tất cả -->
         <div class="text-center mt-4 see-all">
-            <a href="#" class="text-muted text-decoration-none fw-semibold">See all promotions</a>
+            <a href="javascript:void(0);"
+               id="see-all-btn"
+               class="text-muted text-decoration-none fw-semibold"
+               data-has-address="{% if delivery_address and delivery_address != '...' %}true{% else %}false{% endif %}"
+               data-search-url="{{ url_for('search') }}">
+                Nhiều hơn nữa . . .
+            </a>
         </div>
     </div>
 
@@ -111,25 +127,6 @@
     </div>
 </div>
 
-<div class="modal fade" id="mapModal" tabindex="-1" aria-labelledby="mapModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="mapModalLabel">Chọn địa chỉ trên bản đồ</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body position-relative">
-                <div id="map-modal-container" style="height: 450px; width: 100%;"></div>
-                <pre id="coordinates" class="coordinates"></pre>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                <button type="button" class="btn btn-primary" id="select-address-from-map-btn" disabled>Chọn địa chỉ này
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
 <script>
     const carousel = document.getElementById('carousel');
     const arrowLeft = document.getElementById('arrowLeft');
@@ -163,23 +160,41 @@
     const SEARCH_URL = "{{ url_for('search') }}";
 </script>
 
-<script src="{{ url_for('static', filename='js/maps.js') }}"></script>
-<!-- 1. Thư viện Goong Maps chính (vẫn cần thiết) -->
-<script src='https://cdn.jsdelivr.net/npm/@goongmaps/goong-js@1.0.9/dist/goong-js.js'></script>
-<link href='https://cdn.jsdelivr.net/npm/@goongmaps/goong-js@1.0.9/dist/goong-js.css' rel='stylesheet'/>
 
-<!-- 2. Plugin Goong Geocoder (đây là phần quan trọng nhất) -->
-<script src="https://cdn.jsdelivr.net/npm/@goongmaps/goong-geocoder@1.1.1/dist/goong-geocoder.min.js"></script>
-<link href="https://cdn.jsdelivr.net/npm/@goongmaps/goong-geocoder@1.1.1/dist/goong-geocoder.css" rel="stylesheet"
-      type="text/css"/>
-<link href="https://api.mapbox.com/mapbox-gl-js/v3.13.0/mapbox-gl.css" rel="stylesheet">
-<script src="https://api.mapbox.com/mapbox-gl-js/v3.13.0/mapbox-gl.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- LOGIC CHO NÚT "NHIỀU HƠN NỮA" ---
 
-<!-- 3. Promise polyfill script (cần thiết cho một số trình duyệt) -->
-<script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.auto.min.js"></script>
-{% endblock %}
+        const seeAllBtn = document.getElementById('see-all-btn');
 
+        if (seeAllBtn) {
+            seeAllBtn.addEventListener('click', function(event) {
+                // Ngăn hành vi mặc định của thẻ <a>
+                event.preventDefault();
 
+                // Lấy các phần tử cần thiết cho việc báo lỗi và cuộn trang
+                const slogan = document.getElementById('slogan');
 
+                // Đọc trạng thái địa chỉ từ thuộc tính data-* mà Jinja đã in ra
+                const hasAddress = this.dataset.hasAddress === 'true';
 
+                if (hasAddress) {
+                    // TRƯỜNG HỢP 1: Đã có địa chỉ -> Chuyển đến trang tìm kiếm
+                    const searchUrl = this.dataset.searchUrl;
+                    window.location.href = searchUrl;
+                } else {
+                    // TRƯỜNG HỢP 2: Chưa có địa chỉ -> Báo lỗi và cuộn lên
+
+                    // 1. Hiển thị thông báo lỗi
+                    slogan.innerText = 'Cậu đang ở đâu á, để tớ gợi ý những quán xịn xò nhất quanh đây nha! ✨';
+                    slogan.classList.remove('d-none'); // Hiện thông báo
+
+                    // 2. Cuộn màn hình lên đầu form nhập địa chỉ một cách mượt mà
+                    if (slogan) {
+                        slogan.scrollIntoView({ behavior: 'smooth' });
+                    }
+                }
+            });
+        }
+    });
+    </script>{% endblock %}

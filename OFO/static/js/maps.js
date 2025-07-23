@@ -36,6 +36,7 @@
             }
         })
         .catch(err => {
+            console.log(err);
             alert("Lỗi mạng. Vui lòng thử lại.");
             if (button) button.disabled = false;
         });

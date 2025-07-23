@@ -9,6 +9,40 @@ from sqlalchemy import func, event, text
 from sqlalchemy.orm import subqueryload, joinedload
 from geopy.distance import geodesic
 from flask import request, jsonify
+from zoneinfo import ZoneInfo
+import random
+import traceback
+
+def get_greeting():
+    """Lấy lời chào (sáng, trưa, chiều, tối) theo giờ Việt Nam."""
+    hour = datetime.datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).hour
+    if 5 <= hour < 11:
+        return "buổi sáng"
+    elif 11 <= hour < 14:
+        return "buổi trưa"
+    elif 14 <= hour < 18:
+        return "buổi chiều"
+    else:
+        return "buổi tối"
+
+def get_random_slogan():
+    """
+    Đọc file JSON và lấy một câu slogan chào mừng ngẫu nhiên.
+    """
+    # Tạo đường dẫn tuyệt đối đến file JSON
+    file_path = os.path.join(app.static_folder, 'json', 'greeting_content.json')
+    try:
+        # Mở và đọc file với encoding utf-8 để hỗ trợ tiếng Việt
+        with open(file_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            slogans = data.get("greetings", [])
+            if slogans:
+                return random.choice(slogans)
+    except Exception as e:
+        print(f"Lỗi khi đọc file greeting: {e}")
+
+    # Trả về một câu mặc định nếu có lỗi xảy ra
+    return "Bạn ơi, bạn đang ở đâu zậy?"
 
 # Đăng nhập
 def auth_user(phone, password):
@@ -31,6 +65,9 @@ def add_user(name,phone,email,password,avatar=None):
 
      db.session.add(u)
      db.session.commit()
+def get_restaurant_by_user_id(user_id):
+    return Restaurant.query.filter_by(owner_user_id=user_id).first()
+
 
 def load_categories(limit=8):
     """
@@ -42,6 +79,31 @@ def load_categories(limit=8):
         query = query.limit(limit)
     return query.all()
 
+
+def _distance_and_time(restaurants, user_lat, user_lng):
+    """
+    Hàm phụ trợ: Nhận vào một danh sách nhà hàng và tọa độ người dùng,
+    tính toán và thêm thuộc tính .distance_km và .delivery_time_minutes.
+    """
+    # Chỉ thực hiện nếu có đầy đủ thông tin
+    if not all([restaurants, user_lat is not None, user_lng is not None]):
+        return restaurants  # Trả về danh sách gốc nếu thiếu thông tin
+
+    try:
+        user_location = (float(user_lat), float(user_lng))
+        for restaurant in restaurants:
+            restaurant.distance_km = None
+            restaurant.delivery_time_minutes = None  # Đổi tên cho rõ ràng
+
+            if restaurant.lat and restaurant.lng:
+                restaurant_location = (float(restaurant.lat), float(restaurant.lng))
+                distance = geodesic(user_location, restaurant_location).km
+                restaurant.distance_km = round(distance, 1)
+                restaurant.delivery_time_minutes = round(10 + (distance * 5))
+    except (ValueError, TypeError) as e:
+        print(f"Lỗi khi xử lý tọa độ: {e}. Bỏ qua tính toán.")
+
+    return restaurants
 
 def load_random_restaurants(limit=10, user_lat=None, user_lng=None):
     """
@@ -78,6 +140,33 @@ def load_random_restaurants(limit=10, user_lat=None, user_lng=None):
 
                 # Làm tròn đến số nguyên gần nhất và gán vào thuộc tính mới
                 restaurant.delivery_time = round(estimated_time)
+
+    return restaurants
+
+def get_top_rated_restaurants(limit=10):
+    """
+    Lấy danh sách các nhà hàng được đánh giá cao nhất.
+    Tiêu chí:
+    1. Đang hoạt động (active=True).
+    2. Điểm trung bình từ 4.6 trở lên.
+    3. Sắp xếp theo số lượng đánh giá giảm dần.
+    4. Giới hạn ở top 10.
+    """
+    # Câu query này sẽ join Restaurant với Review, đếm số review,
+    # sau đó lọc và sắp xếp.
+    top_restaurants_query = db.session.query(
+        Restaurant,
+        func.count(Review.id).label('review_count')
+    ).outerjoin(Review, Restaurant.id == Review.restaurant_id) \
+        .filter(Restaurant.active == True) \
+        .filter(Restaurant.star_average >= 4.6) \
+        .group_by(Restaurant.id) \
+        .order_by(func.count(Review.id).desc()) \
+        .limit(limit)
+
+    # Query trên trả về một danh sách các tuple (Restaurant, review_count).
+    # Chúng ta chỉ cần lấy đối tượng Restaurant.
+    restaurants = [restaurant for restaurant, count in top_restaurants_query.all()]
 
     return restaurants
 
@@ -261,25 +350,62 @@ def is_favorite(user_id, restaurant_id):
 def get_dish_groups_by_restaurant(restaurant_id):
     return DishGroup.query.filter_by(restaurant_id=restaurant_id).all()
 def add_dishgroup(name, restaurant_id):
-    # Kiểm tra xem tên nhóm đã tồn tại (không phân biệt chữ hoa thường)
-    existing = db.session.query(DishGroup).filter(
+    """
+    Thêm nhóm món, kiểm tra tên trùng lặp trong chính nhà hàng đó.
+    Phiên bản ngắn gọn và an toàn.
+    """
+    # Kiểm tra xem tên nhóm món đã tồn tại trong cùng một nhà hàng chưa
+    if DishGroup.query.filter(
+        DishGroup.restaurant_id == restaurant_id,
         func.lower(DishGroup.name) == name.lower()
-    ).first()
+    ).first():
+        return {'success': False, 'message': 'Tên nhóm món này đã tồn tại.'}
 
-    if existing:
-        return {'success': False, 'message': 'Tên nhóm món đã tồn tại'}
-
-    new_group = DishGroup(name=name, restaurant_id=restaurant_id)
-    db.session.add(new_group)
-    db.session.commit()
-    return {'success': True, 'message': 'Thêm nhóm món thành công'}
-def delete_dishgroup_by_id(group_id):
-    group = DishGroup.query.get(group_id)
-    if group:
-        db.session.delete(group)
+    try:
+        # Nếu chưa tồn tại, tạo mới và lưu vào DB
+        new_group = DishGroup(name=name.strip(), restaurant_id=restaurant_id)
+        db.session.add(new_group)
         db.session.commit()
-        return True
-    return False
+
+        # Trả về thông tin của nhóm vừa tạo để tiện xử lý ở frontend
+        return {
+            'success': True,
+            'message': 'Thêm nhóm món thành công!',
+            'group': {
+                'id': new_group.id,
+                'name': new_group.name
+            }
+        }
+    except Exception as e:
+        db.session.rollback() # Rất quan trọng: Hủy bỏ thay đổi nếu có lỗi
+        print(f"LỖI KHI THÊM NHÓM MÓN: {e}")
+        return {'success': False, 'message': 'Có lỗi xảy ra, không thể thêm nhóm món.'}
+
+
+def delete_dishgroup_by_id(group_id):
+    """
+    Xóa nhóm món và tất cả các món ăn thuộc về nó.
+    """
+    group = DishGroup.query.get(group_id)
+
+    if group:
+        try:
+            # BƯỚC 1: Lặp qua và xóa tất cả các món ăn con trước
+            for dish in group.dishes:
+                db.session.delete(dish)
+
+            # BƯỚC 2: Sau khi đã xóa hết con, xóa chính người cha (nhóm món)
+            db.session.delete(group)
+
+            # BƯỚC 3: Commit một lần duy nhất để lưu tất cả thay đổi
+            db.session.commit()
+            return True
+        except Exception as e:
+            db.session.rollback()  # Hủy bỏ nếu có lỗi
+            print(f"LỖI KHI XÓA NHÓM MÓN VÀ CÁC MÓN ĂN: {e}")
+            return False
+
+    return False  # Trả về False nếu không tìm thấy nhóm món
 def add_dish(name, description, price, image_url, dish_group_id, restaurant_id):
     try:
         dish = Dish(
@@ -338,28 +464,83 @@ def delete_dish(dish_id):
         db.session.rollback()
         return False, str(e)
 
-def add_restaurant(name, email, address, description, open_time, close_time, avatar, cover):
-    restaurant = Restaurant(
-        restaurant_name=name,
-        email=email,
-        address=address,
-        description=description,
-        open_time=open_time,
-        close_time=close_time,
-        image=avatar,  # dùng avatar làm ảnh đại diện
-        owner_user_id=1  # hoặc session['user_id'] nếu có đăng nhập
-    )
-    db.session.add(restaurant)
-    db.session.commit()
-    
-# def authenticate_restaurant(email, password):
-#     restaurant = Restaurant.query.filter_by(email=email).first()
-#     if restaurant and check_password_hash(restaurant.password, password):
-#         return restaurant
-#     return None
+#ĐĂNG KÍ NHÀ HÀNG
+def get_categories():
+    """Truy vấn và trả về danh sách tất cả các loại hình nhà hàng."""
+    try:
+        return Category.query.all()
+    except Exception as e:
+        print(f"Lỗi khi lấy danh sách category: {e}")
+        return []
 
-def get_category_by_name(name):
-    return Category.query.filter(Category.name.ilike(f"%{name}%")).first()
+
+def register_restaurant_and_user(username, email, password, phone, res_name, address,
+                                 description, open_time, close_time, category_id,
+                                 avatar_url=None, cover_url=None):
+    """
+    Lưu User và Restaurant, đã được sửa lại để khớp hoàn toàn với định nghĩa Model.
+    Sử dụng phương pháp liên kết đối tượng của SQLAlchemy.
+    """
+    # 1. Kiểm tra dữ liệu trùng lặp (nên giữ lại để có phản hồi lỗi tốt)
+    if User.query.filter_by(email=email.strip()).first():
+        return (False, 'Email này đã được sử dụng cho một tài khoản khác.')
+    if User.query.filter_by(phone=phone.strip()).first():
+        return (False, 'Số điện thoại này đã được đăng ký.')
+
+    # 2. Tiến hành đăng ký
+    try:
+        # Băm mật khẩu bằng MD5 theo yêu cầu
+        hashed_password = hashlib.md5(password.encode('utf-8')).hexdigest()
+
+        # Tạo đối tượng User
+        new_user = User(
+            name=username.strip(),
+            email=email.strip(),
+            password=hashed_password,
+            phone=phone.strip(),
+            avatar=avatar_url,
+            role=UserRole.RESTAURANT
+        )
+
+        # Chuyển đổi chuỗi thời gian sang đối tượng time của Python
+        open_t = datetime.datetime.strptime(open_time, '%H:%M').time()
+        close_t = datetime.datetime.strptime(close_time, '%H:%M').time()
+
+        # === ĐOẠN CODE QUAN TRỌNG NHẤT ĐÃ ĐƯỢC SỬA LẠI ===
+
+        # Bước 1: Tạo đối tượng Restaurant với các thuộc tính của chính nó
+        new_restaurant = Restaurant(
+            restaurant_name=res_name,
+            address=address,
+            description=description,
+            email=email.strip(),  # Model Restaurant cũng có email riêng
+            open_time=open_t,
+            close_time=close_t,
+            image=cover_url,
+            category_id=int(category_id)
+            # Không truyền owner_user_id hay user_id ở đây
+        )
+
+        # Bước 2: Liên kết hai đối tượng với nhau thông qua thuộc tính 'backref'
+        # SQLAlchemy sẽ tự động hiểu và điền giá trị cho cột 'owner_user_id'
+        new_restaurant.user = new_user
+
+        # Thêm cả hai đối tượng vào session
+        db.session.add(new_user)
+        db.session.add(new_restaurant)
+
+        # Commit để lưu tất cả thay đổi vào DB
+        db.session.commit()
+
+        # Trả về thành công
+        return (True, new_user)
+
+    except Exception as e:
+        # Nếu có lỗi, rollback để đảm bảo toàn vẹn dữ liệu
+        db.session.rollback()
+        print("‼️ ERROR TRONG DAO:", e)
+        traceback.print_exc()
+        return (False, 'Đã có lỗi xảy ra trong quá trình xử lý dữ liệu.')
 def toggle_favorite(user_id, restaurant_id):
     """
     Thêm hoặc xóa một nhà hàng khỏi danh sách yêu thích của người dùng.
