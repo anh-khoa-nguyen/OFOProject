@@ -109,7 +109,8 @@
         <div class="row g-4">
             {% for dish in group.dishes %}
             <div class="col-lg-4 col-md-6 d-flex">
-                <div class="product-card w-100">
+                <!-- THÊM CLASS CÓ ĐIỀU KIỆN: Nếu dish không active, thêm class 'product-card-unavailable' -->
+                <div class="product-card w-100 {% if not dish.active %}product-card-unavailable{% endif %}">
                     <div class="product-card-img-wrapper">
                         <img src="{{ dish.image if dish.image else 'https://via.placeholder.com/400x300' }}"
                              alt="{{ dish.name }}">
@@ -120,15 +121,18 @@
                         <div class="product-card-footer">
                             <div class="product-card-price">
                                 <div>
-                                    {# Định dạng giá tiền cho đẹp #}
                                     <span class="current-price">{{ "{:,.0f}".format(dish.price) }}</span>
                                 </div>
                             </div>
-                            {# Thêm data-dish-id để JavaScript có thể lấy ID món ăn #}
+
+                            <!-- BỌC NÚT TRONG ĐIỀU KIỆN: Chỉ hiển thị nút '+' nếu dish active -->
+                            {% if dish.active %}
                             <button class="btn-add-to-cart" data-bs-toggle="offcanvas"
                                     data-bs-target="#productOptionsOffcanvas"
                                     data-dish-id="{{ dish.id }}">+
                             </button>
+                            {% endif %}
+
                         </div>
                     </div>
                 </div>
@@ -143,12 +147,6 @@
     {% else %}
     <p class="text-center mt-5">Nhà hàng này hiện chưa có thực đơn.</p>
     {% endif %}
-
-    <!-- Nút để mở Offcanvas -->
-    <button class="btn btn-primary btn-lg" type="button" data-bs-toggle="offcanvas"
-            data-bs-target="#productOptionsOffcanvas" aria-controls="productOptionsOffcanvas">
-        Mở Tùy chọn sản phẩm
-    </button>
 
     <!-- Offcanvas cho Product Options -->
     <div class="offcanvas offcanvas-end" tabindex="-1" id="productOptionsOffcanvas" aria-labelledby="offcanvasLabel">
@@ -267,43 +265,43 @@
         const decreaseBtn = document.getElementById('decrease-qty');
         const increaseBtn = document.getElementById('increase-qty');
 
-        // Hàm định dạng tiền tệ
         function formatCurrency(value) {
             return new Intl.NumberFormat('vi-VN').format(value);
         }
 
-        // Hàm này sẽ khởi tạo lại toàn bộ logic tính toán cho offcanvas
         function initializeOffcanvasLogic(dishData) {
             const optionInputs = offcanvasContentWrapper.querySelectorAll('input[type="radio"], input[type="checkbox"]');
 
+            // ===== HÀM VALIDATE ĐÃ ĐƯỢC CẬP NHẬT =====
             function validateSelections() {
                 let allValid = true;
 
                 dishData.option_groups.forEach(group => {
+                    // Chỉ kiểm tra các nhóm bắt buộc
                     if (!group.mandatory) return;
 
                     const groupInputs = offcanvasContentWrapper.querySelectorAll(`input[name="group-${group.id}"]`);
                     const selectedCount = [...groupInputs].filter(input => input.checked).length;
 
-                    if (selectedCount !== group.max_selection) {
+                    // LOGIC MỚI: Nếu là nhóm bắt buộc, người dùng phải chọn ít nhất 1 mục.
+                    if (selectedCount < 1) {
                         allValid = false;
                     }
+                    // Việc giới hạn không được chọn quá `max_selection` đã được xử lý ở UI bên dưới.
                 });
 
                 return allValid;
             }
-            function showToast(message, duration = 3000) {
-                let toast = document.querySelector('.toast-notifications');
 
+            function showWarningToast(message, duration = 3000) {
+                let toast = document.querySelector('.toast-notifications');
                 if (!toast) {
                     toast = document.createElement('div');
                     toast.className = 'toast-notifications';
                     document.body.appendChild(toast);
                 }
-
                 toast.textContent = message;
                 toast.classList.add('show');
-
                 setTimeout(() => {
                     toast.classList.remove('show');
                 }, duration);
@@ -312,53 +310,36 @@
             function updateTotal() {
                 let basePrice = parseFloat(dishData.price);
                 let optionsPrice = 0;
-
                 optionInputs.forEach(input => {
                     if (input.checked) {
                         optionsPrice += parseFloat(input.value);
                     }
                 });
-
                 const quantity = parseInt(quantityInput.value);
                 const total = (basePrice + optionsPrice) * quantity;
-
                 addToBasketBtn.textContent = `Thêm vào giỏ - ${formatCurrency(total)} ₫`;
                 addToBasketBtn.disabled = !validateSelections();
             }
-<!--            offcanvasElement.addEventListener('show.bs.offcanvas', () => {-->
-<!--                addToCartButton.disabled = true;-->
-<!--                validateOptions(); // Gọi validate khi mở-->
-<!--            });-->
-<!--        -->
-<!--            // NEW: remove backdrop nếu nó vẫn còn tồn tại-->
-<!--            offcanvasElement.addEventListener('hidden.bs.offcanvas', () => {-->
-<!--                const backdrop = document.querySelector('.offcanvas-backdrop');-->
-<!--                if (backdrop) {-->
-<!--                    backdrop.remove();-->
-<!--                    document.body.classList.remove('offcanvas-backdrop', 'modal-open'); // phòng trường hợp bị dính class cũ-->
-<!--                }-->
-<!--            });-->
 
             // Chặn chọn quá max_selection với checkbox
             dishData.option_groups.forEach(group => {
+                // Chỉ áp dụng cho checkbox (khi có thể chọn nhiều)
                 if (group.max_selection > 1) {
                     const groupInputs = offcanvasContentWrapper.querySelectorAll(`input[name="group-${group.id}"]`);
-
                     groupInputs.forEach(input => {
                         input.addEventListener('change', () => {
                             const selected = [...groupInputs].filter(i => i.checked);
                             if (selected.length > group.max_selection) {
-                                input.checked = false;
-                                showToast(`Bạn chỉ được chọn tối đa ${group.max_selection} mục trong nhóm "${group.name}"`);
-
+                                input.checked = false; // Bỏ chọn mục vừa click
+                                showWarningToast(`Bạn chỉ được chọn tối đa ${group.max_selection} mục trong nhóm "${group.name}"`);
                             }
-                            updateTotal();
+                            updateTotal(); // Cập nhật lại sau mỗi lần thay đổi
                         });
                     });
                 }
             });
 
-            // Gán sự kiện update lại total
+            // Gán sự kiện update lại total cho tất cả các input
             optionInputs.forEach(input => input.addEventListener('change', updateTotal));
 
             // Gán sự kiện cho nút tăng/giảm số lượng
@@ -374,7 +355,7 @@
                 }
             };
 
-            // Tính giá lần đầu
+            // Tính giá và kiểm tra validation lần đầu khi offcanvas được render xong
             updateTotal();
         }
 
@@ -383,26 +364,18 @@
         offcanvasElement.addEventListener('show.bs.offcanvas', async function (event) {
             const button = event.relatedTarget;
             const dishId = button.dataset.dishId;
-
-
             if (!dishId) return;
 
-            // Reset số lượng về 1
             quantityInput.value = 1;
-            // Vô hiệu hóa nút thêm vào giỏ hàng trong khi tải
             addToBasketBtn.textContent = 'Đang tải...';
             addToBasketBtn.disabled = true;
-
-            // Hiển thị trạng thái loading
             offcanvasContentWrapper.innerHTML = '<div class="text-center p-5"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
 
             try {
-                // Gọi API để lấy chi tiết món ăn
                 const response = await fetch(`/api/dish/${dishId}`);
                 if (!response.ok) throw new Error('Network response was not ok');
                 const data = await response.json();
 
-                // --- BƯỚC 1: XÂY DỰNG HTML ĐỘNG ---
                 let html = `
                     <div class="product-main-info d-flex align-items-start mb-3">
                         <img src="${data.image || 'https://via.placeholder.com/100'}" class="product-image me-3" alt="${data.name}">
@@ -419,12 +392,12 @@
                 data.option_groups.forEach(group => {
                     html += `
                         <div class="options-section">
-                            <div class="d-flex justify-content-between mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
                                 <div>
                                     <h6 class="fw-bold mb-0">${group.name}</h6>
-                                    ${group.max_selection ? `<small class="text-muted">Tùy chọn, tối đa ${group.max_selection}</small>` : ''}
+                                    ${group.max_selection ? `<small class="text-muted">Chọn tối đa ${group.max_selection}</small>` : ''}
                                 </div>
-                                <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill">${group.mandatory ? 'Bắt buộc' : 'Tùy chọn'}</span>
+                                <span class="badge ${group.mandatory ? 'bg-danger-subtle text-danger-emphasis' : 'bg-secondary-subtle text-secondary-emphasis'} rounded-pill">${group.mandatory ? 'Bắt buộc' : 'Tùy chọn'}</span>
                             </div>
                     `;
                     group.options.forEach(option => {
@@ -442,7 +415,6 @@
                     html += `</div>`;
                 });
 
-                // --- THÊM LẠI MỤC GHI CHÚ BỊ MẤT ---
                 html += `
                     <div class="options-section">
                         <div class="mb-2">
@@ -455,10 +427,7 @@
                     </div>
                 `;
 
-                // Cập nhật nội dung offcanvas
                 offcanvasContentWrapper.innerHTML = html;
-
-                // --- BƯỚC 2: GỌI HÀM ĐỂ GÁN LẠI LOGIC TÍNH TOÁN ---
                 initializeOffcanvasLogic(data);
 
             } catch (error) {
@@ -525,5 +494,35 @@
             }, 2500);
         }
     });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const header = document.querySelector('header');
+            const categoryNavbarWrapper = document.querySelector('.category-navbar-wrapper');
+
+            if (!header || !categoryNavbarWrapper) {
+                return;
+            }
+
+            // Lấy vị trí ban đầu của thanh category-navbar so với đầu trang
+            const navbarOffsetTop = categoryNavbarWrapper.offsetTop;
+
+            // Hàm để kiểm tra và ẩn/hiện header
+            function toggleHeaderVisibility() {
+                const scrollPosition = window.pageYOffset;
+
+                if (scrollPosition >= navbarOffsetTop) {
+                    // Thêm một class để ẩn header đi
+                    header.classList.add('header-hidden');
+                } else {
+                    header.classList.remove('header-hidden');
+                }
+            }
+
+            window.addEventListener('scroll', toggleHeaderVisibility);
+
+            toggleHeaderVisibility();
+        });
     </script>
 {% endblock %}
