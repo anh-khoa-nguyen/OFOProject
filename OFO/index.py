@@ -378,7 +378,8 @@ def reslogin():
 def home(restaurant_id):
     restaurant= dao.get_restaurant_by_id(restaurant_id)
     dish_groups = dao.get_dish_groups_by_restaurant(restaurant_id)
-    return render_template('restaurant_main.html',restaurant=restaurant, dish_groups=dish_groups,)
+    dish_option_group= dao.get_dish_option_groups_by_restaurant(restaurant_id)
+    return render_template('restaurant_main.html',restaurant=restaurant, dish_groups=dish_groups,dish_option_group=dish_option_group)
 
 @app.route('/add_dishgroup', methods=['POST'])
 def add_dishgroup_route():
@@ -413,6 +414,7 @@ def add_dish_route():
         dish_group_id = int(request.form.get('dish_group_id'))
         restaurant_id = int(request.form.get('restaurant_id'))
         image = request.files.get('image')
+        option_group_ids = request.form.getlist('option_group_ids')
 
         image_url = None
         if image:
@@ -423,12 +425,42 @@ def add_dish_route():
             image.save(path)
             image_url = f"image/{filename}"
 
-        success = dao.add_dish(name, description, price, image_url, dish_group_id, restaurant_id)
+        success = dao.add_dish(name, description, price, image_url, dish_group_id, restaurant_id,option_group_ids=option_group_ids)
         return jsonify({'success': success})
 
     except Exception as e:
         print("❌ Lỗi khi thêm món ăn (route):", e)
         return jsonify({'success': False, 'message': str(e)})
+
+
+@app.route('/api/dish-details/<int:dish_id>', methods=['GET'])
+def get_dish_details_api(dish_id):
+    dish_data = dao.get_dish_details_for_edit(dish_id)
+    if dish_data:
+        return jsonify(dish_data)
+    else:
+        return jsonify({"error": "Không tìm thấy món ăn"}), 404
+
+
+# SỬA LẠI HOÀN TOÀN ROUTE UPDATE MÓN ĂN
+@app.route('/update_dish', methods=['POST'])
+def update_dish_route():
+    """
+    Nhận dữ liệu từ form sửa món ăn và gọi hàm DAO để xử lý.
+    """
+    try:
+        # Gọi thẳng hàm DAO, truyền toàn bộ request.form và request.files vào
+        success, message = dao.update_dish_with_options(
+            form_data=request.form,
+            image_file=request.files.get('image')
+        )
+
+        # Trả về kết quả cho frontend
+        return jsonify({'success': success, 'message': message})
+
+    except Exception as e:
+        print(f"❌ Lỗi nghiêm trọng tại route /update_dish: {e}")
+        return jsonify({'success': False, 'message': 'Lỗi hệ thống.'}), 500
 @app.route('/delete_dish', methods=['POST'])
 def delete_dish_route():
     try:
@@ -438,7 +470,89 @@ def delete_dish_route():
         return jsonify({'success': success, 'message': message})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
+@app.route('/api/add_option_group', methods=['POST'])
+def api_add_option_group():
+    data = request.get_json()
+    print("Dữ liệu nhận được từ form:", data)  # convert thành dict
 
+    if not data:
+        return jsonify({'success': False, 'message': 'Dữ liệu không hợp lệ.'}), 400
+    new_group = dao.add_option_group_with_options(data)
+
+    if new_group:
+        return jsonify({
+            'success': True,
+            'message': 'Thêm nhóm tùy chọn thành công!',
+            'group': { 'id': new_group.id, 'name': new_group.name }
+        }), 201 # HTTP status 201 Created
+    else:
+        # Nếu thất bại, trả về lỗi server
+        return jsonify({'success': False, 'message': 'Có lỗi xảy ra phía máy chủ.'}), 500
+@app.route('/api/option-group/update', methods=['POST'])
+def update_option_group_api():
+    """
+    API Endpoint để cập nhật nhóm tùy chọn.
+    Chỉ nhận dữ liệu và gọi hàm xử lý từ DAO.
+    """
+    # 1. Nhận dữ liệu JSON từ frontend
+    data = request.get_json()
+    if not data:
+        return jsonify({'success': False, 'message': 'Không có dữ liệu được gửi.'}), 400
+
+    # 2. Gọi hàm DAO để thực hiện logic cập nhật
+    success, result = dao.update_option_group_with_options(data)
+
+    # 3. Xử lý kết quả trả về từ DAO
+    if success:
+        # Nếu thành công, `result` là đối tượng group đã được cập nhật
+        updated_group = result
+        return jsonify({
+            'success': True,
+            'message': f'Đã cập nhật thành công nhóm "{updated_group.name}".'
+        })
+    else:
+        # Nếu thất bại, `result` là chuỗi thông báo lỗi
+        error_message = result
+        # Trả về mã lỗi 400 (Bad Request) hoặc 404 (Not Found) tùy theo lỗi
+        status_code = 404 if "Không tìm thấy" in error_message else 400
+        return jsonify({
+            'success': False,
+            'message': error_message
+        }), status_code
+@app.route('/api/option-group/<int:group_id>', methods=['GET'])
+def get_option_group_details_api(group_id):
+    """
+    API để cung cấp dữ_liệu chi tiết của một DishOptionGroup và các DishOption con.
+    """
+    # get_or_404 là cách tốt nhất, nó tự động trả về lỗi 404 nếu không tìm thấy ID
+    group = DishOptionGroup.query.get_or_404(group_id)
+
+    # Chuyển đổi đối tượng SQLAlchemy thành một dictionary để có thể gửi qua JSON
+    group_data = {
+        'id': group.id,
+        'name': group.name,
+        'max': group.max,
+        'mandatory': group.mandatory,
+        'options': [
+            {'name': opt.name, 'price': opt.price} for opt in group.options
+        ]
+    }
+    return jsonify(group_data)
+@app.route('/api/option-group/delete/<int:group_id>', methods=['DELETE'])
+def delete_option_group_api(group_id):
+    success, message = dao.delete_option_group_by_id(group_id)
+    if success:
+
+        return jsonify({
+            'success': True,
+            'message': message
+        })
+    else:
+        status_code = 404 if "Không tìm thấy" in message else 500
+        return jsonify({
+            'success': False,
+            'message': message
+        }), status_code
 #ĐĂNG KÍ NHÀ HÀNG
 @app.route('/register_restaurant', methods=['POST'])
 def handle_restaurant_registration():
