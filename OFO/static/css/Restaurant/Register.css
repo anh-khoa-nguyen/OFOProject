@@ -1,0 +1,211 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    background-color: #f0f2f5;
+
+}
+.signup-page {
+    padding: 60px 20px;
+}
+
+.signup-container {
+    width: 100%;
+    max-width: 800px;
+    margin: auto;
+    background-color: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    padding: 30px 40px;
+}
+
+h1 {
+    text-align: center;
+    color: #1c1e21;
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 25px;
+}
+
+form {
+    display: flex;
+    gap: 30px;
+}
+
+.form-column {
+    flex: 1;
+}
+
+
+h3 {
+    font-size: 20px;
+    font-weight: 600;
+    padding-bottom: 8px;
+    margin-bottom: 20px;
+}
+
+.column-title-blue {
+    color: #4A55A2;
+    border-bottom: 3px solid #4A55A2;
+}
+.column-title-green {
+    color: #4A55A2;
+    border-bottom: 3px solid #4A55A2;
+}
+
+
+.input-group {
+    margin-bottom: 16px;
+}
+.input-group.no-label {
+    margin-top: 25px;
+}
+.input-wrapper {
+    position: relative;
+}
+
+.input-wrapper input,
+.input-wrapper textarea {
+    width: 100%;
+    padding: 14px 20px 14px 50px;
+    border: 1px solid #dddfe2;
+    background-color: #f5f6f7;
+    border-radius: 12px;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 16px;
+    color: #1c1e21;
+    transition: all 0.2s ease-in-out;
+}
+.input-wrapper textarea {
+    resize: vertical;
+    min-height: 118px;
+}
+
+.input-icon {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #8a8d91;
+    pointer-events: none;
+}
+.input-icon.right {
+    left: auto;
+    right: 18px;
+}
+
+.input-wrapper input:has(+ .input-icon.right) {
+    padding-left: 20px;
+    padding-right: 50px;
+}
+
+
+.input-wrapper input:focus,
+.input-wrapper textarea:focus {
+    outline: none;
+    border-color: #007bff;
+    background-color: #fff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2);
+}
+
+::placeholder {
+    color: #606770;
+    opacity: 1;
+}
+
+.time-group,
+.file-upload-group {
+    display: flex;
+    gap: 15px;
+}
+.file-upload-label {
+    flex: 1;
+    padding: 12px;
+    border: 2px dashed #ccd0d5;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    text-align: center;
+    color: #606770;
+    font-size: 15px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+.file-upload-label:hover {
+    border-color: #007bff;
+    color: #007bff;
+    background-color: #f0f8ff;
+}
+
+.signup-button {
+    width: 100%;
+    padding: 14px;
+    color: #fff;
+
+
+    width: 100%;
+    padding: 15px;
+    background-color: #000;
+    color: #fff;
+    border: none;
+    font-size: 1.5em;
+    cursor: pointer;
+    font-family: 'Patrick Hand', sans-serif;
+    transition: background-color 0.3s ease;
+}
+.signup-button:hover {
+ background-color: #222;}
+
+.bottom-link {
+    text-align: center;
+    margin-top: 16px;
+    font-size: 15px;
+    color: #606770;
+}
+.bottom-link a {
+    color: #007bff;
+    font-weight: 600;
+    text-decoration: none;
+}
+.bottom-link a:hover {
+    text-decoration: underline;
+}
+.button-wrapper {
+    padding: 3px;
+    background: linear-gradient(60deg, #e73c7e, #ee7752, #a166ab, #5073b8);
+    background-size: 300% 300%;
+    animation: animatedgradient 3s ease alternate infinite;
+    border-radius: 5px;
+}
+
+@keyframes animatedgradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.bottom-link {
+    text-align: center;
+    margin-top: 25px;
+}
+
+.bottom-link p {
+    font-size: 1em;
+    color: #555;
+}
+
+.bottom-link a {
+    color: #000;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.bottom-link a:hover {
+    text-decoration: underline;
+}
