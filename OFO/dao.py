@@ -199,42 +199,52 @@ def get_dish_with_options(dish_id):
     return dish
 
 
-def search_restaurants(category_name=None, user_lat=None, user_lng=None, radius_km=10):
+def search_and_classify_restaurants(category_name=None, user_lat=None, user_lng=None, radius_km=10):
     """
-    Tìm kiếm nhà hàng nâng cao, có thể lọc theo tên danh mục và bán kính.
+    Tìm kiếm và phân loại nhà hàng thành hai nhóm:
+    1. Gần: <= 10km
+    2. Có thể thích: > 10km và <= 50km
     """
-    # Bắt đầu với việc lấy tất cả nhà hàng đang hoạt động
     query = Restaurant.query.filter_by(active=True)
 
-    # Lọc theo danh mục NẾU có cung cấp
     if category_name:
-        query = query.join(Category).filter(Category.name == category_name)
+        query = query.join(Restaurant.category).filter(Category.name == category_name)
 
     all_restaurants = query.all()
 
-    # Lọc theo khoảng cách NẾU có tọa độ người dùng
-    if user_lat is not None and user_lng is not None:
-        user_location = (float(user_lat), float(user_lng))
+    if user_lat is None or user_lng is None:
+        for r in all_restaurants:
+            r.distance_km = None
+            r.delivery_time_minutes = None
+        return [], all_restaurants
 
-        restaurants_in_radius = []
+    user_location = (float(user_lat), float(user_lng))
+    nearby_restaurants = []
+    other_restaurants = []
 
-        print(all_restaurants)
-        for restaurant in all_restaurants:
-            if restaurant.lat and restaurant.lng:
-                restaurant_location = (float(restaurant.lat), float(restaurant.lng))
-                distance = geodesic(user_location, restaurant_location).km
+    for restaurant in all_restaurants:
+        if not (restaurant.lat and restaurant.lng):
+            continue
 
-                # Chỉ thêm nhà hàng vào kết quả nếu nó nằm trong bán kính
-                if distance <= radius_km:
-                    # Gán khoảng cách và thời gian giao hàng vào đối tượng
-                    restaurant.distance_km = round(distance, 1)
-                    restaurant.delivery_time_minutes = round(10 + (distance * 5))
-                    restaurants_in_radius.append(restaurant)
+        restaurant_location = (float(restaurant.lat), float(restaurant.lng))
+        distance = geodesic(user_location, restaurant_location).km
 
-        return restaurants_in_radius
 
-    return all_restaurants
+        restaurant.distance_km = round(distance, 2)
+        restaurant.delivery_time_minutes = round(10 + (distance * 5))
 
+        if distance <= radius_km:
+            nearby_restaurants.append(restaurant)
+        # 2. Nếu không, kiểm tra xem có trong bán kính "xa" hay không (> 10km và <= 50km)
+        elif distance <= 50:
+            other_restaurants.append(restaurant)
+        # Các nhà hàng có distance > 50km sẽ không được thêm vào danh sách
+
+    # Sắp xếp danh sách nhà hàng ở xa theo khoảng cách tăng dần
+    other_restaurants.sort(key=lambda r: r.distance_km)
+    nearby_restaurants.sort(key=lambda r: r.distance_km)
+
+    return nearby_restaurants, other_restaurants
 
 def add_review(order_id, star, comment, image_urls=None):
     """
@@ -658,6 +668,8 @@ def register_restaurant_and_user(username, email, password, phone, res_name, add
         traceback.print_exc()
         return (False, 'Đã có lỗi xảy ra trong quá trình xử lý dữ liệu.')
 
+def get_category_by_name(name):
+    return Category.query.filter(Category.name.ilike(f"%{name}%")).first()
 def toggle_favorite(user_id, restaurant_id):
     user = User.query.get(user_id)
     restaurant = Restaurant.query.get(restaurant_id)
