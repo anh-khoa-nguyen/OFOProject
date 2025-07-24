@@ -117,13 +117,18 @@ class DishOptionGroup(db.Model):
     name = Column(String(50), nullable=False)
     mandatory = Column(Boolean, default=False)
     max = Column(Integer)
-    options = relationship('DishOption', backref='dish_option_group', lazy=True)
-
+    options = relationship(
+        'DishOption',
+        back_populates='group',          # <-- Dùng back_populates thay cho backref
+        cascade="all, delete-orphan",    # <-- Thêm cascade để xóa theo
+        lazy='dynamic'                   # <-- Dùng lazy='dynamic' cho hiệu quả
+    )
 class DishOption(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)
     option_group_id = Column(Integer, ForeignKey(DishOptionGroup.id), nullable=False)
     name = Column(String(50), nullable=False)
     price = Column(Float, default=0)
+    group = relationship('DishOptionGroup', back_populates='options')
 
 
 

@@ -4,7 +4,6 @@
 </head>
 {% extends 'layout/base.html' %}
 
-
 {% block content %}
 <style>
     .restaurant-info-block .restaurant-management-nav {
@@ -57,6 +56,199 @@
 .restaurant-info-block .restaurant-management-nav a i {
     margin-right: 8px;
     font-size
+}
+#dynamicFormOffcanvas {
+    --bs-offcanvas-width: 500px;
+}
+#dynamicFormOffcanvas .offcanvas-header {
+    background-color: #FFF0F5;
+    border-bottom: 2px solid #E91E63;
+}
+#dynamicFormOffcanvas .offcanvas-title {
+    font-weight: 600;
+    color: #E91E63;
+}
+#dynamicFormOffcanvas .offcanvas-body {
+    background-color: #fff;
+    padding: 1.5rem;
+}
+
+/* --- 2. Thiết kế cho các KHỐI (section) trong form --- */
+.form-section {
+    background-color: #FFF0F5;  /* << Nền hồng rất nhạt >> */
+    border: 1px solid #F8BBD0;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+.form-section-title {
+    font-weight: 600;
+    color: #c2185b; /* Màu hồng tối hơn để dễ đọc */
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #F8BBD0;
+}
+
+/* --- 3. Tùy chỉnh các ô input và label --- */
+.form-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #495057;
+}
+.form-control:focus {
+    border-color: #E91E63;
+    box-shadow: 0 0 0 0.25rem rgba(233, 30, 99, 0.25); /* << Đổ bóng hồng khi focus >> */
+}
+
+/* --- 4. Tùy chỉnh cho nút gạt "Bắt buộc" --- */
+.form-switch {
+    display: flex;
+    justify-content: space-between; /* Đẩy label và nút gạt ra hai bên */
+    align-items: center;
+    padding-left: 0 !important; /* Ghi đè padding mặc định của Bootstrap */
+}
+.form-switch .form-check-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #495057;
+}
+.form-switch .form-check-input {
+    width: 3.25em;
+    height: 1.6em;
+    cursor: pointer;
+    margin-left: 1em;
+}
+/* Nút gạt sẽ có màu hồng khi được bật */
+.form-switch .form-check-input:checked {
+    background-color: #E91E63;
+    border-color: #E91E63;
+}
+
+
+/* --- 5. Các thẻ lựa chọn động --- */
+.option-card { /* Đây là tên class mới cho các thẻ lựa chọn */
+    background-color: #fff; /* Nền trắng để nổi bật trên nền hồng của section */
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    position: relative;
+    transition: all 0.2s ease-in-out;
+}
+.option-card:hover {
+    border-color: #E91E63;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+.btn-delete-option {
+    position: absolute;
+    top: 0.5rem; right: 0.5rem; width: 28px; height: 28px;
+    border-radius: 50%; border: none; background-color: #e9ecef; color: #6c757d;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s ease;
+}
+.btn-delete-option:hover {
+    background-color: #E91E63; color: white; transform: scale(1.1);
+}
+.option-card .form-label {
+    font-size: 0.85rem; margin-bottom: 0.25rem;
+}
+
+
+/* --- 6. Nút "Thêm Lựa Chọn" và "Lưu" --- */
+#addInputButton {
+    border: 2px dashed #E91E63;
+    color: #E91E63;
+    background-color: transparent; /* Nền trong suốt trên nền hồng của section */
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+#addInputButton:hover {
+    background-color: #E91E63;
+    color: white;
+    border-style: solid;
+}
+
+#dynamicFormOffcanvas .offcanvas-footer {
+    padding: 1rem 1.5rem;
+    background-color: #fff;
+    border-top: 1px solid #e9ecef;
+}
+#dynamicFormOffcanvas .btn-success {
+    background: #E91E63;
+    border-color: #E91E63;
+    font-weight: 600;
+    padding: 0.75rem;
+    transition: all 0.2s ease-in-out;
+}
+#dynamicFormOffcanvas .btn-success:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(233, 30, 99, 0.4);
+}
+#editOptionGroupOffcanvas {
+    --bs-offcanvas-width: 500px;
+}
+#editOptionGroupOffcanvas .offcanvas-header {
+    background-color: #e7f1ff; /* Nền xanh dương rất nhạt */
+    border-bottom: 2px solid #E91E63; /* Đường viền xanh dương đậm */
+}
+#editOptionGroupOffcanvas .offcanvas-title {
+    font-weight: 600;
+    color: #E91E63; /* Chữ màu xanh dương đậm */
+}
+#editOptionGroupOffcanvas .offcanvas-body {
+    background-color: #fff;
+    padding: 1.5rem;
+}
+
+/* --- 2. Style cho input và label (Kế thừa từ các class chung) --- */
+/* Các class như .form-label, .form-control sẽ tự động được áp dụng,
+   nhưng chúng ta sẽ tùy chỉnh hiệu ứng :focus cho phù hợp với tông màu xanh */
+#editOptionGroupOffcanvas .form-control:focus {
+    border-color: #E91E63;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); /* Đổ bóng xanh khi focus */
+}
+
+/* --- 3. Style cho nút gạt "Bắt buộc" --- */
+/* Class .form-switch sẽ được áp dụng, chỉ cần đổi màu khi được bật */
+#editOptionGroupOffcanvas .form-switch .form-check-input:checked {
+    background-color: #E91E63;
+    border-color: #E91E63;
+}
+
+/* --- 4. Style cho các thẻ lựa chọn động --- */
+/* Class chung .option-card sẽ được áp dụng, chỉ cần tùy chỉnh màu khi hover */
+#editOptionGroupOffcanvas .option-card:hover {
+    border-color: #E91E63; /* Viền xanh khi hover */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+/* Nút xóa vẫn nên có màu đỏ/hồng để cảnh báo, nên ta giữ nguyên style cũ cho nó */
+#editOptionGroupOffcanvas .btn-delete-option:hover {
+    background-color: #dc3545; /* Màu đỏ nguy hiểm */
+    color: white;
+    transform: scale(1.1);
+}
+.btn-pink {
+    background-color: #E91E63;
+    border-color: #E91E63;
+    color: white; /* Đừng quên đổi màu chữ cho dễ đọc */
+}
+/* --- 5. Style cho các nút hành động --- */
+
+/* Nút "Thêm Lựa Chọn Khác" */
+#addAnotherOptionBtn {
+    border: 2px dashed #E91E63;
+    color: #E91E63;
+    background-color: transparent;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+#addAnotherOptionBtn:hover {
+    background-color: #E91E63;
+    color: white;
+    border-style: solid;
+}
+
 </style >
 
 
@@ -145,7 +337,46 @@
             </button>
 
         </div>
+
     </div>
+    <div class="category-navbar-wrapper mt-3">
+    <div class="category-navbar">
+
+        <!-- Nút cuộn trái (ID mới) -->
+        <button id="scroll-left-btnn" class="scroll-btn left d-none">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+
+        <!-- Danh sách các Dish_option_Group (ID mới) -->
+        <div id="option-group-nav-list" class="category-nav-list">
+            <button class="btn-add-to-dish_group" title="Tạo Nhóm Tùy Chọn Mới"
+            type="button"
+            data-bs-toggle="offcanvas"
+            data-bs-target="#dynamicFormOffcanvas">
+        +
+    </button>
+
+            {# Vòng lặp này sẽ hiển thị tất cả các nhóm tùy chọn bạn đã tạo #}
+            {# Giả sử bạn truyền một biến `option_groups` từ backend #}
+            {% for option_group in dish_option_group %}
+            <a href="#" class="category-nav-item edit-option-group-trigger"
+                role="button"
+       data-bs-toggle="offcanvas"
+       data-bs-target="#editOptionGroupOffcanvas"
+               data-group-id="{{ option_group.id }}" >
+                {{ option_group.name }}
+            </a>
+            {% endfor %}
+        </div>
+
+        <!-- Nút cuộn phải (ID mới) -->
+        <button id="scroll-right-btnn" class="scroll-btn right">
+            <i class="bi bi-chevron-right"></i>
+        </button>
+
+    </div>
+</div>
+
     <!-- ==== BẮT ĐẦU PHẦN HIỂN THỊ SẢN PHẨM ==== -->
     {% for group in dish_groups %}
     <div id="section-{{ group.name | lower | replace(' ', '-') }}" class="menu-section">
@@ -169,8 +400,7 @@
                     </button>
 
                     <div class="product-card-img-wrapper">
-                        <img src="{{ url_for('static', filename=dish.image) if dish.image else url_for('static', filename='images/default.jpg') }}"
-     alt="{{ dish.name }}">
+                        <img src="{{ url_for('static', filename=dish.image) if dish.image else url_for('static', filename='images/default.jpg') }}" alt="{{ dish.name }}">
                     </div>
                     <div class="product-card-body">
                         <h5 class="product-card-title">{{ dish.name }}</h5>
@@ -185,7 +415,8 @@
                                     data-desc="{{ dish.description }}"
                                     data-price="{{ dish.price }}"
                                     data-image="{{ dish.image }}"
-                                    data-group="{{ dish.dish_group_id }}">
+                                    data-group="{{ dish.dish_group_id }}"
+                            >
                                    <i class="fas fa-edit"></i>
                             </button>
 
@@ -222,10 +453,7 @@
         </div>
     </div>
     <!-- Nút để mở Offcanvas -->
-    <button class="btn btn-primary btn-lg" type="button" data-bs-toggle="offcanvas"
-            data-bs-target="#productOptionsOffcanvas" aria-controls="productOptionsOffcanvas">
-        Mở Tùy chọn sản phẩm
-    </button>
+
          <!--THÊM MÓN ĂN - MODAL -->
             <div id="modal_add_dish" class="modal">
     <!-- Lớp phủ màu đen phía sau (dùng chung class 'modal-overlay') -->
@@ -259,7 +487,23 @@
                 <label for="input_dish_price">Giá</label>
                 <input type="number" id="input_dish_price" name="price" required placeholder="Ví dụ: 35000">
             </div>
-
+            <div class="form-group">
+    <label class="form-label fw-bold">Thêm vào các nhóm tùy chọn</label>
+    <div id="add-dish-options-container" class="mt-2">
+        {% for group in dish_option_group %}
+            <div class="form-check">
+                <!-- `name` phải là "option_group_ids" (số nhiều) -->
+                <input class="form-check-input" type="checkbox"
+                       name="option_group_ids"
+                       value="{{ group.id }}"
+                       id="add-dish-option-{{ group.id }}">
+                <label class="form-check-label" for="add-dish-option-{{ group.id }}">
+                    {{ group.name }}
+                </label>
+            </div>
+        {% endfor %}
+    </div>
+</div>
             <div class="form-group">
                 <label for="input_dish_image">Hình ảnh</label>
                 <input type="file" id="input_dish_image" name="image" accept="image/*">
@@ -294,7 +538,23 @@
                 <label>Giá</label>
                 <input type="number" name="price" id="edit_price" required>
             </div>
-
+             <div class="form-group">
+    <label class="form-label fw-bold">Các nhóm tùy chọn liên kết</label>
+    <div id="edit-dish-options-container" class="mt-2">
+        {% for group in dish_option_group %}
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox"
+                       name="option_group_ids"
+                       value="{{ group.id }}"
+                       id="edit-dish-option-{{ group.id }}">
+                <!-- SỬA LẠI `for` Ở ĐÂY để khớp với id ở trên -->
+                <label class="form-check-label" for="edit-dish-option-{{ group.id }}">
+                    {{ group.name }}
+                </label>
+            </div>
+        {% endfor %}
+    </div>
+</div>
             <div class="form-group">
                 <label>Hình ảnh mới (tùy chọn)</label>
                 <input type="file" name="image" accept="image/*">
@@ -304,130 +564,136 @@
         </form>
     </div>
 </div>
-    <!-- Offcanvas cho Product Options -->
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="productOptionsOffcanvas" aria-labelledby="offcanvasLabel">
-        <div class="offcanvas-header">
-            <h5 class="offcanvas-title" id="offcanvasLabel"></h5>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+   <!-- ==== OFFCANVAS ĐỂ TẠO MỚI DISH OPTION GROUP ==== -->
+<div class="offcanvas offcanvas-end" style="--bs-offcanvas-width: 500px;" tabindex="-1" id="dynamicFormOffcanvas" aria-labelledby="offcanvasLabel">
+    <div class="offcanvas-header border-bottom">
+        <h5 class="offcanvas-title" id="offcanvasLabel">Tạo Nhóm Tùy Chọn Mới</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <form id="dynamicForm">
+            <!-- Tên nhóm -->
+            <div class="mb-4">
+                <label for="groupName" class="form-label fw-bold">Tên nhóm tùy chọn</label>
+                <input type="text" class="form-control" id="groupName" placeholder="Ví dụ: Topping, Chọn Size...">
+            </div>
+            <div class="mb-3">
+            <label for="maxSelection" class="form-label">Lựa chọn tối đa</label>
+            <input type="number" class="form-control" id="maxSelection" min="1" placeholder="Bỏ trống nếu không giới hạn">
         </div>
-        <div class="offcanvas-body">
-            <!-- NỘI DUNG CÓ THỂ CUỘN -->
-            <div class="scrollable-content">
-                <!-- Thông tin sản phẩm chính -->
-                <div class="product-main-info d-flex align-items-start">
-                    <img src="{{ url_for('static', filename='images/garan.png') }}" class="product-image me-3"
-                         alt="Trà Sữa Bơ">
-                    <div class="flex-grow-1">
-                        <h5 class="fw-bold mb-1">Trà Sữa Bơ</h5>
-                        <p class="small text-muted">Sự hòa quyện giữa trà sữa lài thơm thanh đậm đà cùng bơ tươi Đà Lạt
-                            xay
-                            nhuyễn và sánh mịn. Thông tin dị ứng: Sản phẩm có chứa sữa</p>
-                    </div>
-                    <div class="text-end ms-2 flex-shrink-0">
-                        <span class="fw-bold fs-5" id="basePriceText">27.000</span>
-                    </div>
-                </div>
 
-                <!-- Tùy chọn Size -->
-                <div class="options-section" id="size-options">
-                    <div class="d-flex justify-content-between mb-3">
-                        <h6 class="fw-bold mb-0">SIZE</h6>
-                        <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill">Pick 1</span>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="size" id="sizeM" data-base-price="27000"
-                                   checked>
-                            <label class="form-check-label w-100" for="sizeM">Trà Sữa Bơ M</label>
-                        </div>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="size" id="sizeL" data-base-price="33000">
-                            <label class="form-check-label w-100" for="sizeL">Trà Sữa Bơ L</label>
-                        </div>
-                        <span class="fw-normal">+6.000</span>
-                    </div>
-                </div>
+        <!-- 3. Bắt buộc (TRƯỜNG MỚI CHO `mandatory`) -->
+        <div class="form-check form-switch p-0">
+             <label class="form-check-label" for="isMandatory">Bắt buộc</label>
+            <input class="form-check-input" style="margin: auto" type="checkbox" role="switch" id="isMandatory">
+        </div>
+            <hr>
 
-                <!-- Tùy chọn Topping -->
-                <div class="options-section" id="topping-options" data-max-selection="4">
-                    <div class="d-flex justify-content-between mb-3">
-                        <div>
-                            <h6 class="fw-bold mb-0">1. Topping</h6>
-                            <small class="text-muted">Optional, max 4</small>
-                        </div>
-                        <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill">Optional</span>
-                    </div>
-                    <!-- Các topping -->
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="7000" id="topping1">
-                            <label class="form-check-label w-100" for="topping1">Sợi Pha Lê</label>
-                        </div>
-                        <span class="fw-normal">+7.000</span>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="7000" id="topping2">
-                            <label class="form-check-label w-100" for="topping2">Trân Châu Củ Năng</label>
-                        </div>
-                        <span class="fw-normal">+7.000</span>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="10000" id="topping3">
-                            <label class="form-check-label w-100" for="topping3">Topping Cheese Ball</label>
-                        </div>
-                        <span class="fw-normal">+10.000</span>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="7000" id="topping4">
-                            <label class="form-check-label w-100" for="topping4">Đậu Đỏ</label>
-                        </div>
-                        <span class="fw-normal">+7.000</span>
-                    </div>
-                </div>
-                <div class="options-section">
-                    <div class="mb-2">
-                        <label for="specialInstructions" class="form-label">
-                            <strong class="me-2">Special instructions</strong>
-                            <small class="text-muted">Optional</small>
-                        </label>
-                        <input type="text" class="form-control" id="specialInstructions"
-                               placeholder="E.g. No onions please">
-                    </div>
-                </div>
-
+            <!-- Các lựa chọn -->
+            <h6 class="fw-bold mb-3">Các Lựa Chọn Trong Nhóm</h6>
+            <div id="dynamicInputsContainer">
+                <!-- JavaScript sẽ chèn các "Thẻ Lựa Chọn" vào đây -->
             </div>
 
-            <!-- FOOTER CỐ ĐỊNH -->
-            <div class="offcanvas-footer d-flex align-items-center justify-content-between">
-                <div class="quantity-selector d-flex align-items-center">
-                    <button class="btn" id="decrease-qty">-</button>
-                    <input type="text" id="quantity" value="1" readonly>
-                    <button class="btn" id="increase-qty">+</button>
-                </div>
-                <button class="btn btn-pink flex-grow-1 ms-3 fw-bold" id="add-to-basket-btn" disabled>Add to Basket
-                </button>
-            </div>
-        </div>
+            <!-- Nút thêm thẻ mới -->
+            <button type="button" class="btn w-100 mt-2" id="addInputButton">
+                <i class="fas fa-plus"></i> Thêm Lựa Chọn
+            </button>
+        </form>
+    </div>
+    <div class="offcanvas-footer p-3 border-top bg-light">
+        <button type="submit" class="btn btn-success w-100 fw-bold" form="dynamicForm">
+            Lưu
+        </button>
+    </div>
+</div>
+</div>
+<!-- OFF-CANVAS "SỬA" - ID MỚI, CLASS GIỐNG HỆT OFF-CANVAS "TẠO" -->
+<div class="offcanvas offcanvas-end" style="--bs-offcanvas-width: 500px;" tabindex="-1"
+     id="editOptionGroupOffcanvas"
+     aria-labelledby="editOffcanvasLabel">
+
+    <div class="offcanvas-header border-bottom">
+        <h5 class="offcanvas-title" id="editOffcanvasLabel">Chỉnh Sửa Nhóm Tùy Chọn</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
 
+    <div class="offcanvas-body">
+        <form id="editOptionGroupForm">
+            <!-- Input ẩn để lưu ID của group đang sửa -->
+            <input type="hidden" id="editGroupId">
 
+            <!-- Các trường input -->
+            <div class="mb-4">
+                <label for="editGroupName" class="form-label fw-bold">Tên nhóm tùy chọn</label>
+                <input type="text" class="form-control" id="editGroupName" required>
+            </div>
+            <div class="mb-3">
+                <label for="editGroupMax" class="form-label">Lựa chọn tối đa</label>
+                <input type="number" class="form-control" id="editGroupMax" min="1" placeholder="Bỏ trống nếu không giới hạn">
+            </div>
+            <div class="form-check form-switch p-0">
+                <label class="form-check-label" for="editGroupMandatory">Bắt buộc</label>
+                <input class="form-check-input" style="margin: auto" type="checkbox" role="switch" id="editGroupMandatory">
+            </div>
+            <hr>
+
+            <h6 class="fw-bold mb-3">Các Lựa Chọn Trong Nhóm</h6>
+            <div id="editOptionsContainer">
+                <!-- JavaScript sẽ điền các lựa chọn vào đây -->
+            </div>
+
+            <!-- Nút thêm lựa chọn mới -->
+            <button type="button" class="btn   w-100 mt-2" id="addAnotherOptionBtn">
+                <i class="fas fa-plus"></i> Thêm Lựa Chọn Khác
+            </button>
+        </form>
+    </div>
+
+    <div class="offcanvas-footer p-3 border-top bg-light">
+        <!-- Nút submit trỏ đến form "Sửa" bằng thuộc tính `form` -->
+        <button type="submit" class="btn btn-pink w-100 fw-bold" form="editOptionGroupForm">
+            Lưu Thay Đổi
+        </button>
+        <button type="button"   style=" margin-top: 10px" class="btn btn-outline-danger w-100 fw-bold " id="deleteGroupInsideFormBtn">
+            Xóa
+        </button>
+
+    </div>
 </div>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<!-- Bootstrap Bundle JS (gồm cả Popper) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 {% endblock %}
 
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        function reformatNumberInput(inputElement) {
+            let value = inputElement.value;
+            if (value.startsWith('0') && value.length > 1) {
+                inputElement.value = Number(value);
+            }
+        }
+        document.body.addEventListener('input', function(event) {
+            if (event.target.matches('input[name="option_price"]') || event.target.matches('.edit-option-price')) {
+                reformatNumberInput(event.target);
+            }
+        });
+
+    });
+    document.addEventListener('DOMContentLoaded', function () {
         // --- Phần 1: Các biến và phần tử cần thiết ---
         const navList = document.getElementById('category-nav-list');
         const navLinks = document.querySelectorAll('#category-nav-list .category-nav-item');
+        const navListe = document.getElementById('option-group-nav-list');
         const sections = document.querySelectorAll('.menu-section');
         const leftBtn = document.getElementById('scroll-left-btn');
         const rightBtn = document.getElementById('scroll-right-btn');
+        const leftBtnn = document.getElementById('scroll-left-btnn');
+        const rightBtnn = document.getElementById('scroll-right-btnn');
 
         // Chiều cao của header và thanh nav để tính toán vị trí cuộn chính xác
         const offsetHeight = 150;
@@ -448,6 +714,20 @@
             rightBtn.addEventListener('click', () => navList.scrollBy({ left: scrollAmount }));
             navList.addEventListener('scroll', updateButtonVisibility);
             setTimeout(updateButtonVisibility, 100);
+        }
+        if (leftBtnn && rightBtnn) {
+            const scrollAmountt = 250;
+
+            function updateButtonVisibilityy() {
+                const maxScrolll = navListe.scrollWidth - navListe.clientWidth;
+                leftBtnn.classList.toggle('d-none', navListe.scrollLeft <= 0);
+                rightBtnn.classList.toggle('d-none', navListe.scrollLeft >= maxScrolll - 1);
+            }
+
+            leftBtnn.addEventListener('click', () => navListe.scrollBy({ left: -scrollAmountt }));
+            rightBtnn.addEventListener('click', () => navListe.scrollBy({ left: scrollAmountt }));
+            navListe.addEventListener('scroll', updateButtonVisibilityy);
+            setTimeout(updateButtonVisibilityy, 100);
         }
 
         // --- Phần 3: Xử lý highlight tự động KHI CUỘN trang ---
@@ -496,86 +776,365 @@
         });
 
     });
+document.addEventListener('DOMContentLoaded', function () {
+
+        // --- 1. Lấy các phần tử của thanh Tùy Chọn bằng ID riêng của nó ---
+        const optionsNavList = document.getElementById('option-group-nav-list');
+        const optionsLeftBtn = document.getElementById('scroll-left-options-btn');
+        const optionsRightBtn = document.getElementById('scroll-right-options-btn');
+
+        // Nếu không tìm thấy một trong các phần tử, thoát để không gây lỗi
+        if (!optionsNavList || !optionsLeftBtn || !optionsRightBtn) {
+            return;
+        }
+
+        // --- 2. Xử lý các nút cuộn trái/phải ---
+        const scrollAmount = 250;
+
+        // Hàm này có tên riêng để không xung đột với hàm của script cũ
+        function updateOptionsButtons() {
+            const maxScroll = optionsNavList.scrollWidth - optionsNavList.clientWidth;
+
+            // Ẩn/hiện các nút của thanh Tùy Chọn
+            optionsLeftBtn.classList.toggle('d-none', optionsNavList.scrollLeft <= 0);
+            optionsRightBtn.classList.toggle('d-none', optionsNavList.scrollLeft >= maxScroll - 1);
+        }
+
+        // Gán sự kiện click cho các nút của thanh Tùy Chọn
+        optionsLeftBtn.addEventListener('click', () => optionsNavList.scrollBy({ left: -scrollAmount, behavior: 'smooth' }));
+        optionsRightBtn.addEventListener('click', () => optionsNavList.scrollBy({ left: scrollAmount, behavior: 'smooth' }));
+
+        // Gán sự kiện scroll cho thanh Tùy Chọn
+        optionsNavList.addEventListener('scroll', updateOptionsButtons);
+
+        // SỬA LỖI HIỂN THỊ:
+        // Dùng ResizeObserver là cách đáng tin cậy nhất để theo dõi kích thước
+        // và cập nhật nút đúng thời điểm, thay vì dùng setTimeout.
+        const observer = new ResizeObserver(updateOptionsButtons);
+        observer.observe(optionsNavList);
+    });
 </script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const offcanvasElement = document.getElementById('productOptionsOffcanvas');
 
-        // Lấy các element cần thiết
-        const quantityInput = document.getElementById('quantity');
-        const decreaseBtn = document.getElementById('decrease-qty');
-        const increaseBtn = document.getElementById('increase-qty');
-        const addToBasketBtn = document.getElementById('add-to-basket-btn');
+    const addInputButton = document.getElementById('addInputButton');
+    const dynamicInputsContainer = document.getElementById('dynamicInputsContainer');
+    const dynamicForm = document.getElementById('dynamicForm');
 
-        const sizeOptions = document.querySelectorAll('input[name="size"]');
-        const toppingOptionsContainer = document.getElementById('topping-options');
-        const toppingOptions = toppingOptionsContainer.querySelectorAll('input[type="checkbox"]');
-        const maxToppings = parseInt(toppingOptionsContainer.dataset.maxSelection);
+    // --- HÀM TẠO RA MỘT "THẺ LỰA CHỌN" MỚI ---
+    function createNewInputRow() {
+        const cardWrapper = document.createElement('div');
+        // Gán class để CSS có thể áp dụng style
+        cardWrapper.classList.add('option-card');
 
-        // Hàm định dạng tiền tệ
-        function formatCurrency(value) {
-            return new Intl.NumberFormat('vi-VN').format(value);
+        // Nội dung HTML cho cả thẻ
+        cardWrapper.innerHTML = `
+            <!-- Nút xóa nằm ở góc -->
+            <button type="button" class="btn-delete-option" title="Xóa lựa chọn này">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <!-- Bố cục 2 cột cho Tên và Giá -->
+            <div class="row g-3">
+                <!-- Cột 1: Tên lựa chọn -->
+                <div class="col-md-7">
+                    <label class="form-label">Tên lựa chọn</label>
+                    <input type="text" class="form-control form-control-sm" name="option_name" required>
+                </div>
+
+                <!-- Cột 2: Giá thêm -->
+                <div class="col-md-5">
+                    <label class="form-label">Giá thêm (đ)</label>
+                    <input type="number" class="form-control form-control-sm" name="option_price" value="0" min="0" required>
+                </div>
+            </div>
+        `;
+        dynamicInputsContainer.appendChild(cardWrapper);
+    }
+
+
+    // --- GÁN SỰ KIỆN ---
+
+    // 1. Click để thêm thẻ mới
+    addInputButton.addEventListener('click', createNewInputRow);
+
+    // 2. Click để xóa thẻ
+    dynamicInputsContainer.addEventListener('click', function(event) {
+        const deleteButton = event.target.closest('.btn-delete-option');
+        if (deleteButton) {
+            // Tìm đến thẻ cha gần nhất có class .option-card và xóa nó
+            deleteButton.closest('.option-card').remove();
         }
+    });
 
-        // Hàm chính để cập nhật tổng giá tiền
-        function updateTotal() {
-            // 1. Lấy giá cơ bản từ size đã chọn
-            const selectedSize = document.querySelector('input[name="size"]:checked');
-            let basePrice = parseFloat(selectedSize.dataset.basePrice);
+    // 3. Submit form để thu thập dữ liệu
+    dynamicForm.addEventListener('submit', function(event) {
+        event.preventDefault();
 
-            // 2. Tính tổng giá topping
-            let toppingPrice = 0;
-            let checkedToppingsCount = 0;
-            toppingOptions.forEach(checkbox => {
-                if (checkbox.checked) {
-                    toppingPrice += parseFloat(checkbox.value);
-                    checkedToppingsCount++;
-                }
-            });
+        const data = {
+            name: document.getElementById('groupName').value.trim(),
+            options: []
+        };
 
-            // 3. Lấy số lượng
-            const quantity = parseInt(quantityInput.value);
-
-            // 4. Tính tổng cuối cùng
-            const total = (basePrice + toppingPrice) * quantity;
-
-            // 5. Cập nhật nội dung nút
-            addToBasketBtn.textContent = `Add to Basket - ${formatCurrency(total)} ₫`;
-            addToBasketBtn.disabled = false;
-
-            // 6. Xử lý giới hạn topping
-             toppingOptions.forEach(checkbox => {
-                if (!checkbox.checked && checkedToppingsCount >= maxToppings) {
-                    checkbox.disabled = true; // Vô hiệu hóa các checkbox chưa chọn khi đạt giới hạn
-                } else {
-                    checkbox.disabled = false; // Bật lại nếu chưa đạt giới hạn
-                }
-            });
-        }
-
-        // Gán sự kiện cho các nút và input
-        increaseBtn.addEventListener('click', () => {
-            quantityInput.value = parseInt(quantityInput.value) + 1;
-            updateTotal();
-        });
-
-        decreaseBtn.addEventListener('click', () => {
-            let currentQty = parseInt(quantityInput.value);
-            if (currentQty > 1) {
-                quantityInput.value = currentQty - 1;
-                updateTotal();
+        const allOptionCards = dynamicInputsContainer.querySelectorAll('.option-card');
+        allOptionCards.forEach(card => {
+            const name = card.querySelector('input[name="option_name"]').value.trim();
+            const price = parseFloat(card.querySelector('input[name="option_price"]').value);
+            if (name) {
+                data.options.push({ name, price });
             }
         });
 
-        sizeOptions.forEach(radio => radio.addEventListener('change', updateTotal));
-        toppingOptions.forEach(checkbox => checkbox.addEventListener('change', updateTotal));
+        if (!data.name || data.options.length === 0) {
+            alert("Vui lòng điền đầy đủ tên nhóm và ít nhất một lựa chọn.");
+            return;
+        }
 
-        // Tính toán lần đầu khi offcanvas được hiển thị
-        offcanvasElement.addEventListener('shown.bs.offcanvas', function () {
-            updateTotal();
-        });
+        console.log('Dữ liệu dạng thẻ sẽ được gửi đi:');
+        console.log(JSON.stringify(data, null, 2));
     });
+
+    // Tự động tạo thẻ đầu tiên
+    createNewInputRow();
+    //Thêm DISH_OPTION_GROUP
+ dynamicForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            // 1. Thu thập dữ liệu từ form
+            const data = {
+                restaurant_id: "{{ restaurant.id }}", // Lấy ID nhà hàng từ template
+                name: document.getElementById('groupName').value.trim(),
+                max: document.getElementById('maxSelection').value ? parseInt(document.getElementById('maxSelection').value) : null,
+                mandatory: document.getElementById('isMandatory').checked,
+                options: []
+            };
+
+            const allOptionCards = dynamicInputsContainer.querySelectorAll('.option-card');
+            allOptionCards.forEach(card => {
+                const name = card.querySelector('input[name="option_name"]').value.trim();
+                const price = parseFloat(card.querySelector('input[name="option_price"]').value);
+                if (name) {
+                    data.options.push({ name, price });
+                }
+            });
+
+            if (!data.name || data.options.length === 0) {
+                alert("Vui lòng điền đầy đủ tên nhóm và ít nhất một lựa chọn.");
+                return;
+            }
+
+            // 2. Gửi dữ liệu đến API bằng fetch
+            fetch('/api/add_option_group', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(res => res.json())
+            .then(result => {
+                // 3. Xử lý kết quả trả về từ server
+                if (result.success) {
+                    alert('✅ ' + result.message);
+
+                    // Tải lại trang để cập nhật danh sách
+                    location.reload();
+                } else {
+                    alert('❌ Lỗi: ' + result.message);
+                }
+            })
+            .catch(error => {
+                console.error('Lỗi khi gửi dữ liệu:', error);
+                alert('❌ Đã xảy ra lỗi mạng. Vui lòng thử lại.');
+            });
+  });
+
+
 </script>
+<script>
+    //SỬA NHÓM MÓN
+document.addEventListener('DOMContentLoaded', function () {
+
+    const editOffcanvasEl = document.getElementById('editOptionGroupOffcanvas');
+
+    // Nếu không có offcanvas "Sửa" trên trang thì dừng lại
+    if (!editOffcanvasEl) {
+        return;
+    }
+
+    // --- 1. Lấy các phần tử DOM của form "Sửa" ---
+    const editForm = document.getElementById('editOptionGroupForm');
+    const editGroupIdInput = document.getElementById('editGroupId');
+    const editGroupNameInput = document.getElementById('editGroupName');
+    const editGroupMaxInput = document.getElementById('editGroupMax');
+    const editGroupMandatoryInput = document.getElementById('editGroupMandatory');
+    const editOptionsContainer = document.getElementById('editOptionsContainer');
+    const addAnotherOptionBtn = document.getElementById('addAnotherOptionBtn');
+
+    // --- 2. Hàm tái sử dụng để tạo một dòng tùy chọn ---
+    const createEditOptionRow = (option = { name: '', price: 0 }) => {
+        const card = document.createElement('div');
+        card.className = 'option-card';
+        card.innerHTML = `
+            <button type="button" class="btn-delete-option" title="Xóa"><i class="fas fa-times"></i></button>
+            <div class="row g-3">
+                <div class="col-md-7">
+                    <label class="form-label">Tên</label>
+                    <input type="text" class="form-control form-control-sm edit-option-name" value="${option.name}" required>
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label">Giá</label>
+                    <input type="number" class="form-control form-control-sm edit-option-price" value="${option.price}" min="0" required>
+                </div>
+            </div>`;
+        card.querySelector('.btn-delete-option').addEventListener('click', () => card.remove());
+        return card;
+    };
+
+    // --- 3. Lắng nghe sự kiện khi offcanvas CHUẨN BỊ MỞ (Fetch Data) ---
+    editOffcanvasEl.addEventListener('show.bs.offcanvas', async function (event) {
+        // Dọn dẹp form và hiển thị trạng thái tải
+        editForm.reset();
+        editOptionsContainer.innerHTML = '<p class="text-center"><i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu...</p>';
+
+        const triggerLink = event.relatedTarget;
+        const groupId = triggerLink.dataset.groupId;
+
+        try {
+            const response = await fetch(`/api/option-group/${groupId}`);
+            if (!response.ok) {
+                throw new Error(`Lỗi máy chủ: ${response.statusText}`);
+            }
+            const data = await response.json();
+
+            // Đổ dữ liệu vào form
+            editGroupIdInput.value = data.id;
+            editGroupNameInput.value = data.name;
+            editGroupMaxInput.value = data.max;
+            editGroupMandatoryInput.checked = data.mandatory;
+
+            editOptionsContainer.innerHTML = '';
+            if (data.options && data.options.length > 0) {
+                data.options.forEach(opt => editOptionsContainer.appendChild(createEditOptionRow(opt)));
+            } else {
+                editOptionsContainer.appendChild(createEditOptionRow());
+            }
+        } catch (error) {
+            console.error("Lỗi khi tải dữ liệu nhóm tùy chọn:", error);
+            editOptionsContainer.innerHTML = `<div class="alert alert-danger">Không thể tải dữ liệu. Vui lòng thử lại.</div>`;
+        }
+    });
+
+    // --- 4. Sự kiện cho nút "Thêm Lựa Chọn Khác" ---
+    addAnotherOptionBtn.addEventListener('click', () => {
+        editOptionsContainer.appendChild(createEditOptionRow());
+    });
+
+    // --- 5. Lắng nghe sự kiện khi SUBMIT FORM (Gửi dữ liệu đi) ---
+    editForm.addEventListener('submit', function(event) {
+    // Ngăn trình duyệt tải lại trang, chúng ta sẽ xử lý bằng JavaScript
+    event.preventDefault();
+
+    // ----- A. THU THẬP DỮ LIỆU -----
+
+    // Thu thập tất cả các lựa chọn (options) từ các thẻ đã tạo
+    let optionsPayload = [];
+    editOptionsContainer.querySelectorAll('.option-card').forEach(card => {
+        const name = card.querySelector('.edit-option-name').value.trim();
+        const price = parseFloat(card.querySelector('.edit-option-price').value) || 0;
+
+        // Chỉ thêm vào danh sách nếu người dùng đã nhập tên
+        if (name) {
+            optionsPayload.push({ name: name, price: price });
+        }
+    });
+
+    // Đóng gói toàn bộ dữ liệu (payload) để gửi đến server
+    const payload = {
+        id: parseInt(editGroupIdInput.value),
+        name: editGroupNameInput.value.trim(),
+        max: editGroupMaxInput.value ? parseInt(editGroupMaxInput.value) : null,
+        mandatory: editGroupMandatoryInput.checked,
+        options: optionsPayload
+    };
+
+    // ----- B. KIỂM TRA DỮ LIỆU -----
+    if (!payload.name || !payload.id) {
+        alert("Có lỗi xảy ra: Tên nhóm hoặc ID không hợp lệ.");
+        return;
+    }
+
+    // ----- C. GỬI DỮ LIỆU ĐẾN API -----
+    fetch('/api/option-group/update', { // API này chúng ta sẽ tạo ở backend
+        method: 'POST', // Phương thức là POST vì chúng ta đang gửi dữ liệu để cập nhật
+        headers: {
+            'Content-Type': 'application/json', // Báo cho server biết chúng ta đang gửi JSON
+        },
+        body: JSON.stringify(payload) // Chuyển đối tượng JavaScript thành một chuỗi JSON
+    })
+    .then(res => res.json()) // Chuyển đổi phản hồi từ server thành JSON
+    .then(result => {
+        // ----- D. XỬ LÝ KẾT QUẢ -----
+        if (result.success) {
+            alert('✅ ' + (result.message || 'Cập nhật thành công!'));
+            // Tải lại trang là cách đơn giản nhất để thấy thay đổi
+            location.reload();
+        } else {
+            alert('❌ Lỗi: ' + (result.message || 'Không thể cập nhật.'));
+        }
+    })
+    .catch(error => {
+        // Bắt lỗi nếu có vấn đề về mạng
+        console.error("Lỗi khi gửi form sửa:", error);
+        alert('❌ Đã xảy ra lỗi mạng. Vui lòng thử lại.');
+    });
+});
+
+});
+</script>
+<script>
+    const deleteBtnInsideForm = document.getElementById('deleteGroupInsideFormBtn');
+
+
+// === SỰ KIỆN KHI CLICK VÀO NÚT "XÓA" BÊN TRONG FORM ===
+deleteBtnInsideForm.addEventListener('click', function() {
+
+    // Lấy ID và tên của nhóm đang được sửa từ các ô input
+    const groupId = editGroupId.value;
+    const groupName = editGroupName.value.trim();
+
+    // Nếu không có ID, không làm gì cả (để phòng lỗi)
+    if (!groupId) {
+        alert("Không thể xác định nhóm cần xóa.");
+        return;
+    }
+
+    // Hiển thị hộp thoại xác nhận
+    if (confirm(`Bạn có chắc chắn muốn xóa vĩnh viễn nhóm "${groupName}" không?`)) {
+
+        // Gọi API xóa (API này bạn đã tạo ở bước trước)
+        fetch(`/api/option-group/delete/${groupId}`, {
+            method: 'DELETE'
+        })
+        .then(res => res.json())
+        .then(result => {
+            if (result.success) {
+                alert('✅ ' + result.message);
+
+
+                // Tải lại trang để cập nhật danh sách
+                location.reload();
+            } else {
+                alert('❌ Lỗi: ' + result.message);
+            }
+        })
+        .catch(error => {
+            console.error("Lỗi khi gửi yêu cầu xóa từ trong form:", error);
+            alert('❌ Đã xảy ra lỗi mạng.');
+        });
+    }
+});
+</script>
+
 <script>
     //THÊM NHÓM MÓN ĂN
 document.addEventListener('DOMContentLoaded', function () {
@@ -670,7 +1229,10 @@ console.log('Dữ liệu gửi lên server:', data);
     const form = document.getElementById('form_add_dish');
     const closeBtn = modal.querySelector('.close-modal');
     const overlay = modal.querySelector('.modal-overlay');
+    form.reset();
 
+        // Sau khi reset, gán lại giá trị cho trường ẩn
+        document.getElementById('dish_group_id_input').value = groupId;
     const closeModal = () => modal.classList.remove('show');
 
     // 👇 Gắn ngay trong callback
@@ -706,77 +1268,103 @@ console.log('Dữ liệu gửi lên server:', data);
 
   });
 });
-
 //SỬA MÓN ĂN
-    document.querySelectorAll('.btn-edit-dish').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const modal = document.getElementById('modal_add_dish');
-        modal.classList.add('show');
-
-        // Lấy thông tin từ nút
-        document.getElementById('input_dish_name').value = btn.dataset.name;
-        document.getElementById('input_dish_description').value = btn.dataset.desc;
-        document.getElementById('input_dish_price').value = btn.dataset.price;
-        document.getElementById('dish_group_id_input').value = btn.dataset.group;
-        document.getElementById('restaurant_id_input').value = "1";
-
-        // Gán thêm hidden field để biết đang sửa món nào
-        let idInput = document.getElementById('dish_id_input');
-        if (!idInput) {
-            idInput = document.createElement('input');
-            idInput.type = 'hidden';
-            idInput.name = 'dish_id';
-            idInput.id = 'dish_id_input';
-            document.getElementById('form_add_dish').appendChild(idInput);
-        }
-        idInput.value = btn.dataset.id;
-    });
-});
-    //SỬA MÓN ĂN
-    document.querySelectorAll('.btn-add-to-cart').forEach(btn => {
-    btn.addEventListener('click', () => {
+document.querySelectorAll('.btn-add-to-cart').forEach(btn => {
+    btn.addEventListener('click', async () => {
+        const dishId = btn.dataset.id;
         const modal = document.getElementById('modal_edit_dish');
+        const form = document.getElementById('form_edit_dish');
+
+        // Reset form để xóa dữ liệu cũ và bỏ tick các checkbox
+        form.reset();
         modal.classList.add('show');
 
-        document.getElementById('edit_dish_id').value = btn.dataset.id;
-        document.getElementById('edit_name').value = btn.dataset.name;
-        document.getElementById('edit_description').value = btn.dataset.desc;
-        document.getElementById('edit_price').value = btn.dataset.price;
-        document.getElementById('edit_group_id').value = btn.dataset.group;
-    });
-});
+        const optionsContainer = document.getElementById('edit-dish-options-container');
+        optionsContainer.innerHTML = '<p class="text-center"><i class="fas fa-spinner fa-spin"></i> Đang tải...</p>';
 
-// Đóng modal
-document.querySelector('#modal_edit_dish .close-modal').addEventListener('click', () => {
-    document.getElementById('modal_edit_dish').classList.remove('show');
-});
-document.querySelector('#modal_edit_dish .modal-overlay').addEventListener('click', () => {
-    document.getElementById('modal_edit_dish').classList.remove('show');
-});
+        try {
+            // Gọi API để lấy dữ liệu chi tiết của món ăn
+            const response = await fetch(`/api/dish-details/${dishId}`);
+            if (!response.ok) throw new Error('Không thể tải dữ liệu.');
+            const data = await response.json();
 
-// Submit sửa món
-document.getElementById('form_edit_dish').addEventListener('submit', function (e) {
-    e.preventDefault();
-    const formData = new FormData(this);
+            // Điền dữ liệu cơ bản vào form
+            form.querySelector('#edit_dish_id').value = data.id;
+            form.querySelector('#edit_name').value = data.name;
+            form.querySelector('#edit_description').value = data.description;
+            form.querySelector('#edit_price').value = data.price;
+            form.querySelector('#edit_group_id').value = data.dish_group_id;
 
-    fetch('/update_dish', {
-        method: 'POST',
-        body: formData
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            alert("✅ Đã cập nhật!");
-            location.reload();
-        } else {
-            alert("❌ Sửa thất bại: " + data.message);
+            // Khôi phục lại HTML gốc của các checkbox
+            optionsContainer.innerHTML = `
+                {% for group in dish_option_group %}
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox"
+                               name="option_group_ids"
+                               value="{{ group.id }}"
+                               id="edit-dish-option-{{ group.id }}">
+                        <label class="form-check-label" for="edit-dish-option-{{ group.id }}">
+                            {{ group.name }}
+                        </label>
+                    </div>
+                {% endfor %}
+            `;
+
+            // Tick sẵn vào các checkbox đã được liên kết
+            if (data.linked_option_group_ids && data.linked_option_group_ids.length > 0) {
+                const linkedIds = new Set(data.linked_option_group_ids.map(String));
+                form.querySelectorAll('input[name="option_group_ids"]').forEach(checkbox => {
+                    if (linkedIds.has(checkbox.value)) {
+                        checkbox.checked = true;
+                    }
+                });
+            }
+
+        } catch (error) {
+            console.error(error);
+            alert(error.message);
+            modal.classList.remove('show');
         }
-    })
-    .catch(err => {
-        alert("❌ Lỗi hệ thống");
-        console.error(err);
     });
 });
+
+// 2. Xử lý đóng modal
+const editDishModal = document.getElementById('modal_edit_dish');
+if (editDishModal) {
+    editDishModal.querySelector('.close-modal').addEventListener('click', () => {
+        editDishModal.classList.remove('show');
+    });
+    editDishModal.querySelector('.modal-overlay').addEventListener('click', () => {
+        editDishModal.classList.remove('show');
+    });
+}
+
+// 3. Xử lý submit form sửa
+const editDishForm = document.getElementById('form_edit_dish');
+if (editDishForm) {
+    editDishForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+
+        fetch('/update_dish', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert("✅ " + (data.message || "Đã cập nhật!"));
+                location.reload();
+            } else {
+                alert("❌ Sửa thất bại: " + (data.message || "Lỗi không xác định."));
+            }
+        })
+        .catch(err => {
+            alert("❌ Lỗi hệ thống");
+            console.error(err);
+        });
+    });
+}
 //XÓA MÓN ĂN
     document.querySelectorAll('.btn-delete-dish').forEach(btn => {
     btn.addEventListener('click', (e) => {

@@ -684,6 +684,250 @@
     opacity: 1;
     visibility: visible;
 }
+<<<<<<< HEAD
+.restaurant-info-block .restaurant-management-nav {
+    width: 100%;
+    padding-bottom: 1rem;
+    margin-top: 1.5rem;
+    margin-bottom: 2rem;
+    text-align: left;
+}
+
+/* Selector này cụ thể hơn, sẽ ghi đè lên style mặc định */
+.restaurant-info-block .restaurant-management-nav ul {
+    display: inline-flex !important; /* Dùng !important để đảm bảo chiến thắng */
+    align-items: center;
+    list-style: none !important; /* Quan trọng: Xóa dấu chấm tròn */
+    padding: 0;
+    margin: 0;
+    gap: 1.5rem;
+}
+
+/* Selector này cụ thể hơn, sẽ ghi đè lên style mặc định */
+.restaurant-info-block .restaurant-management-nav li {
+    display: block !important; /* Bỏ qua 'display: list-item' mặc định */
+    padding-left: 1.5rem;
+    border-left: 1px solid #ced4da; /* Tạo dấu gạch đứng */
+}
+
+/* Mục đầu tiên không cần dấu gạch đứng bên trái */
+.restaurant-info-block .restaurant-management-nav li:first-child {
+    border-left: none;
+    padding-left: 0;
+}
+
+.restaurant-info-block .restaurant-management-nav a {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: #495057;
+    font-weight: 500;
+    font-size: 1.1rem;
+    transition: color 0.2s ease-in-out;
+}
+
+.restaurant-info-block .restaurant-management-nav a:hover,
+.restaurant-info-block .restaurant-management-nav a.active {
+    color: #E91E63; /* Màu xanh nổi bật */
+    font-weight: 700;
+}
+
+.restaurant-info-block .restaurant-management-nav a i {
+    margin-right: 8px;
+    font-size
+}
+#dynamicFormOffcanvas {
+    --bs-offcanvas-width: 500px;
+}
+#dynamicFormOffcanvas .offcanvas-header {
+    background-color: #FFF0F5;
+    border-bottom: 2px solid #E91E63;
+}
+#dynamicFormOffcanvas .offcanvas-title {
+    font-weight: 600;
+    color: #E91E63;
+}
+#dynamicFormOffcanvas .offcanvas-body {
+    background-color: #fff;
+    padding: 1.5rem;
+}
+
+/* --- 2. Thiết kế cho các KHỐI (section) trong form --- */
+.form-section {
+    background-color: #FFF0F5;  /* << Nền hồng rất nhạt >> */
+    border: 1px solid #F8BBD0;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+.form-section-title {
+    font-weight: 600;
+    color: #c2185b; /* Màu hồng tối hơn để dễ đọc */
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #F8BBD0;
+}
+
+/* --- 3. Tùy chỉnh các ô input và label --- */
+.form-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #495057;
+}
+.form-control:focus {
+    border-color: #E91E63;
+    box-shadow: 0 0 0 0.25rem rgba(233, 30, 99, 0.25); /* << Đổ bóng hồng khi focus >> */
+}
+
+/* --- 4. Tùy chỉnh cho nút gạt "Bắt buộc" --- */
+.form-switch {
+    display: flex;
+    justify-content: space-between; /* Đẩy label và nút gạt ra hai bên */
+    align-items: center;
+    padding-left: 0 !important; /* Ghi đè padding mặc định của Bootstrap */
+}
+.form-switch .form-check-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #495057;
+}
+.form-switch .form-check-input {
+    width: 3.25em;
+    height: 1.6em;
+    cursor: pointer;
+    margin-left: 1em;
+}
+/* Nút gạt sẽ có màu hồng khi được bật */
+.form-switch .form-check-input:checked {
+    background-color: #E91E63;
+    border-color: #E91E63;
+}
+
+
+/* --- 5. Các thẻ lựa chọn động --- */
+.option-card { /* Đây là tên class mới cho các thẻ lựa chọn */
+    background-color: #fff; /* Nền trắng để nổi bật trên nền hồng của section */
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    position: relative;
+    transition: all 0.2s ease-in-out;
+}
+.option-card:hover {
+    border-color: #E91E63;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+.btn-delete-option {
+    position: absolute;
+    top: 0.5rem; right: 0.5rem; width: 28px; height: 28px;
+    border-radius: 50%; border: none; background-color: #e9ecef; color: #6c757d;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s ease;
+}
+.btn-delete-option:hover {
+    background-color: #E91E63; color: white; transform: scale(1.1);
+}
+.option-card .form-label {
+    font-size: 0.85rem; margin-bottom: 0.25rem;
+}
+
+
+/* --- 6. Nút "Thêm Lựa Chọn" và "Lưu" --- */
+#addInputButton {
+    border: 2px dashed #E91E63;
+    color: #E91E63;
+    background-color: transparent; /* Nền trong suốt trên nền hồng của section */
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+#addInputButton:hover {
+    background-color: #E91E63;
+    color: white;
+    border-style: solid;
+}
+
+#dynamicFormOffcanvas .offcanvas-footer {
+    padding: 1rem 1.5rem;
+    background-color: #fff;
+    border-top: 1px solid #e9ecef;
+}
+#dynamicFormOffcanvas .btn-success {
+    background: #E91E63;
+    border-color: #E91E63;
+    font-weight: 600;
+    padding: 0.75rem;
+    transition: all 0.2s ease-in-out;
+}
+#dynamicFormOffcanvas .btn-success:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(233, 30, 99, 0.4);
+}
+#editOptionGroupOffcanvas {
+    --bs-offcanvas-width: 500px;
+}
+#editOptionGroupOffcanvas .offcanvas-header {
+    background-color: #e7f1ff; /* Nền xanh dương rất nhạt */
+    border-bottom: 2px solid #E91E63; /* Đường viền xanh dương đậm */
+}
+#editOptionGroupOffcanvas .offcanvas-title {
+    font-weight: 600;
+    color: #E91E63; /* Chữ màu xanh dương đậm */
+}
+#editOptionGroupOffcanvas .offcanvas-body {
+    background-color: #fff;
+    padding: 1.5rem;
+}
+
+/* --- 2. Style cho input và label (Kế thừa từ các class chung) --- */
+/* Các class như .form-label, .form-control sẽ tự động được áp dụng,
+   nhưng chúng ta sẽ tùy chỉnh hiệu ứng :focus cho phù hợp với tông màu xanh */
+#editOptionGroupOffcanvas .form-control:focus {
+    border-color: #E91E63;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); /* Đổ bóng xanh khi focus */
+}
+
+/* --- 3. Style cho nút gạt "Bắt buộc" --- */
+/* Class .form-switch sẽ được áp dụng, chỉ cần đổi màu khi được bật */
+#editOptionGroupOffcanvas .form-switch .form-check-input:checked {
+    background-color: #E91E63;
+    border-color: #E91E63;
+}
+
+/* --- 4. Style cho các thẻ lựa chọn động --- */
+/* Class chung .option-card sẽ được áp dụng, chỉ cần tùy chỉnh màu khi hover */
+#editOptionGroupOffcanvas .option-card:hover {
+    border-color: #E91E63; /* Viền xanh khi hover */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+/* Nút xóa vẫn nên có màu đỏ/hồng để cảnh báo, nên ta giữ nguyên style cũ cho nó */
+#editOptionGroupOffcanvas .btn-delete-option:hover {
+    background-color: #dc3545; /* Màu đỏ nguy hiểm */
+    color: white;
+    transform: scale(1.1);
+}
+.btn-pink {
+    background-color: #E91E63;
+    border-color: #E91E63;
+    color: white; /* Đừng quên đổi màu chữ cho dễ đọc */
+}
+/* --- 5. Style cho các nút hành động --- */
+
+/* Nút "Thêm Lựa Chọn Khác" */
+#addAnotherOptionBtn {
+    border: 2px dashed #E91E63;
+    color: #E91E63;
+    background-color: transparent;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+#addAnotherOptionBtn:hover {
+    background-color: #E91E63;
+    color: white;
+    border-style: solid;
+}
+=======
 .product-card-unavailable {
     /* Làm mờ toàn bộ card */
     opacity: 0.6;
@@ -723,4 +967,5 @@ header {
     transition: transform 0.3s ease-in-out;
 }
 
+>>>>>>> 52d5fa775b6ff71268354fb4341aaac19104a536
 

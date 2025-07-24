@@ -1,5 +1,8 @@
 import json
 import os
+
+from sqlalchemy.exc import SQLAlchemyError
+
 import config
 import hashlib
 from  models import *
@@ -349,12 +352,96 @@ def is_favorite(user_id, restaurant_id):
 #Load restaurant_main:
 def get_dish_groups_by_restaurant(restaurant_id):
     return DishGroup.query.filter_by(restaurant_id=restaurant_id).all()
+def get_dish_option_groups_by_restaurant(restaurant_id):
+    return DishOptionGroup.query.filter_by(restaurant_id=restaurant_id).order_by(DishOptionGroup.name).all()
+def update_option_group_with_options(data):
+        group_id = data.get('id')
+        if not group_id:
+            return False, "Thiếu ID của nhóm cần cập nhật."
+        try:
+            with db.session.begin_nested():
+                # 1. Tìm đối tượng cần sửa trong database
+                group_to_update = db.session.query(DishOptionGroup).get(group_id)
+                if not group_to_update:
+                    return False, f"Không tìm thấy nhóm tùy chọn với ID {group_id}."
+                # 2. Cập nhật các thuộc tính của nhóm cha
+                group_to_update.name = data.get('name', '').strip()
+                group_to_update.max = data.get('max')
+                group_to_update.mandatory = data.get('mandatory', False)
+                # Xóa các option cũ khỏi session
+                for option in list(group_to_update.options):
+                    db.session.delete(option)
+
+                # Thêm các option mới từ payload vào session
+                new_options_data = data.get('options', [])
+                for option_data in new_options_data:
+                    if option_data.get('name'):  # Chỉ thêm nếu có tên
+                        new_option = DishOption(
+                            name=option_data.get('name').strip(),
+                            price=option_data.get('price', 0)
+                        )
+                        group_to_update.options.append(new_option)
+            db.session.commit()
+            return True, group_to_update
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            print(f"LỖI DATABASE KHI CẬP NHẬT NHÓM TÙY CHỌN (DAO): {e}")
+            return False, "Lỗi cơ sở dữ liệu khi cập nhật."
+        except Exception as e:
+            db.session.rollback()
+            print(f"LỖI KHÔNG MONG MUỐN KHI CẬP NHẬT NHÓM TÙY CHỌN (DAO): {e}")
+            return False, "Có lỗi không mong muốn xảy ra."
+def add_option_group_with_options(data):
+
+    try:
+        new_group = DishOptionGroup(
+            restaurant_id=data.get('restaurant_id'),
+            name=data.get('name'),
+            mandatory=data.get('mandatory', False),
+            max=data.get('max')
+        )
+        options_data = data.get('options', [])
+        if not options_data:
+            raise ValueError("Nhóm tùy chọn phải có ít nhất một lựa chọn.")
+
+        for option_data in options_data:
+            new_option = DishOption(
+                name=option_data.get('name'),
+                price=option_data.get('price', 0)
+            )
+            new_group.options.append(new_option)
+
+        db.session.add(new_group)
+        db.session.commit()
+        return new_group
+    except (SQLAlchemyError, ValueError) as e:
+        # Nếu có bất kỳ lỗi nào, hủy bỏ mọi thay đổi
+        print(f"ERROR - Could not add option group: {e}")
+        db.session.rollback()
+        return None
+
+
+def delete_option_group_by_id(group_id):
+    try:
+        __tablename__ = 'dish_option_group'
+        group_to_delete = db.session.query(DishOptionGroup).get(group_id)
+        if not group_to_delete:
+            return False, f"Không tìm thấy nhóm tùy chọn với ID {group_id}."
+        group_name = group_to_delete.name
+        db.session.delete(group_to_delete)
+        db.session.commit()
+        return True, f'Đã xóa thành công nhóm "{group_name}".'
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        print(f"LỖI DATABASE KHI XÓA NHÓM TÙY CHỌN (DAO): {e}")
+        return False, "Lỗi cơ sở dữ liệu khi xóa."
+    except Exception as e:
+        db.session.rollback()
+        print(f"LỖI KHÔNG MONG MUỐN KHI XÓA NHÓM TÙY CHỌN (DAO): {e}")
+        return False, "Có lỗi không mong muốn xảy ra."
+
 def add_dishgroup(name, restaurant_id):
-    """
-    Thêm nhóm món, kiểm tra tên trùng lặp trong chính nhà hàng đó.
-    Phiên bản ngắn gọn và an toàn.
-    """
-    # Kiểm tra xem tên nhóm món đã tồn tại trong cùng một nhà hàng chưa
+
     if DishGroup.query.filter(
         DishGroup.restaurant_id == restaurant_id,
         func.lower(DishGroup.name) == name.lower()
@@ -362,12 +449,10 @@ def add_dishgroup(name, restaurant_id):
         return {'success': False, 'message': 'Tên nhóm món này đã tồn tại.'}
 
     try:
-        # Nếu chưa tồn tại, tạo mới và lưu vào DB
         new_group = DishGroup(name=name.strip(), restaurant_id=restaurant_id)
         db.session.add(new_group)
         db.session.commit()
 
-        # Trả về thông tin của nhóm vừa tạo để tiện xử lý ở frontend
         return {
             'success': True,
             'message': 'Thêm nhóm món thành công!',
@@ -383,21 +468,13 @@ def add_dishgroup(name, restaurant_id):
 
 
 def delete_dishgroup_by_id(group_id):
-    """
-    Xóa nhóm món và tất cả các món ăn thuộc về nó.
-    """
     group = DishGroup.query.get(group_id)
 
     if group:
         try:
-            # BƯỚC 1: Lặp qua và xóa tất cả các món ăn con trước
             for dish in group.dishes:
                 db.session.delete(dish)
-
-            # BƯỚC 2: Sau khi đã xóa hết con, xóa chính người cha (nhóm món)
             db.session.delete(group)
-
-            # BƯỚC 3: Commit một lần duy nhất để lưu tất cả thay đổi
             db.session.commit()
             return True
         except Exception as e:
@@ -405,8 +482,8 @@ def delete_dishgroup_by_id(group_id):
             print(f"LỖI KHI XÓA NHÓM MÓN VÀ CÁC MÓN ĂN: {e}")
             return False
 
-    return False  # Trả về False nếu không tìm thấy nhóm món
-def add_dish(name, description, price, image_url, dish_group_id, restaurant_id):
+    return False
+def add_dish(name, description, price, image_url, dish_group_id, restaurant_id,option_group_ids=None):
     try:
         dish = Dish(
             name=name,
@@ -416,6 +493,17 @@ def add_dish(name, description, price, image_url, dish_group_id, restaurant_id):
             dish_group_id=dish_group_id,
             restaurant_id=restaurant_id
         )
+        if option_group_ids:
+            # Lặp qua từng ID trong danh sách được gửi lên
+            for group_id in option_group_ids:
+                # Tìm đối tượng DishOptionGroup tương ứng trong database
+                group = DishOptionGroup.query.get(int(group_id))
+
+                # Nếu tìm thấy, thêm nó vào mối quan hệ của món ăn mới.
+                # SQLAlchemy sẽ tự động tạo bản ghi trong bảng trung gian `dish_has_option_groups`.
+                if group:
+                    dish.option_groups.append(group)
+
         db.session.add(dish)
         db.session.commit()
         return True
@@ -423,35 +511,98 @@ def add_dish(name, description, price, image_url, dish_group_id, restaurant_id):
         db.session.rollback()
         print("❌ Lỗi khi thêm món ăn trong DAO:", e)
         return False
-def update_dish(data, image_file=None):
+
+
+def get_dish_details_for_edit(dish_id):
+    """
+    Lấy thông tin chi tiết của một món ăn để điền vào form sửa.
+    Bao gồm cả danh sách ID của các nhóm tùy chọn đã được liên kết.
+    """
     try:
-        dish_id = int(data.get('dish_id'))
         dish = Dish.query.get(dish_id)
         if not dish:
-            return False, "Món ăn không tồn tại"
+            return None
 
-        dish.name = data.get('name')
-        dish.description = data.get('description')
-        dish.price = float(data.get('price'))
-        dish.dish_group_id = int(data.get('dish_group_id'))
-        dish.restaurant_id = int(data.get('restaurant_id'))
+        # Tạo một dictionary để chứa dữ liệu trả về
+        dish_data = {
+            "id": dish.id,
+            "name": dish.name,
+            "description": dish.description,
+            "price": dish.price,
+            "dish_group_id": dish.dish_group_id,
+            # Dùng list comprehension để lấy danh sách ID của các nhóm đã liên kết
+            "linked_option_group_ids": [group.id for group in dish.option_groups]
+        }
+        return dish_data
+    except Exception as e:
+        print(f"❌ Lỗi khi lấy chi tiết món ăn (DAO): {e}")
+        return None
 
-        if image_file:
+
+def update_dish_with_options(form_data, image_file=None):
+    """
+    Cập nhật thông tin một món ăn, bao gồm cả hình ảnh và các liên kết nhiều-nhiều.
+    Đã tích hợp logic upload ảnh từ hàm update_dish cũ.
+
+    Args:
+        form_data (werkzeug.datastructures.ImmutableMultiDict): Dữ liệu từ request.form.
+        image_file (FileStorage, optional): File ảnh từ request.files. Defaults to None.
+
+    Returns:
+        tuple: (True, "Success message") hoặc (False, "Error message")
+    """
+    dish_id = form_data.get('dish_id')
+    if not dish_id:
+        return False, "Thiếu ID của món ăn cần cập nhật."
+
+    try:
+        # 1. Tìm món ăn cần cập nhật
+        dish_to_update = Dish.query.get(int(dish_id))
+        if not dish_to_update:
+            return False, "Không tìm thấy món ăn."
+
+        # 2. Cập nhật các trường thông tin cơ bản (lấy từ hàm cũ của bạn)
+        dish_to_update.name = form_data.get('name', '').strip()
+        dish_to_update.description = form_data.get('description', '').strip()
+        dish_to_update.price = float(form_data.get('price'))
+        dish_to_update.dish_group_id = int(form_data.get('dish_group_id'))
+        # restaurant_id thường không đổi, nhưng vẫn có thể cập nhật nếu cần
+        # dish_to_update.restaurant_id = int(form_data.get('restaurant_id'))
+
+        # 3. XỬ LÝ UPLOAD ẢNH MỚI (LOGIC TỪ HÀM CŨ CỦA BẠN)
+        # Nếu người dùng có tải lên file ảnh mới
+        if image_file and image_file.filename != '':
+            # Lấy đường dẫn tuyệt đối đến thư mục static để đảm bảo an toàn
+            upload_dir = os.path.join(app.root_path, 'static/image')
+            os.makedirs(upload_dir, exist_ok=True)
+
+            # Lưu file vào thư mục
             filename = image_file.filename
-            save_path = os.path.join('static/image', filename)
-            os.makedirs('static/image', exist_ok=True)
+            save_path = os.path.join(upload_dir, filename)
             image_file.save(save_path)
-            dish.image = f'image/{filename}'
 
+            # Cập nhật đường dẫn ảnh mới vào database
+            dish_to_update.image = f'image/{filename}'
+
+        # 4. Cập nhật các liên kết với nhóm tùy chọn (logic mới)
+        new_option_group_ids = form_data.getlist('option_group_ids')
+        dish_to_update.option_groups.clear()  # Xóa hết liên kết cũ
+        if new_option_group_ids:
+            for group_id in new_option_group_ids:
+                group = DishOptionGroup.query.get(int(group_id))
+                if group:
+                    dish_to_update.option_groups.append(group)
+
+        # 5. Lưu tất cả thay đổi vào database
         db.session.commit()
-        return True, None
+        return True, "Cập nhật món ăn thành công!"
+
     except Exception as e:
         db.session.rollback()
-        return False, str(e)
-@app.route('/update_dish', methods=['POST'])
-def update_dish_route():
-    success, message = update_dish(request.form, request.files.get('image'))
-    return jsonify({'success': success, 'message': message if not success else 'Cập nhật thành công'})
+        print(f"❌ Lỗi khi cập nhật món ăn (DAO): {e}")
+        return False, str(e)  # Trả về lỗi cụ thể
+
+
 def delete_dish(dish_id):
     try:
         dish = Dish.query.get(dish_id)
@@ -466,7 +617,6 @@ def delete_dish(dish_id):
 
 #ĐĂNG KÍ NHÀ HÀNG
 def get_categories():
-    """Truy vấn và trả về danh sách tất cả các loại hình nhà hàng."""
     try:
         return Category.query.all()
     except Exception as e:
@@ -477,22 +627,14 @@ def get_categories():
 def register_restaurant_and_user(username, email, password, phone, res_name, address,
                                  description, open_time, close_time, category_id,
                                  avatar_url=None, cover_url=None):
-    """
-    Lưu User và Restaurant, đã được sửa lại để khớp hoàn toàn với định nghĩa Model.
-    Sử dụng phương pháp liên kết đối tượng của SQLAlchemy.
-    """
-    # 1. Kiểm tra dữ liệu trùng lặp (nên giữ lại để có phản hồi lỗi tốt)
+
     if User.query.filter_by(email=email.strip()).first():
         return (False, 'Email này đã được sử dụng cho một tài khoản khác.')
     if User.query.filter_by(phone=phone.strip()).first():
         return (False, 'Số điện thoại này đã được đăng ký.')
-
-    # 2. Tiến hành đăng ký
     try:
-        # Băm mật khẩu bằng MD5 theo yêu cầu
         hashed_password = hashlib.md5(password.encode('utf-8')).hexdigest()
 
-        # Tạo đối tượng User
         new_user = User(
             name=username.strip(),
             email=email.strip(),
@@ -501,42 +643,26 @@ def register_restaurant_and_user(username, email, password, phone, res_name, add
             avatar=avatar_url,
             role=UserRole.RESTAURANT
         )
-
-        # Chuyển đổi chuỗi thời gian sang đối tượng time của Python
         open_t = datetime.datetime.strptime(open_time, '%H:%M').time()
         close_t = datetime.datetime.strptime(close_time, '%H:%M').time()
-
-        # === ĐOẠN CODE QUAN TRỌNG NHẤT ĐÃ ĐƯỢC SỬA LẠI ===
-
-        # Bước 1: Tạo đối tượng Restaurant với các thuộc tính của chính nó
         new_restaurant = Restaurant(
             restaurant_name=res_name,
             address=address,
             description=description,
-            email=email.strip(),  # Model Restaurant cũng có email riêng
             open_time=open_t,
             close_time=close_t,
             image=cover_url,
             category_id=int(category_id)
-            # Không truyền owner_user_id hay user_id ở đây
         )
 
-        # Bước 2: Liên kết hai đối tượng với nhau thông qua thuộc tính 'backref'
-        # SQLAlchemy sẽ tự động hiểu và điền giá trị cho cột 'owner_user_id'
         new_restaurant.user = new_user
-
-        # Thêm cả hai đối tượng vào session
         db.session.add(new_user)
         db.session.add(new_restaurant)
 
-        # Commit để lưu tất cả thay đổi vào DB
         db.session.commit()
-
-        # Trả về thành công
         return (True, new_user)
 
     except Exception as e:
-        # Nếu có lỗi, rollback để đảm bảo toàn vẹn dữ liệu
         db.session.rollback()
         print("‼️ ERROR TRONG DAO:", e)
         traceback.print_exc()
@@ -544,12 +670,7 @@ def register_restaurant_and_user(username, email, password, phone, res_name, add
 
 def get_category_by_name(name):
     return Category.query.filter(Category.name.ilike(f"%{name}%")).first()
-
 def toggle_favorite(user_id, restaurant_id):
-    """
-    Thêm hoặc xóa một nhà hàng khỏi danh sách yêu thích của người dùng.
-    Trả về 'added' nếu đã thêm, 'removed' nếu đã xóa.
-    """
     user = User.query.get(user_id)
     restaurant = Restaurant.query.get(restaurant_id)
 
