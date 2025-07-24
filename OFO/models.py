@@ -218,9 +218,30 @@ Order.vouchers = relationship('Voucher', secondary=voucher_applied, lazy='subque
 if __name__ == '__main__':
     # Lệnh này cần chạy trong ngữ cảnh của ứng dụng Flask
     with app.app_context():
-        db.drop_all()
-        db.create_all()
-        db.session.commit()
+        from sqlalchemy import text
+
+        # --- SỬA LỖI Ở ĐÂY: Sử dụng một kết nối duy nhất từ engine ---
+        with db.engine.connect() as connection:
+            # Bắt đầu một transaction
+            with connection.begin():
+                print("--- Tạm thời vô hiệu hóa Foreign Key Checks ---")
+                connection.execute(text('SET FOREIGN_KEY_CHECKS=0;'))
+
+                print("--- Bắt đầu xóa tất cả các bảng (drop_all) ---")
+                # Yêu cầu drop_all sử dụng kết nối này
+                db.metadata.drop_all(bind=connection)
+                print("--- Xóa bảng thành công ---")
+
+                print("--- Bắt đầu tạo tất cả các bảng (create_all) ---")
+                # Yêu cầu create_all sử dụng kết nối này
+                db.metadata.create_all(bind=connection)
+                print("--- Tạo bảng thành công ---")
+
+                print("--- Kích hoạt lại Foreign Key Checks ---")
+                connection.execute(text('SET FOREIGN_KEY_CHECKS=1;'))
+
+        # Sau khi schema đã ổn định, bắt đầu thêm dữ liệu
+        print("\n--- Bắt đầu tạo dữ liệu ---")
 
         # --- Bắt đầu tạo dữ liệu ---
 
