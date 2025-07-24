@@ -541,6 +541,10 @@ def register_restaurant_and_user(username, email, password, phone, res_name, add
         print("‼️ ERROR TRONG DAO:", e)
         traceback.print_exc()
         return (False, 'Đã có lỗi xảy ra trong quá trình xử lý dữ liệu.')
+
+def get_category_by_name(name):
+    return Category.query.filter(Category.name.ilike(f"%{name}%")).first()
+
 def toggle_favorite(user_id, restaurant_id):
     """
     Thêm hoặc xóa một nhà hàng khỏi danh sách yêu thích của người dùng.
