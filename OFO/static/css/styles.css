@@ -91,3 +91,123 @@ header .navbar {
 .address-display-header .input-group .btn.btn-outline-secondary:hover {
     background-color: #fff;  /* Một màu xám nhạt khi hover */
 }
+
+/* Tùy chỉnh Offcanvas Giỏ hàng */
+#cartOffcanvas {
+width: 420px !important;
+}
+#cartOffcanvas .offcanvas-body {
+padding: 0; background-color: #f8f9fa;
+}
+.cart-restaurant-group {
+background-color: white; margin-bottom: 1rem; border-bottom: 1px solid #e9ecef;
+}
+.cart-restaurant-header { padding: 1rem 1.5rem; border-bottom: 1px solid #e9ecef; }
+.cart-restaurant-header h6 { font-weight: bold; margin-bottom: 0; }
+.cart-item { display: flex; padding: 1rem 1.5rem; gap: 1rem; align-items: center; }
+.cart-item-quantity { font-weight: bold; flex-shrink: 0; }
+.cart-item-details { flex-grow: 1; }
+.cart-item-details .item-name { font-weight: 500; margin-bottom: 0.25rem; }
+.cart-item-details .item-options { font-size: 0.85rem; color: #6c757d; margin-bottom: 0; }
+.cart-item-price { font-weight: bold; flex-shrink: 0; }
+#cartOffcanvas .offcanvas-footer { padding: 1.5rem; background-color: white; border-top: 1px solid #e9ecef; }
+.cart-total-row { display: flex; justify-content: space-between; margin-bottom: 1rem; font-size: 1.1rem; }
+.cart-total-row .label { font-weight: 500; }
+.cart-total-row .value { font-weight: bold; }
+.btn-view-order { width: 100%; padding: 0.75rem; font-weight: bold; background-color: #343a40; color: white; border: none; }
+.btn-view-order:hover { background-color: #23272b; }
+#cart-empty-state { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; }
+.btn-pink {
+    background-color: #E91E63 !important;
+    color: white !important;
+    padding: 0.75rem;
+    border: none;
+}
+
+.btn-pink:hover {
+    background-color: #c2185b !important;
+    color: white !important;
+}
+.cart-index-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    gap: 1rem;
+    border-bottom: 1px solid #e9ecef;
+    transition: background-color 0.2s;
+}
+
+.cart-index-item:hover {
+    background-color: #f8f9fa;
+}
+
+.cart-index-item-img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+.cart-index-item-details {
+    flex-grow: 1;
+}
+.cart-item {
+    position: relative;
+}
+
+.cart-item-info {
+    flex-grow: 1;
+    cursor: pointer;
+}
+
+.cart-item-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: 1rem;
+}
+
+.btn-change-qty {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid #ddd;
+    background-color: white;
+    color: #333;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.btn-delete-item {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    border: none;
+    background: none;
+    color: #aaa;
+    font-size: 0.8rem;
+    padding: 5px;
+}
+.btn-delete-item:hover {
+    color: #dc3545;
+}
+
+#confirmationModal .modal-content {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+#confirmationModal .modal-header,
+#confirmationModal .modal-footer {
+    padding: 1.5rem;
+}
+
+#confirmationModal .modal-body {
+    padding: 0 1.5rem 1.5rem;
+    font-size: 1.1rem;
+}

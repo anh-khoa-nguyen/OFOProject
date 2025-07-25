@@ -3,6 +3,9 @@
 </head>
 {% extends 'layout/base.html' %}
 
+{% block body_attributes %}
+    data-restaurant-id="{{ restaurant.id }}"
+{% endblock %}
 
 {% block content %}
 <div class="container py-4">
@@ -178,6 +181,7 @@
 {% endblock %}
 
 {% block scripts %}
+ {{ super() }}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         // --- Phần 1: Các biến và phần tử cần thiết ---
@@ -269,8 +273,23 @@
             return new Intl.NumberFormat('vi-VN').format(value);
         }
 
-        function initializeOffcanvasLogic(dishData) {
+        function initializeOffcanvasLogic(dishData,preselectedItemData = null) {
             const optionInputs = offcanvasContentWrapper.querySelectorAll('input[type="radio"], input[type="checkbox"]');
+
+            if (preselectedItemData) {
+                quantityInput.value = preselectedItemData.quantity;
+
+                // 2. Lấy danh sách ID của các option đã chọn
+                const selectedOptionIds = preselectedItemData.options.map(opt => opt.id);
+
+                // 3. Duyệt qua tất cả các input và tick vào những cái đã được chọn
+                optionInputs.forEach(input => {
+                    const optionId = parseInt(input.id.replace('option-', ''));
+                    if (selectedOptionIds.includes(optionId)) {
+                        input.checked = true;
+                    }
+                });
+            }
 
             // ===== HÀM VALIDATE ĐÃ ĐƯỢC CẬP NHẬT =====
             function validateSelections() {
@@ -366,10 +385,25 @@
             const dishId = button.dataset.dishId;
             if (!dishId) return;
 
+            addToBasketBtn.dataset.dishId = dishId;
+
             quantityInput.value = 1;
             addToBasketBtn.textContent = 'Đang tải...';
             addToBasketBtn.disabled = true;
             offcanvasContentWrapper.innerHTML = '<div class="text-center p-5"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+
+            const itemKeyToEdit = offcanvasElement.dataset.editingItemKey;
+            let preselectedData = null;
+
+            // Nếu có item key (tức là đang chỉnh sửa) và giỏ hàng toàn cục tồn tại
+            if (itemKeyToEdit && window.currentCart) {
+                const restaurantId = String('{{ restaurant.id }}'); // Chuyển ID sang chuỗi để khớp với key
+
+                // Kiểm tra một cách an toàn
+                if (window.currentCart[restaurantId] && window.currentCart[restaurantId].items[itemKeyToEdit]) {
+                    preselectedData = window.currentCart[restaurantId].items[itemKeyToEdit];
+                }
+            }
 
             try {
                 const response = await fetch(`/api/dish/${dishId}`);
@@ -428,12 +462,63 @@
                 `;
 
                 offcanvasContentWrapper.innerHTML = html;
-                initializeOffcanvasLogic(data);
+                initializeOffcanvasLogic(data, preselectedData);
 
             } catch (error) {
                 console.error('Failed to fetch dish details:', error);
                 offcanvasContentWrapper.innerHTML = '<p class="text-center text-danger">Không thể tải được chi tiết món ăn. Vui lòng thử lại.</p>';
             }
+        });
+        // Gán sự kiện click cho nút "Thêm vào giỏ"
+        addToBasketBtn.addEventListener('click', function() {
+            const dishId = this.dataset.dishId; // Lấy dishId từ nút
+            const quantity = parseInt(quantityInput.value);
+            const selectedOptions = [...offcanvasContentWrapper.querySelectorAll('input:checked')].map(input => input.id.replace('option-', ''));
+            const itemKeyToEdit = offcanvasElement.dataset.editingItemKey;
+
+            this.disabled = true;
+            this.textContent = 'Đang thêm...';
+
+            let payload = {
+                dish_id: dishId,
+                quantity: quantity,
+                options: selectedOptions
+            };
+            if (itemKeyToEdit) {
+                payload.item_key_to_edit = itemKeyToEdit;
+            }
+
+            // Gọi API
+            fetch('/api/add-to-cart', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+
+                    document.dispatchEvent(new CustomEvent('cartUpdated', {
+                        detail: { cart: data.cart }
+                    }));
+
+
+                    const optionsOffcanvas = bootstrap.Offcanvas.getInstance(offcanvasElement);
+                    optionsOffcanvas.hide();
+                } else {
+                    alert('Lỗi: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Lỗi thêm vào giỏ:', error);
+                alert('Đã có lỗi xảy ra. Vui lòng thử lại.');
+            })
+            .finally(() => {
+                if (itemKeyToEdit) {
+                    delete offcanvasElement.dataset.editingItemKey;
+                }
+
+            });
         });
     });
 </script>

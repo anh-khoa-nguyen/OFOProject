@@ -567,5 +567,64 @@ def toggle_favorite(user_id, restaurant_id):
         db.session.commit()
         return 'added'
 
+
+
+def get_dish_by_id(dish_id):
+    try:
+        return db.session.get(Dish, int(dish_id))
+    except (ValueError, TypeError):
+        return None
+
+
+def get_options_by_ids(option_ids):
+    if not option_ids:
+        return []
+    try:
+        int_option_ids = [int(opt_id) for opt_id in option_ids]
+
+        # Sử dụng filter và .in_() để truy vấn hiệu quả nhiều ID cùng lúc
+        return DishOption.query.filter(DishOption.id.in_(int_option_ids)).all()
+    except (ValueError, TypeError):
+        return []
+def get_dish_details_by_id(dish_id):
+    """
+    Lấy thông tin chi tiết của một món ăn, bao gồm cả các nhóm tùy chọn
+    và các tùy chọn con của nó.
+    """
+    try:
+        dish = db.session.get(Dish, int(dish_id))
+        if not dish:
+            return None
+
+        dish_data = {
+            "id": dish.id,
+            "name": dish.name,
+            "description": dish.description,
+            "price": dish.price,
+            "image": dish.image,
+            "option_groups": []
+        }
+
+        # Lấy các nhóm tùy chọn được liên kết với món ăn này
+        for group in dish.option_groups:
+            group_data = {
+                "id": group.id,
+                "name": group.name,
+                "mandatory": group.mandatory,
+                "max_selection": group.max,
+                "options": []
+            }
+            for option in group.options:
+                option_data = {
+                    "id": option.id,
+                    "name": option.name,
+                    "price_change": option.price
+                }
+                group_data["options"].append(option_data)
+            dish_data["option_groups"].append(group_data)
+
+        return dish_data
+    except (ValueError, TypeError):
+        return None
 if __name__ == "__main__":
     print(auth_user("user", 123))
