@@ -272,14 +272,14 @@ if __name__ == '__main__':
                          password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()), role=UserRole.USER)
         customer3 = User(name='Khách Hàng C', email='customer3@email.com', phone='0982223331',
                          password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()), role=UserRole.USER)
-        customer3 = User(name='Khách Hàng D', email='customer4@email.com', phone='0982223334',
+        customer6 = User(name='Khách Hàng D', email='customer4@email.com', phone='0982223334',
                          password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()), role=UserRole.USER)
         customer4 = User(name='Khách Hàng E', email='customer5@email.com', phone='0982223335',
                          password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()), role=UserRole.USER)
         customer5 = User(name='Khách Hàng F', email='customer6@email.com', phone='0982223336',
                          password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()), role=UserRole.USER)
 
-        db.session.add_all([admin_user, owner1, owner2, customer1, customer2,customer3,customer4,customer5])
+        db.session.add_all([admin_user, owner1, owner2, customer1, customer2,customer3,customer4,customer5,customer6])
         db.session.commit()
 
         #=====================================================================================================================
@@ -320,7 +320,6 @@ if __name__ == '__main__':
                                  address='111 Cách Mạng Tháng Tám, P. 1, Q. 3, TP.HCM',
                                  description='Mì trộn độc đáo với các loại sốt nhà làm.',
                                  image='https://res.cloudinary.com/dq2jtbrda/image/upload/v1752910914/mitron_bbzzqc.jpg',
-                                 category=cat_thucannhanh,
                                  lat =10.773291135000022,
                                  lng =106.68979721600004,
                                  # Thêm giờ mở/đóng cửa
@@ -333,7 +332,6 @@ if __name__ == '__main__':
                                  address='222 Phan Xích Long, P. 2, Q. Phú Nhuận, TP.HCM',
                                  description='Cơm trộn Hàn Quốc chuẩn vị cho giới trẻ.',
                                  image='https://res.cloudinary.com/dq2jtbrda/image/upload/v1752910914/comtron_qhxxer.jpg',
-                                 category=cat_comtam,
                                  lat =10.834618,
                                  lng =106.665187,
                                  # Thêm giờ mở/đóng cửa
@@ -346,7 +344,6 @@ if __name__ == '__main__':
                                  address='333 Tô Hiến Thành, P. 13, Q. 10, TP.HCM',
                                  description='Gà giòn vui vẻ, Mì Ý sốt bò bằm.',
                                  image='https://res.cloudinary.com/dq2jtbrda/image/upload/v1752910914/garan_mzz4tb.webp',
-                                 category=cat_thitga,
                                  lat=10.77735356900007,
                                  lng=106.66494351700004,
                                  # Thêm giờ mở/đóng cửa
@@ -359,7 +356,6 @@ if __name__ == '__main__':
                                  address='444 Lê Văn Lương, P. Tân Hưng, Q. 7, TP.HCM',
                                  description='Bánh mì heo quay da giòn trứ danh.',
                                  image='https://res.cloudinary.com/dq2jtbrda/image/upload/v1752910913/banhmi_w70ph8.webp',
-                                 category=cat_banhmi,
                                  lat=10.736429194000038,
                                  lng=106.70292244500007,
                                  # Thêm giờ mở/đóng cửa
@@ -371,7 +367,6 @@ if __name__ == '__main__':
                                  address='242/12 Nguyễn Thiện Thuật, P. 3, Q. 3, TP.HCM',
                                  description='Bún bò Huế đậm đà hương vị truyền thống.',
                                  image='https://res.cloudinary.com/dbb1oslnw/image/upload/v1753189389/bunbohue_tph_09_afz7md.jpg',
-                                 category=cat_amthucviet,
                                  lat=10.773291,
                                  lng=106.689797,
                                  # Thêm giờ mở/đóng cửa
@@ -383,7 +378,6 @@ if __name__ == '__main__':
                                  address='84 Đặng Văn Ngữ, P. 10, Q. Phú Nhuận, TP.HCM',
                                  description='Sườn nướng mật ong trứ danh.',
                                  image='https://res.cloudinary.com/dbb1oslnw/image/upload/v1753190745/images_1_eqa8vc.jpg',
-                                 category=cat_amthucviet,
                                  lat=10.794850,
                                  lng=106.676250,
                                  # Thêm giờ mở/đóng cửa
@@ -395,7 +389,6 @@ if __name__ == '__main__':
                                  address='413-415 Nguyễn Trãi, P. 7, Q. 5, TP.HCM',
                                  description='Tô phở đầy đặn, nước lèo ngọt thanh.',
                                  image='https://res.cloudinary.com/dbb1oslnw/image/upload/v1753190614/pho-le-sai-gon-01-1720501423_cb477g.jpg',
-                                 category=cat_amthucviet,
                                  lat=10.753580,
                                  lng=106.670050,
                                  # Thêm giờ mở/đóng cửa
@@ -407,7 +400,6 @@ if __name__ == '__main__':
                                  address='1 Quang Trung, P. 11, Q. Gò Vấp, TP.HCM',
                                  description='Thịt nướng Hàn Quốc chuẩn vị.',
                                  image='https://res.cloudinary.com/dbb1oslnw/image/upload/v1753190899/images_pf5lrc.png',
-                                 category=cat_monnhat,
                                  lat=10.832850,
                                  lng=106.665780,
                                  # Thêm giờ mở/đóng cửa
@@ -419,7 +411,6 @@ if __name__ == '__main__':
                                  address='404 Lê Văn Khương, P. Thới An, Q. 12, TP.HCM',
                                  description='Lẩu dê nóng hổi, thịt mềm.',
                                  image='https://res.cloudinary.com/dbb1oslnw/image/upload/v1753191068/images_2_xc7xlg.jpg',
-                                 category=cat_amthucviet,
                                  lat=10.868910,
                                  lng=106.641390,
                                  # Thêm giờ mở/đóng cửa
@@ -431,7 +422,6 @@ if __name__ == '__main__':
                                  address='216 Võ Văn Ngân, P. Bình Thọ, TP. Thủ Đức, TP.HCM',
                                  description='Sushi và sashimi tươi ngon.',
                                  image='https://res.cloudinary.com/dbb1oslnw/image/upload/v1753191372/Hokkaido-sushi-1024x819_ewdbmq.jpg',
-                                 category=cat_monnhat,
                                  lat=10.849930,
                                  lng=106.753740,
                                  # Thêm giờ mở/đóng cửa
@@ -443,7 +433,6 @@ if __name__ == '__main__':
                                   address='Số 1 đường số 17A, P. Bình Trị Đông B, Q. Bình Tân, TP.HCM',
                                   description='Gà rán giòn tan, khoai tây chiên nóng hổi.',
                                   image='https://res.cloudinary.com/dbb1oslnw/image/upload/v1753191569/39wkPMS6pLZ4W8JSWEJYu2tnDaOBML9RGfxlqLNK_wutflb.webp',
-                                  category=cat_thucannhanh,
                                   lat=10.747810,
                                   lng=106.605390,
                                   # Thêm giờ mở/đóng cửa
@@ -455,7 +444,6 @@ if __name__ == '__main__':
                                   address='510 Phan Văn Trị, P. 7, Q. Gò Vấp, TP.HCM',
                                   description='Không gian yên tĩnh, cà phê đậm đà.',
                                   image='https://res.cloudinary.com/dbb1oslnw/image/upload/v1753191745/1614958720329-h%E1%BB%8Dc_b%E1%BB%95ng_c%C3%A1c_ch%C3%A2u_l%E1%BB%A5c_16_hpognh.png',
-                                  category=cat_cafe,
                                   lat=10.828540,
                                   lng=106.688920,
                                   # Thêm giờ mở/đóng cửa
@@ -467,7 +455,6 @@ if __name__ == '__main__':
                                   address='14 Song Hành, TT. Hóc Môn, Huyện Hóc Môn, TP.HCM',
                                   description='Bánh canh cua đặc quánh, topping đầy đủ.',
                                   image='https://res.cloudinary.com/dbb1oslnw/image/upload/v1753191938/15173065480_rlv9h1.jpg',
-                                  category=cat_amthucviet,
                                   lat=10.880120,
                                   lng=106.589450,
                                   # Thêm giờ mở/đóng cửa
@@ -479,7 +466,6 @@ if __name__ == '__main__':
                                   address='Km 9 Xa lộ Hà Nội, P. Hiệp Phú, TP. Thủ Đức, TP.HCM',
                                   description='Pizza viền phô mai béo ngậy.',
                                   image='https://res.cloudinary.com/dbb1oslnw/image/upload/v1753192265/Pizza-Hut-New-Logo-Design_ohmxk1.jpg',
-                                  category=cat_thucannhanh,
                                   lat=10.849320,
                                   lng=106.770180,
                                   # Thêm giờ mở/đóng cửa
@@ -491,7 +477,6 @@ if __name__ == '__main__':
                                   address='35A Tú Xương, P. Võ Thị Sáu, Q. 3, TP.HCM',
                                   description='Lẩu nấm thiên nhiên bổ dưỡng.',
                                   image='https://res.cloudinary.com/dbb1oslnw/image/upload/v1753192319/images_1_pd1fik.png',
-                                  category=cat_amthucviet,
                                   lat=10.781890,
                                   lng=106.689510,
                                   # Thêm giờ mở/đóng cửa
@@ -503,7 +488,6 @@ if __name__ == '__main__':
                                   address='Quốc lộ 22, Xã Tân Phú Trung, Huyện Củ Chi, TP.HCM',
                                   description='Đặc sản bò tơ Củ Chi chính gốc.',
                                   image='https://res.cloudinary.com/dbb1oslnw/image/upload/v1753192519/images_2_jtb47b.png',
-                                  category=cat_amthucviet,
                                   lat=10.915670,
                                   lng=106.558980,
                                   # Thêm giờ mở/đóng cửa
@@ -515,7 +499,6 @@ if __name__ == '__main__':
                                   address='240-242 Phạm Văn Đồng, P. Hiệp Bình Chánh, TP. Thủ Đức, TP.HCM',
                                   description='Phin sữa đá và trà sen vàng nổi tiếng.',
                                   image='https://res.cloudinary.com/dbb1oslnw/image/upload/v1753192647/09160234_logo-highland-900x900_kvoocd.png',
-                                  category=cat_cafe,
                                   lat=10.828880,
                                   lng=106.720010,
                                   # Thêm giờ mở/đóng cửa
@@ -527,7 +510,6 @@ if __name__ == '__main__':
                                   address='215-217 Lý Tự Trọng, P. Bến Thành, Q. 1, TP.HCM',
                                   description='Mì Udon sợi tươi làm tại chỗ.',
                                   image='https://res.cloudinary.com/dbb1oslnw/image/upload/v1753192761/images_3_my6zoo.jpg',
-                                  category=cat_monnhat,
                                   lat=10.773820,
                                   lng=106.695740,
                                   # Thêm giờ mở/đóng cửa
@@ -539,13 +521,14 @@ if __name__ == '__main__':
                                   address='74 Sương Nguyệt Ánh, P. Bến Thành, Q. 1, TP.HCM',
                                   description='Bánh xèo giòn rụm, rau rừng tươi ngon.',
                                   image='https://res.cloudinary.com/dbb1oslnw/image/upload/v1753192883/images_4_uugpfd.jpg',
-                                  category=cat_amthucviet,
                                   lat=10.772560,
                                   lng=106.691890,
                                   # Thêm giờ mở/đóng cửa
                                   open_time=time(10, 0),  # 10:00 AM
                                   close_time=time(22, 0),
                                   active=True)
+
+
 
         #=====================================================================================================================
         # 3. KHÁCH YÊU THÍCH NHÀ HÀNG
@@ -554,6 +537,25 @@ if __name__ == '__main__':
         customer2.favorite_restaurants.append(restaurant3)
 
         db.session.add_all([restaurant1, restaurant2, restaurant3, restaurant4,restaurant5,restaurant6,restaurant7,restaurant8,restaurant9,restaurant10,restaurant11,restaurant12,restaurant13,restaurant14,restaurant15,restaurant16,restaurant17,restaurant18,restaurant19])
+        restaurant1.category= cat_thucannhanh
+        restaurant2.category = cat_comtam
+        restaurant3.category = cat_thucannhanh
+        restaurant4.category = cat_thucannhanh
+        restaurant5.category = cat_thucannhanh
+        restaurant6.category = cat_thucannhanh
+        restaurant7.category = cat_amthucviet
+        restaurant8.category = cat_monnhat
+        restaurant9.category = cat_amthucviet
+        restaurant10.category = cat_monnhat
+        restaurant11.category = cat_thucannhanh
+        restaurant12.category = cat_cafe
+        restaurant13.category = cat_amthucviet
+        restaurant14.category = cat_thucannhanh
+        restaurant15.category = cat_amthucviet
+        restaurant16.category = cat_amthucviet
+        restaurant17.category = cat_cafe
+        restaurant18.category = cat_monnhat
+        restaurant19.category = cat_amthucviet
         db.session.commit()
 
         #=====================================================================================================================
@@ -568,24 +570,26 @@ if __name__ == '__main__':
         dish1_1 = Dish(restaurant_id=restaurant1.id,
                        name='Cơm tấm sườn',
                        price=35000,
-                       description='Một miếng sườn cốt lết nướng thơm lừng trên than hồng, ăn kèm với cơm tấm nóng hổi, mỡ hành và nước mắm chua ngọt.',
-                       group=group_com_chinh)
+                       description='Một miếng sườn cốt lết nướng thơm lừng trên than hồng, ăn kèm với cơm tấm nóng hổi, mỡ hành và nước mắm chua ngọt.')
         dish1_2 = Dish(restaurant_id=restaurant1.id,
                        name='Cơm tấm bì chả',
                        price=30000,
-                       description='Sự kết hợp hoàn hảo giữa bì heo thái sợi giòn dai và chả trứng hấp mềm mịn, béo ngậy.',
-                       group=group_com_chinh)
+                       description='Sự kết hợp hoàn hảo giữa bì heo thái sợi giòn dai và chả trứng hấp mềm mịn, béo ngậy.')
 
         dish1_3 = Dish(restaurant_id=restaurant1.id,
                        name='Canh khổ qua',
                        price=10000,
-                       description='Canh khổ qua dồn thịt thanh mát, giải nhiệt, vị đắng nhẹ đặc trưng, tốt cho sức khỏe.',
-                       group=group_canh)
+                       description='Canh khổ qua dồn thịt thanh mát, giải nhiệt, vị đắng nhẹ đặc trưng, tốt cho sức khỏe.')
 
         dish2_1 = Dish(restaurant_id=restaurant2.id, name='Bún bò đặc biệt', price=55000)
         dish2_2 = Dish(restaurant_id=restaurant2.id, name='Bún bò giò nạm', price=45000)
 
         db.session.add_all([dish1_1, dish1_2, dish1_3, dish2_1, dish2_2])
+        dish1_1.group= group_com_chinh
+        dish1_2.group= group_com_chinh
+        dish1_3.group = group_canh
+        dish2_1.group = group_com_chinh
+        dish2_2.group = group_com_chinh
         db.session.commit()
 
         #=====================================================================================================================
@@ -686,17 +690,6 @@ if __name__ == '__main__':
 
 
 
-        # 2. Gán Category cho một nhà hàng
-        # Giả sử bạn đã có một nhà hàng tên `restaurant1`
-        # Gán trực tiếp đối tượng Category, không dùng .append() nữa
-        restaurant1.category = cat_comtam
-        db.session.commit()
-
-        # 3. Tạo DishGroup cho nhà hàng đó
-        group_com_chinh = DishGroup(name='Món Cơm Chính', restaurant_id=restaurant1.id)
-        group_canh = DishGroup(name='Các Món Canh', restaurant_id=restaurant1.id)
-        db.session.add_all([group_com_chinh, group_canh])
-        db.session.commit()
 
         # 4. Tạo Món ăn và gán vào DishGroup
         com_tam = Dish(name='Cơm tấm đặc biệt', price=35000, restaurant_id=restaurant1.id, group=group_com_chinh)
@@ -723,8 +716,10 @@ if __name__ == '__main__':
         db.session.commit()
 
         # Tùy chọn cho món "1 Miếng Gà Rán"
-        opt_group_j_1 = DishOptionGroup(dish_id=dish_j_1.id, name='Chọn Phần Gà', mandatory=True, max=1)
+        opt_group_j_1 = DishOptionGroup(restaurant_id=restaurant3.id, name='Chọn Phần Gà', mandatory=True, max=1)
         db.session.add(opt_group_j_1)
+        db.session.commit()
+        dish_j_1.option_groups.append(opt_group_j_1)
         db.session.commit()
         opt_j_1_1 = DishOption(option_group_id=opt_group_j_1.id, name='Má Đùi (Cay)', price=0)
         opt_j_1_2 = DishOption(option_group_id=opt_group_j_1.id, name='Má Đùi (Không Cay)', price=0)
@@ -733,10 +728,14 @@ if __name__ == '__main__':
         db.session.commit()
 
         # Tùy chọn cho "Combo 2 Miếng Gà Rán"
-        opt_group_j_2 = DishOptionGroup(dish_id=dish_j_2.id, name='Chọn 2 Phần Gà', mandatory=True, max=2)
-        opt_group_j_3 = DishOptionGroup(dish_id=dish_j_2.id, name='Đổi Nước Lớn', mandatory=False, max=1)
+        opt_group_j_2 = DishOptionGroup(restaurant_id=restaurant3.id, name='Chọn 2 Phần Gà', mandatory=True, max=2)
+        opt_group_j_3 = DishOptionGroup(restaurant_id=restaurant3.id, name='Đổi Nước Lớn', mandatory=False, max=1)
         db.session.add_all([opt_group_j_2, opt_group_j_3])
         db.session.commit()
+        dish_j_2.option_groups.append(opt_group_j_2)
+        dish_j_2.option_groups.append(opt_group_j_3)
+        db.session.commit()
+
         opt_j_2_1 = DishOption(option_group_id=opt_group_j_2.id, name='Má Đùi (Cay)', price=0)
         opt_j_2_2 = DishOption(option_group_id=opt_group_j_2.id, name='Má Đùi (Không Cay)', price=0)
         opt_j_2_3 = DishOption(option_group_id=opt_group_j_2.id, name='Cánh (Cay)', price=0)
@@ -759,8 +758,10 @@ if __name__ == '__main__':
         db.session.commit()
 
         # Tùy chọn cho Bánh Mì
-        opt_group_bm_1 = DishOptionGroup(dish_id=dish_bm_1.id, name='Yêu cầu thêm', mandatory=False, max=2)
+        opt_group_bm_1 = DishOptionGroup(restaurant_id=restaurant4.id, name='Yêu cầu thêm', mandatory=False, max=2)
         db.session.add(opt_group_bm_1)
+        db.session.commit()
+        dish_bm_1.option_groups.append(opt_group_bm_1)
         db.session.commit()
         opt_bm_1_1 = DishOption(option_group_id=opt_group_bm_1.id, name='Thêm Pate', price=7000)
         opt_bm_1_2 = DishOption(option_group_id=opt_group_bm_1.id, name='Thêm Trứng Ốp La', price=8000)
@@ -782,8 +783,10 @@ if __name__ == '__main__':
         db.session.add_all([dish_pho_1, dish_pho_2, dish_pho_3, dish_pho_4])
         db.session.commit()
 
-        opt_group_pho_1 = DishOptionGroup(dish_id=dish_pho_1.id, name='Yêu cầu', mandatory=False, max=1)
+        opt_group_pho_1 = DishOptionGroup(restaurant_id=restaurant7.id, name='Yêu cầu', mandatory=False, max=1)
         db.session.add(opt_group_pho_1)
+        db.session.commit()
+        dish_pho_1.option_groups.append(opt_group_pho_1)
         db.session.commit()
         opt_pho_1_1 = DishOption(option_group_id=opt_group_pho_1.id, name='Nhiều bánh phở', price=0)
         opt_pho_1_2 = DishOption(option_group_id=opt_group_pho_1.id, name='Không hành', price=0)
@@ -803,9 +806,12 @@ if __name__ == '__main__':
         db.session.add_all([dish_gogi_1, dish_gogi_2])
         db.session.commit()
 
-        opt_group_gogi_1 = DishOptionGroup(dish_id=dish_gogi_2.id, name='Chọn Độ Cay', mandatory=True, max=1)
-        opt_group_gogi_2 = DishOptionGroup(dish_id=dish_gogi_2.id, name='Thêm Món Nhúng', mandatory=False, max=3)
+        opt_group_gogi_1 = DishOptionGroup(restaurant_id=restaurant8.id, name='Chọn Độ Cay', mandatory=True, max=1)
+        opt_group_gogi_2 = DishOptionGroup(restaurant_id=restaurant8.id, name='Thêm Món Nhúng', mandatory=False, max=3)
         db.session.add_all([opt_group_gogi_1, opt_group_gogi_2])
+        db.session.commit()
+        dish_gogi_2.option_groups.append(opt_group_gogi_1)
+        dish_gogi_2.option_groups.append(opt_group_gogi_2)
         db.session.commit()
         opt_gogi_1_1 = DishOption(option_group_id=opt_group_gogi_1.id, name='Ít Cay', price=0)
         opt_gogi_1_2 = DishOption(option_group_id=opt_group_gogi_1.id, name='Cay Vừa', price=0)
@@ -829,9 +835,12 @@ if __name__ == '__main__':
         db.session.add_all([dish_tch_1, dish_tch_2, dish_tch_3])
         db.session.commit()
 
-        opt_group_tch_1 = DishOptionGroup(dish_id=dish_tch_2.id, name='Chọn Size', mandatory=True, max=1)
-        opt_group_tch_2 = DishOptionGroup(dish_id=dish_tch_2.id, name='Mức Đường', mandatory=False, max=1)
+        opt_group_tch_1 = DishOptionGroup(restaurant_id=restaurant12.id, name='Chọn Size', mandatory=True, max=1)
+        opt_group_tch_2 = DishOptionGroup(restaurant_id=restaurant12.id, name='Mức Đường', mandatory=False, max=1)
         db.session.add_all([opt_group_tch_1, opt_group_tch_2])
+        db.session.commit()
+        dish_tch_2.option_groups.append(opt_group_tch_1)
+        dish_tch_2.option_groups.append(opt_group_tch_2)
         db.session.commit()
         opt_tch_1_1 = DishOption(option_group_id=opt_group_tch_1.id, name='Size M', price=0)
         opt_tch_1_2 = DishOption(option_group_id=opt_group_tch_1.id, name='Size L', price=10000)

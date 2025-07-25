@@ -3,7 +3,6 @@ from __init__ import app, db, login
 import dao
 from flask_login import login_user, logout_user, login_required, current_user
 from models import *
-from flask import request, jsonify
 from flask import session
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 import cloudinary.uploader
@@ -666,6 +665,148 @@ def tim_kiem():
 @login.user_loader
 def get_user_by_id(user_id):
     return dao.get_user_by_id(user_id)
+
+# Trong file index.py
+
+@app.route('/api/dish/<int:dish_id>')
+def get_dish_details(dish_id):
+    """
+    API endpoint để trả về chi tiết của một món ăn dưới dạng JSON.
+    """
+    dish_details = dao.get_dish_details_by_id(dish_id)
+    if dish_details:
+        return jsonify(dish_details)
+    return jsonify({"error": "Dish not found"}), 404
+
+# Thêm vào đầu file index.py
+
+from dao import get_dish_by_id, get_options_by_ids
+
+@app.route('/api/add-to-cart', methods=['POST'])
+def add_to_cart():
+    data = request.json
+    dish_id = data.get('dish_id')
+    quantity = int(data.get('quantity', 1))
+    selected_option_ids = data.get('options', [])
+    item_key_to_edit = data.get('item_key_to_edit') # <-- THAM SỐ MỚI
+
+    dish = get_dish_by_id(dish_id)
+    if not dish:
+        return jsonify({'success': False, 'message': 'Món ăn không tồn tại'}), 404
+
+    cart = session.get('cart', {})
+    restaurant_id_str = str(dish.restaurant_id)
+
+    # --- LOGIC CHỈNH SỬA MỚI ---
+    # Nếu đây là một lần chỉnh sửa, hãy xóa món ăn cũ trước
+    if item_key_to_edit and restaurant_id_str in cart and item_key_to_edit in cart[restaurant_id_str]['items']:
+        print(f"Editing item: Deleting old key {item_key_to_edit}")
+        del cart[restaurant_id_str]['items'][item_key_to_edit]
+        # Không cần xóa nhà hàng ngay cả khi giỏ trống, vì chúng ta sắp thêm món mới vào lại
+
+    # --- PHẦN CÒN LẠI CỦA HÀM GIỮ NGUYÊN ---
+    if restaurant_id_str not in cart:
+        cart[restaurant_id_str] = {
+            'restaurant_name': dish.restaurant.restaurant_name,
+            'restaurant_image': dish.restaurant.image,
+            'items': {}
+        }
+
+    selected_option_ids.sort()
+    unique_key = f"dish_{dish_id}_" + '_'.join(map(str, selected_option_ids))
+
+    options_details = []
+    options_price = 0
+    if selected_option_ids:
+        options = get_options_by_ids(selected_option_ids)
+        for opt in options:
+            options_details.append({'id': opt.id, 'name': opt.name, 'price': opt.price})
+            options_price += opt.price
+
+    final_price_per_item = dish.price + options_price
+
+    if unique_key in cart[restaurant_id_str]['items']:
+        cart[restaurant_id_str]['items'][unique_key]['quantity'] += quantity
+    else:
+        cart[restaurant_id_str]['items'][unique_key] = {
+            'dish_id': dish.id,
+            'name': dish.name,
+            'image': dish.image,
+            'price': final_price_per_item,
+            'quantity': quantity,
+            'options': options_details
+        }
+
+    session['cart'] = cart
+    session.modified = True
+
+    return jsonify({'success': True, 'message': 'Đã cập nhật giỏ hàng', 'cart': cart})
+
+# Nên dùng Api thay vì ssesion vì gửi những thông tin nhạy cảm như là giá tiền, ng dùng có thể dùng F12 thay đổi giá tiền -> rất nguy hiểm
+@app.route('/api/update-cart-item', methods=['POST'])
+def update_cart_item():
+    """
+    API để cập nhật số lượng của một món ăn trong giỏ hàng.
+    Nếu số lượng <= 0, món ăn sẽ bị xóa.
+    """
+    data = request.json
+    restaurant_id = str(data.get('restaurant_id'))
+    item_key = data.get('item_key')
+    new_quantity = int(data.get('quantity', 1))
+
+    cart = session.get('cart', {})
+
+    if restaurant_id in cart and item_key in cart[restaurant_id]['items']:
+        if new_quantity > 0:
+            cart[restaurant_id]['items'][item_key]['quantity'] = new_quantity
+        else:
+            del cart[restaurant_id]['items'][item_key]
+            if not cart[restaurant_id]['items']:
+                del cart[restaurant_id]
+
+        session['cart'] = cart
+        session.modified = True
+        return jsonify({'success': True, 'cart': cart})
+
+    return jsonify({'success': False, 'message': 'Món ăn không tìm thấy trong giỏ'}), 404
+
+
+@app.route('/api/delete-cart-item', methods=['POST'])
+def delete_cart_item():
+    """
+    API để xóa hoàn toàn một món ăn khỏi giỏ hàng.
+    """
+    data = request.json
+    restaurant_id = str(data.get('restaurant_id'))
+    item_key = data.get('item_key')
+
+    cart = session.get('cart', {})
+
+    if restaurant_id in cart and item_key in cart[restaurant_id]['items']:
+        del cart[restaurant_id]['items'][item_key]
+        if not cart[restaurant_id]['items']:
+            del cart[restaurant_id]
+
+        session['cart'] = cart
+        session.modified = True
+        return jsonify({'success': True, 'cart': cart})
+
+    return jsonify({'success': False, 'message': 'Món ăn không tìm thấy trong giỏ'}), 404
+
+# Thêm vào file index.py
+
+@app.route('/my-favorites')
+@login_required # Đảm bảo chỉ người dùng đã đăng nhập mới truy cập được
+def favorite_restaurants_page():
+
+    favorite_list = current_user.favorite_restaurants.all()
+    return render_template('favorite_restaurant.html', favorite_restaurants=favorite_list)
+
+@app.context_processor
+def inject_cart():
+    return {
+        'cart': session.get('cart', {})
+    }
 import admin
 if __name__ == '__main__':
     with app.app_context():
