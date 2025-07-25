@@ -439,13 +439,8 @@ def add_dish_route():
 
         image_url = None
         if image:
-            upload_dir = 'static/image'
-            os.makedirs(upload_dir, exist_ok=True)
-            filename = image.filename
-            path = os.path.join(upload_dir, filename)
-            image.save(path)
-            image_url = f"image/{filename}"
-
+            upload_result = cloudinary.uploader.upload(image)
+            image_url = upload_result.get('secure_url')
         success = dao.add_dish(name, description, price, image_url, dish_group_id, restaurant_id,option_group_ids=option_group_ids)
         return jsonify({'success': success})
 

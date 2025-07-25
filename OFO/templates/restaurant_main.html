@@ -1,289 +1,44 @@
 <head>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/restaurant.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 </head>
 {% extends 'layout/base.html' %}
 
 {% block content %}
-<style>
-    .restaurant-info-block .restaurant-management-nav {
-    width: 100%;
-    padding-bottom: 1rem;
-    margin-top: 1.5rem;
-    margin-bottom: 2rem;
-    text-align: left;
-}
-
-/* Selector này cụ thể hơn, sẽ ghi đè lên style mặc định */
-.restaurant-info-block .restaurant-management-nav ul {
-    display: inline-flex !important; /* Dùng !important để đảm bảo chiến thắng */
-    align-items: center;
-    list-style: none !important; /* Quan trọng: Xóa dấu chấm tròn */
-    padding: 0;
-    margin: 0;
-    gap: 1.5rem;
-}
-
-/* Selector này cụ thể hơn, sẽ ghi đè lên style mặc định */
-.restaurant-info-block .restaurant-management-nav li {
-    display: block !important; /* Bỏ qua 'display: list-item' mặc định */
-    padding-left: 1.5rem;
-    border-left: 1px solid #ced4da; /* Tạo dấu gạch đứng */
-}
-
-/* Mục đầu tiên không cần dấu gạch đứng bên trái */
-.restaurant-info-block .restaurant-management-nav li:first-child {
-    border-left: none;
-    padding-left: 0;
-}
-
-.restaurant-info-block .restaurant-management-nav a {
-    display: flex;
-    align-items: center;
-    text-decoration: none;
-    color: #495057;
-    font-weight: 500;
-    font-size: 1.1rem;
-    transition: color 0.2s ease-in-out;
-}
-
-.restaurant-info-block .restaurant-management-nav a:hover,
-.restaurant-info-block .restaurant-management-nav a.active {
-    color: #E91E63; /* Màu xanh nổi bật */
-    font-weight: 700;
-}
-
-.restaurant-info-block .restaurant-management-nav a i {
-    margin-right: 8px;
-    font-size
-}
-#dynamicFormOffcanvas {
-    --bs-offcanvas-width: 500px;
-}
-#dynamicFormOffcanvas .offcanvas-header {
-    background-color: #FFF0F5;
-    border-bottom: 2px solid #E91E63;
-}
-#dynamicFormOffcanvas .offcanvas-title {
-    font-weight: 600;
-    color: #E91E63;
-}
-#dynamicFormOffcanvas .offcanvas-body {
-    background-color: #fff;
-    padding: 1.5rem;
-}
-
-/* --- 2. Thiết kế cho các KHỐI (section) trong form --- */
-.form-section {
-    background-color: #FFF0F5;  /* << Nền hồng rất nhạt >> */
-    border: 1px solid #F8BBD0;
-    border-radius: 0.75rem;
-    padding: 1.25rem;
-    margin-bottom: 1.5rem;
-}
-.form-section-title {
-    font-weight: 600;
-    color: #c2185b; /* Màu hồng tối hơn để dễ đọc */
-    margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid #F8BBD0;
-}
-
-/* --- 3. Tùy chỉnh các ô input và label --- */
-.form-label {
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: #495057;
-}
-.form-control:focus {
-    border-color: #E91E63;
-    box-shadow: 0 0 0 0.25rem rgba(233, 30, 99, 0.25); /* << Đổ bóng hồng khi focus >> */
-}
-
-/* --- 4. Tùy chỉnh cho nút gạt "Bắt buộc" --- */
-.form-switch {
-    display: flex;
-    justify-content: space-between; /* Đẩy label và nút gạt ra hai bên */
-    align-items: center;
-    padding-left: 0 !important; /* Ghi đè padding mặc định của Bootstrap */
-}
-.form-switch .form-check-label {
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: #495057;
-}
-.form-switch .form-check-input {
-    width: 3.25em;
-    height: 1.6em;
-    cursor: pointer;
-    margin-left: 1em;
-}
-/* Nút gạt sẽ có màu hồng khi được bật */
-.form-switch .form-check-input:checked {
-    background-color: #E91E63;
-    border-color: #E91E63;
-}
-
-
-/* --- 5. Các thẻ lựa chọn động --- */
-.option-card { /* Đây là tên class mới cho các thẻ lựa chọn */
-    background-color: #fff; /* Nền trắng để nổi bật trên nền hồng của section */
-    border: 1px solid #dee2e6;
-    border-radius: 0.5rem;
-    padding: 1rem;
-    margin-bottom: 1rem;
-    position: relative;
-    transition: all 0.2s ease-in-out;
-}
-.option-card:hover {
-    border-color: #E91E63;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-.btn-delete-option {
-    position: absolute;
-    top: 0.5rem; right: 0.5rem; width: 28px; height: 28px;
-    border-radius: 50%; border: none; background-color: #e9ecef; color: #6c757d;
-    display: flex; align-items: center; justify-content: center;
-    transition: all 0.2s ease;
-}
-.btn-delete-option:hover {
-    background-color: #E91E63; color: white; transform: scale(1.1);
-}
-.option-card .form-label {
-    font-size: 0.85rem; margin-bottom: 0.25rem;
-}
-
-
-/* --- 6. Nút "Thêm Lựa Chọn" và "Lưu" --- */
-#addInputButton {
-    border: 2px dashed #E91E63;
-    color: #E91E63;
-    background-color: transparent; /* Nền trong suốt trên nền hồng của section */
-    font-weight: 500;
-    transition: all 0.2s ease;
-}
-#addInputButton:hover {
-    background-color: #E91E63;
-    color: white;
-    border-style: solid;
-}
-
-#dynamicFormOffcanvas .offcanvas-footer {
-    padding: 1rem 1.5rem;
-    background-color: #fff;
-    border-top: 1px solid #e9ecef;
-}
-#dynamicFormOffcanvas .btn-success {
-    background: #E91E63;
-    border-color: #E91E63;
-    font-weight: 600;
-    padding: 0.75rem;
-    transition: all 0.2s ease-in-out;
-}
-#dynamicFormOffcanvas .btn-success:hover {
-    opacity: 0.9;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(233, 30, 99, 0.4);
-}
-#editOptionGroupOffcanvas {
-    --bs-offcanvas-width: 500px;
-}
-#editOptionGroupOffcanvas .offcanvas-header {
-    background-color: #e7f1ff; /* Nền xanh dương rất nhạt */
-    border-bottom: 2px solid #E91E63; /* Đường viền xanh dương đậm */
-}
-#editOptionGroupOffcanvas .offcanvas-title {
-    font-weight: 600;
-    color: #E91E63; /* Chữ màu xanh dương đậm */
-}
-#editOptionGroupOffcanvas .offcanvas-body {
-    background-color: #fff;
-    padding: 1.5rem;
-}
-
-/* --- 2. Style cho input và label (Kế thừa từ các class chung) --- */
-/* Các class như .form-label, .form-control sẽ tự động được áp dụng,
-   nhưng chúng ta sẽ tùy chỉnh hiệu ứng :focus cho phù hợp với tông màu xanh */
-#editOptionGroupOffcanvas .form-control:focus {
-    border-color: #E91E63;
-    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); /* Đổ bóng xanh khi focus */
-}
-
-/* --- 3. Style cho nút gạt "Bắt buộc" --- */
-/* Class .form-switch sẽ được áp dụng, chỉ cần đổi màu khi được bật */
-#editOptionGroupOffcanvas .form-switch .form-check-input:checked {
-    background-color: #E91E63;
-    border-color: #E91E63;
-}
-
-/* --- 4. Style cho các thẻ lựa chọn động --- */
-/* Class chung .option-card sẽ được áp dụng, chỉ cần tùy chỉnh màu khi hover */
-#editOptionGroupOffcanvas .option-card:hover {
-    border-color: #E91E63; /* Viền xanh khi hover */
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-/* Nút xóa vẫn nên có màu đỏ/hồng để cảnh báo, nên ta giữ nguyên style cũ cho nó */
-#editOptionGroupOffcanvas .btn-delete-option:hover {
-    background-color: #dc3545; /* Màu đỏ nguy hiểm */
-    color: white;
-    transform: scale(1.1);
-}
-.btn-pink {
-    background-color: #E91E63;
-    border-color: #E91E63;
-    color: white; /* Đừng quên đổi màu chữ cho dễ đọc */
-}
-/* --- 5. Style cho các nút hành động --- */
-
-/* Nút "Thêm Lựa Chọn Khác" */
-#addAnotherOptionBtn {
-    border: 2px dashed #E91E63;
-    color: #E91E63;
-    background-color: transparent;
-    font-weight: 500;
-    transition: all 0.2s ease;
-}
-#addAnotherOptionBtn:hover {
-    background-color: #E91E63;
-    color: white;
-    border-style: solid;
-}
-
-</style >
-
-
 <div class="container py-4">
 
     <div class="restaurant-info-block">
         <div class="restaurant-management-nav">
-    <ul>
-        <li>
-            <!-- Trang 'Thực đơn' đang active -->
-            <a href="{{ url_for('home', restaurant_id=restaurant.id) }}" class="active">
-                <i class="fas fa-utensils"></i>
-                <span>Thực Đơn</span>
-            </a>
-        </li>
-        <li>
-            <a href="#"> <!-- Thay bằng url_for('...') của bạn -->
-                <i class="fas fa-receipt"></i>
-                <span>Đơn Hàng</span>
-            </a>
-        </li>
-        <li>
-            <a href="#"> <!-- Thay bằng url_for('...') của bạn -->
-                <i class="fas fa-chart-line"></i>
-                <span>Doanh Thu</span>
-            </a>
-        </li>
-        <li>
-            <a href="#"> <!-- Thay bằng url_for('...') của bạn -->
-                <i class="fas fa-tags"></i>
-                <span>Khuyến Mãi</span>
-            </a>
-        </li>
-    </ul>
-</div>
+            <ul>
+                <li>
+                    <!-- Trang 'Thực đơn' đang active -->
+                    <a href="{{ url_for('home', restaurant_id=restaurant.id) }}" class="active">
+                        <i class="fas fa-utensils"></i>
+                        <span>Thực Đơn</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#"> <!-- Thay bằng url_for('...') của bạn -->
+                        <i class="fas fa-receipt"></i>
+                        <span>Đơn Hàng</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#"> <!-- Thay bằng url_for('...') của bạn -->
+                        <i class="fas fa-chart-line"></i>
+                        <span>Doanh Thu</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#"> <!-- Thay bằng url_for('...') của bạn -->
+                        <i class="fas fa-tags"></i>
+                        <span>Khuyến Mãi</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
 
         <h1 class="restaurant-title mt-2">{{ restaurant.restaurant_name }}</h1>
         <p class="text-muted fs-5">Trà sữa</p>
@@ -305,7 +60,8 @@
 
         <div class="restaurant-meta-item mt-3 text-muted">
             <span>Giờ mở cửa</span>
-            <strong class="text-dark ms-2">Hôm nay {{ restaurant.open_time.strftime('%H:%M') }} - {{ restaurant.close_time.strftime('%H:%M') }}</strong>
+            <strong class="text-dark ms-2">Hôm nay {{ restaurant.open_time.strftime('%H:%M') }} - {{
+                restaurant.close_time.strftime('%H:%M') }}</strong>
         </div>
 
         <div class="promo-section restaurant-meta-item mt-3">
@@ -340,42 +96,42 @@
 
     </div>
     <div class="category-navbar-wrapper mt-3">
-    <div class="category-navbar">
+        <div class="category-navbar">
 
-        <!-- Nút cuộn trái (ID mới) -->
-        <button id="scroll-left-btnn" class="scroll-btn left d-none">
+            <!-- Nút cuộn trái (ID mới) -->
+            <button id="scroll-left-btnn" class="scroll-btn left d-none">
                 <i class="bi bi-chevron-left"></i>
             </button>
 
-        <!-- Danh sách các Dish_option_Group (ID mới) -->
-        <div id="option-group-nav-list" class="category-nav-list">
-            <button class="btn-add-to-dish_group" title="Tạo Nhóm Tùy Chọn Mới"
-            type="button"
-            data-bs-toggle="offcanvas"
-            data-bs-target="#dynamicFormOffcanvas">
-        +
-    </button>
+            <!-- Danh sách các Dish_option_Group (ID mới) -->
+            <div id="option-group-nav-list" class="category-nav-list">
+                <button class="btn-add-to-dish_group" title="Tạo Nhóm Tùy Chọn Mới"
+                        type="button"
+                        data-bs-toggle="offcanvas"
+                        data-bs-target="#dynamicFormOffcanvas">
+                    +
+                </button>
 
-            {# Vòng lặp này sẽ hiển thị tất cả các nhóm tùy chọn bạn đã tạo #}
-            {# Giả sử bạn truyền một biến `option_groups` từ backend #}
-            {% for option_group in dish_option_group %}
-            <a href="#" class="category-nav-item edit-option-group-trigger"
-                role="button"
-       data-bs-toggle="offcanvas"
-       data-bs-target="#editOptionGroupOffcanvas"
-               data-group-id="{{ option_group.id }}" >
-                {{ option_group.name }}
-            </a>
-            {% endfor %}
+                {# Vòng lặp này sẽ hiển thị tất cả các nhóm tùy chọn bạn đã tạo #}
+                {# Giả sử bạn truyền một biến `option_groups` từ backend #}
+                {% for option_group in dish_option_group %}
+                <a href="#" class="category-nav-item edit-option-group-trigger"
+                   role="button"
+                   data-bs-toggle="offcanvas"
+                   data-bs-target="#editOptionGroupOffcanvas"
+                   data-group-id="{{ option_group.id }}">
+                    {{ option_group.name }}
+                </a>
+                {% endfor %}
+            </div>
+
+            <!-- Nút cuộn phải (ID mới) -->
+            <button id="scroll-right-btnn" class="scroll-btn right">
+                <i class="bi bi-chevron-right"></i>
+            </button>
+
         </div>
-
-        <!-- Nút cuộn phải (ID mới) -->
-        <button id="scroll-right-btnn" class="scroll-btn right">
-            <i class="bi bi-chevron-right"></i>
-        </button>
-
     </div>
-</div>
 
     <!-- ==== BẮT ĐẦU PHẦN HIỂN THỊ SẢN PHẨM ==== -->
     {% for group in dish_groups %}
@@ -394,13 +150,13 @@
             <div class="col-lg-4 col-md-6 d-flex">
                 <div class="product-card w-100">
                     <button class="btn-delete-dish position-absolute top-0 end-0 m-2"
-                    data-dish-id="{{ dish.id }}"
-                    title="Xóa món ăn">
+                            data-dish-id="{{ dish.id }}"
+                            title="Xóa món ăn">
                         <i class="fas fa-xmark"></i>
                     </button>
 
                     <div class="product-card-img-wrapper">
-                        <img src="{{ url_for('static', filename=dish.image) if dish.image else url_for('static', filename='images/default.jpg') }}" alt="{{ dish.name }}">
+                        <img src="{{ dish.image if dish.image else 'https://example.com/default.jpg' }}" alt="{{ dish.name }}">
                     </div>
                     <div class="product-card-body">
                         <h5 class="product-card-title">{{ dish.name }}</h5>
@@ -417,7 +173,7 @@
                                     data-image="{{ dish.image }}"
                                     data-group="{{ dish.dish_group_id }}"
                             >
-                                   <i class="fas fa-edit"></i>
+                                <i class="fas fa-edit"></i>
                             </button>
 
                         </div>
@@ -427,7 +183,8 @@
             {% endfor %}
         </div>
         <button type="button" class="add-dish-btn"
-        data-group-id="{{ group.id }}">➕ Thêm món ăn</button>
+                data-group-id="{{ group.id }}">➕ Thêm món ăn
+        </button>
     </div>
     {% endfor %}
     <!-- THE MODAL CHO DISHGROUP -->
@@ -454,159 +211,162 @@
     </div>
     <!-- Nút để mở Offcanvas -->
 
-         <!--THÊM MÓN ĂN - MODAL -->
-            <div id="modal_add_dish" class="modal">
-    <!-- Lớp phủ màu đen phía sau (dùng chung class 'modal-overlay') -->
-    <div class="modal-overlay"></div>
+    <!--THÊM MÓN ĂN - MODAL -->
+    <div id="modal_add_dish" class="modal">
+        <!-- Lớp phủ màu đen phía sau (dùng chung class 'modal-overlay') -->
+        <div class="modal-overlay"></div>
 
-    <!-- Nội dung của Modal (dùng chung class 'modal-content') -->
-    <div class="modal-content">
-        <!-- Nút đóng (dùng chung class 'close-modal') -->
-        <button class="close-modal" title="Đóng">×</button>
+        <!-- Nội dung của Modal (dùng chung class 'modal-content') -->
+        <div class="modal-content">
+            <!-- Nút đóng (dùng chung class 'close-modal') -->
+            <button class="close-modal" title="Đóng">×</button>
 
 
-        <h2>Thêm Món Ăn Mới</h2>
+            <h2>Thêm Món Ăn Mới</h2>
 
-        <!-- Form để gửi dữ liệu, với ID cụ thể là 'form_add_dish' -->
-        <form id="form_add_dish" enctype="multipart/form-data">
-            <!-- TRƯỜNG ẨN: Rất quan trọng để biết món ăn này thuộc nhóm nào -->
-            <input type="hidden" id="dish_group_id_input" name="dish_group_id">
-            <input type="hidden" name="restaurant_id" value="1"> <!-- Giả sử ID nhà hàng là 1 -->
+            <!-- Form để gửi dữ liệu, với ID cụ thể là 'form_add_dish' -->
+            <form id="form_add_dish" enctype="multipart/form-data">
+                <!-- TRƯỜNG ẨN: Rất quan trọng để biết món ăn này thuộc nhóm nào -->
+                <input type="hidden" id="dish_group_id_input" name="dish_group_id">
+                <input type="hidden" name="restaurant_id" value="1"> <!-- Giả sử ID nhà hàng là 1 -->
 
-            <div class="form-group">
-                <label for="input_dish_name">Tên món ăn</label>
-                <input type="text" id="input_dish_name" name="name" required placeholder="Ví dụ: Cơm Tấm Sườn">
-            </div>
+                <div class="form-group">
+                    <label for="input_dish_name">Tên món ăn</label>
+                    <input type="text" id="input_dish_name" name="name" required placeholder="Ví dụ: Cơm Tấm Sườn">
+                </div>
 
-            <div class="form-group">
-                <label for="input_dish_description">Mô tả (không bắt buộc)</label>
-                <input type="text" id="input_dish_description" name="description" placeholder="Ví dụ: Sườn nướng mật ong">
-            </div>
+                <div class="form-group">
+                    <label for="input_dish_description">Mô tả (không bắt buộc)</label>
+                    <input type="text" id="input_dish_description" name="description"
+                           placeholder="Ví dụ: Sườn nướng mật ong">
+                </div>
 
-            <div class="form-group">
-                <label for="input_dish_price">Giá</label>
-                <input type="number" id="input_dish_price" name="price" required placeholder="Ví dụ: 35000">
-            </div>
-            <div class="form-group">
-    <label class="form-label fw-bold">Thêm vào các nhóm tùy chọn</label>
-    <div id="add-dish-options-container" class="mt-2">
-        {% for group in dish_option_group %}
-            <div class="form-check">
-                <!-- `name` phải là "option_group_ids" (số nhiều) -->
-                <input class="form-check-input" type="checkbox"
-                       name="option_group_ids"
-                       value="{{ group.id }}"
-                       id="add-dish-option-{{ group.id }}">
-                <label class="form-check-label" for="add-dish-option-{{ group.id }}">
-                    {{ group.name }}
-                </label>
-            </div>
-        {% endfor %}
+                <div class="form-group">
+                    <label for="input_dish_price">Giá</label>
+                    <input type="number" id="input_dish_price" name="price" required placeholder="Ví dụ: 35000">
+                </div>
+                <div class="form-group">
+                    <label class="form-label fw-bold">Thêm vào các nhóm tùy chọn</label>
+                    <div id="add-dish-options-container" class="mt-2">
+                        {% for group in dish_option_group %}
+                        <div class="form-check">
+                            <!-- `name` phải là "option_group_ids" (số nhiều) -->
+                            <input class="form-check-input" type="checkbox"
+                                   name="option_group_ids"
+                                   value="{{ group.id }}"
+                                   id="add-dish-option-{{ group.id }}">
+                            <label class="form-check-label" for="add-dish-option-{{ group.id }}">
+                                {{ group.name }}
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="input_dish_image">Hình ảnh</label>
+                    <input type="file" id="input_dish_image" name="image" accept="image/*">
+                </div>
+
+                <button type="submit" class="btn-submit">Lưu Món Ăn</button>
+            </form>
+        </div>
     </div>
-</div>
-            <div class="form-group">
-                <label for="input_dish_image">Hình ảnh</label>
-                <input type="file" id="input_dish_image" name="image" accept="image/*">
-            </div>
-
-            <button type="submit" class="btn-submit">Lưu Món Ăn</button>
-        </form>
-    </div>
-</div>
-<!--SỬA MÓN ĂN -->
+    <!--SỬA MÓN ĂN -->
     <div id="modal_edit_dish" class="modal">
-    <div class="modal-overlay"></div>
-    <div class="modal-content">
-        <button class="close-modal">×</button>
-        <h2>Sửa Món Ăn</h2>
-        <form id="form_edit_dish" enctype="multipart/form-data">
-            <input type="hidden" name="dish_id" id="edit_dish_id">
-            <input type="hidden" name="restaurant_id" value="1">
-            <input type="hidden" name="dish_group_id" id="edit_group_id">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <button class="close-modal">×</button>
+            <h2>Sửa Món Ăn</h2>
+            <form id="form_edit_dish" enctype="multipart/form-data">
+                <input type="hidden" name="dish_id" id="edit_dish_id">
+                <input type="hidden" name="restaurant_id" value="1">
+                <input type="hidden" name="dish_group_id" id="edit_group_id">
 
-            <div class="form-group">
-                <label>Tên món ăn</label>
-                <input type="text" name="name" id="edit_name" required>
-            </div>
+                <div class="form-group">
+                    <label>Tên món ăn</label>
+                    <input type="text" name="name" id="edit_name" required>
+                </div>
 
-            <div class="form-group">
-                <label>Mô tả</label>
-                <input type="text" name="description" id="edit_description">
-            </div>
+                <div class="form-group">
+                    <label>Mô tả</label>
+                    <input type="text" name="description" id="edit_description">
+                </div>
 
-            <div class="form-group">
-                <label>Giá</label>
-                <input type="number" name="price" id="edit_price" required>
-            </div>
-             <div class="form-group">
-    <label class="form-label fw-bold">Các nhóm tùy chọn liên kết</label>
-    <div id="edit-dish-options-container" class="mt-2">
-        {% for group in dish_option_group %}
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox"
-                       name="option_group_ids"
-                       value="{{ group.id }}"
-                       id="edit-dish-option-{{ group.id }}">
-                <!-- SỬA LẠI `for` Ở ĐÂY để khớp với id ở trên -->
-                <label class="form-check-label" for="edit-dish-option-{{ group.id }}">
-                    {{ group.name }}
-                </label>
-            </div>
-        {% endfor %}
-    </div>
-</div>
-            <div class="form-group">
-                <label>Hình ảnh mới (tùy chọn)</label>
-                <input type="file" name="image" accept="image/*">
-            </div>
+                <div class="form-group">
+                    <label>Giá</label>
+                    <input type="number" name="price" id="edit_price" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label fw-bold">Các nhóm tùy chọn liên kết</label>
+                    <div id="edit-dish-options-container" class="mt-2">
+                        {% for group in dish_option_group %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox"
+                                   name="option_group_ids"
+                                   value="{{ group.id }}"
+                                   id="edit-dish-option-{{ group.id }}">
+                            <!-- SỬA LẠI `for` Ở ĐÂY để khớp với id ở trên -->
+                            <label class="form-check-label" for="edit-dish-option-{{ group.id }}">
+                                {{ group.name }}
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Hình ảnh mới (tùy chọn)</label>
+                    <input type="file" name="image" accept="image/*">
+                </div>
 
-            <button type="submit" class="btn-submit">Lưu thay đổi</button>
-        </form>
-    </div>
-</div>
-   <!-- ==== OFFCANVAS ĐỂ TẠO MỚI DISH OPTION GROUP ==== -->
-<div class="offcanvas offcanvas-end" style="--bs-offcanvas-width: 500px;" tabindex="-1" id="dynamicFormOffcanvas" aria-labelledby="offcanvasLabel">
-    <div class="offcanvas-header border-bottom">
-        <h5 class="offcanvas-title" id="offcanvasLabel">Tạo Nhóm Tùy Chọn Mới</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-    </div>
-    <div class="offcanvas-body">
-        <form id="dynamicForm">
-            <!-- Tên nhóm -->
-            <div class="mb-4">
-                <label for="groupName" class="form-label fw-bold">Tên nhóm tùy chọn</label>
-                <input type="text" class="form-control" id="groupName" placeholder="Ví dụ: Topping, Chọn Size...">
-            </div>
-            <div class="mb-3">
-            <label for="maxSelection" class="form-label">Lựa chọn tối đa</label>
-            <input type="number" class="form-control" id="maxSelection" min="1" placeholder="Bỏ trống nếu không giới hạn">
+                <button type="submit" class="btn-submit">Lưu thay đổi</button>
+            </form>
         </div>
-
-        <!-- 3. Bắt buộc (TRƯỜNG MỚI CHO `mandatory`) -->
-        <div class="form-check form-switch p-0">
-             <label class="form-check-label" for="isMandatory">Bắt buộc</label>
-            <input class="form-check-input" style="margin: auto" type="checkbox" role="switch" id="isMandatory">
+    </div>
+    <!-- ==== OFFCANVAS ĐỂ TẠO MỚI DISH OPTION GROUP ==== -->
+    <div class="offcanvas offcanvas-end" style="--bs-offcanvas-width: 500px;" tabindex="-1" id="dynamicFormOffcanvas"
+         aria-labelledby="offcanvasLabel">
+        <div class="offcanvas-header border-bottom">
+            <h5 class="offcanvas-title" id="offcanvasLabel">Tạo Nhóm Tùy Chọn Mới</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
-            <hr>
+        <div class="offcanvas-body">
+            <form id="dynamicForm">
+                <!-- Tên nhóm -->
+                <div class="mb-4">
+                    <label for="groupName" class="form-label fw-bold">Tên nhóm tùy chọn</label>
+                    <input type="text" class="form-control" id="groupName" placeholder="Ví dụ: Topping, Chọn Size...">
+                </div>
+                <div class="mb-3">
+                    <label for="maxSelection" class="form-label">Lựa chọn tối đa</label>
+                    <input type="number" class="form-control" id="maxSelection" min="1"
+                           placeholder="Bỏ trống nếu không giới hạn">
+                </div>
 
-            <!-- Các lựa chọn -->
-            <h6 class="fw-bold mb-3">Các Lựa Chọn Trong Nhóm</h6>
-            <div id="dynamicInputsContainer">
-                <!-- JavaScript sẽ chèn các "Thẻ Lựa Chọn" vào đây -->
-            </div>
+                <!-- 3. Bắt buộc (TRƯỜNG MỚI CHO `mandatory`) -->
+                <div class="form-check form-switch p-0">
+                    <label class="form-check-label" for="isMandatory">Bắt buộc</label>
+                    <input class="form-check-input" style="margin: auto" type="checkbox" role="switch" id="isMandatory">
+                </div>
+                <hr>
 
-            <!-- Nút thêm thẻ mới -->
-            <button type="button" class="btn w-100 mt-2" id="addInputButton">
-                <i class="fas fa-plus"></i> Thêm Lựa Chọn
+                <!-- Các lựa chọn -->
+                <h6 class="fw-bold mb-3">Các Lựa Chọn Trong Nhóm</h6>
+                <div id="dynamicInputsContainer">
+                    <!-- JavaScript sẽ chèn các "Thẻ Lựa Chọn" vào đây -->
+                </div>
+
+                <!-- Nút thêm thẻ mới -->
+                <button type="button" class="btn w-100 mt-2" id="addInputButton">
+                    <i class="fas fa-plus"></i> Thêm Lựa Chọn
+                </button>
+            </form>
+        </div>
+        <div class="offcanvas-footer p-3 border-top bg-light">
+            <button type="submit" class="btn btn-success w-100 fw-bold" form="dynamicForm">
+                Lưu
             </button>
-        </form>
+        </div>
     </div>
-    <div class="offcanvas-footer p-3 border-top bg-light">
-        <button type="submit" class="btn btn-success w-100 fw-bold" form="dynamicForm">
-            Lưu
-        </button>
-    </div>
-</div>
 </div>
 <!-- OFF-CANVAS "SỬA" - ID MỚI, CLASS GIỐNG HỆT OFF-CANVAS "TẠO" -->
 <div class="offcanvas offcanvas-end" style="--bs-offcanvas-width: 500px;" tabindex="-1"
@@ -630,11 +390,13 @@
             </div>
             <div class="mb-3">
                 <label for="editGroupMax" class="form-label">Lựa chọn tối đa</label>
-                <input type="number" class="form-control" id="editGroupMax" min="1" placeholder="Bỏ trống nếu không giới hạn">
+                <input type="number" class="form-control" id="editGroupMax" min="1"
+                       placeholder="Bỏ trống nếu không giới hạn">
             </div>
             <div class="form-check form-switch p-0">
                 <label class="form-check-label" for="editGroupMandatory">Bắt buộc</label>
-                <input class="form-check-input" style="margin: auto" type="checkbox" role="switch" id="editGroupMandatory">
+                <input class="form-check-input" style="margin: auto" type="checkbox" role="switch"
+                       id="editGroupMandatory">
             </div>
             <hr>
 
@@ -655,17 +417,15 @@
         <button type="submit" class="btn btn-pink w-100 fw-bold" form="editOptionGroupForm">
             Lưu Thay Đổi
         </button>
-        <button type="button"   style=" margin-top: 10px" class="btn btn-outline-danger w-100 fw-bold " id="deleteGroupInsideFormBtn">
+        <button type="button" style=" margin-top: 10px" class="btn btn-outline-danger w-100 fw-bold "
+                id="deleteGroupInsideFormBtn">
             Xóa
         </button>
 
     </div>
 </div>
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
-<!-- Bootstrap Bundle JS (gồm cả Popper) -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 {% endblock %}
 
 {% block scripts %}
@@ -1398,5 +1158,34 @@ if (editDishForm) {
     });
 });
 
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const header = document.querySelector('header');
+        const categoryNavbarWrapper = document.querySelector('.category-navbar-wrapper');
+
+        if (!header || !categoryNavbarWrapper) {
+            return;
+        }
+
+        // Lấy vị trí ban đầu của thanh category-navbar so với đầu trang
+        const navbarOffsetTop = categoryNavbarWrapper.offsetTop;
+
+        // Hàm để kiểm tra và ẩn/hiện header
+        function toggleHeaderVisibility() {
+            const scrollPosition = window.pageYOffset;
+
+            if (scrollPosition >= navbarOffsetTop) {
+                // Thêm một class để ẩn header đi
+                header.classList.add('header-hidden');
+            } else {
+                header.classList.remove('header-hidden');
+            }
+        }
+
+        window.addEventListener('scroll', toggleHeaderVisibility);
+
+        toggleHeaderVisibility();
+    });
 </script>
 {% endblock %}
