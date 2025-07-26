@@ -36,6 +36,7 @@
             <div class="ms-auto d-flex align-items-center">
 
                 <!-- Cart Button -->
+                {% if not (current_user.is_authenticated and (current_user.role.name == 'RESTAURANT' or current_user.role.name=='ADMIN')) %}
                 <button type="button" class="btn btn-custom-light me-2 position-relative" data-bs-toggle="offcanvas" data-bs-target="#cartOffcanvas" aria-controls="cartOffcanvas">
                     <i class="bi bi-bag"></i>
                     <span id="cart-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">
@@ -43,7 +44,7 @@
                         <span class="visually-hidden">items in cart</span>
                     </span>
                 </button>
-
+                {% endif %}
                 {% if current_user.is_authenticated %}
                 <!-- User Dropdown Menu -->
                 <div class="dropdown">
@@ -57,7 +58,17 @@
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                         {% if current_user.role.name == 'ADMIN' %}
                         <li><a class="dropdown-item" href="{{ url_for('admin.index') }}"><i class="bi bi-shield-lock me-2"></i>Trang quản trị</a></li>
+                        <li><a class="dropdown-item" href="/logout"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
+
                         {% endif %}
+                        {% if current_user.role.name == 'RESTAURANT' %}
+                        <li><a class="dropdown-item" href="/restaurante/{{ session['restaurant_id'] }}"><i class="bi bi-person me-2"></i>Nhà hàng của tôi</a></li>
+                        <li><a class="dropdown-item" href="/logout"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
+
+
+
+                        {% endif %}
+                         {% if current_user.role.name == 'USER' %}
                         <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Tài khoản của tôi</a></li>
 
                         <!-- MỤC MỚI: NHÀ HÀNG YÊU THÍCH -->
@@ -66,6 +77,10 @@
                         <li><a class="dropdown-item" href="#"><i class="bi bi-receipt me-2"></i>Lịch sử đơn hàng</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="/logout"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
+
+
+                        {% endif %}
+
                     </ul>
                 </div>
 
@@ -77,16 +92,7 @@
                 {% endif %}
 
                 <!-- Language Dropdown -->
-                <div class="dropdown">
-                    <button class="btn btn-custom-light dropdown-toggle" type="button" id="languageDropdown"
-                            data-bs-toggle="dropdown" aria-expanded="false">
-                        VI
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
-                        <li><a class="dropdown-item" href="#">VI - Tiếng Việt</a></li>
-                        <li><a class="dropdown-item" href="#">EN - English</a></li>
-                    </ul>
-                </div>
+
 
             </div>
         </nav>

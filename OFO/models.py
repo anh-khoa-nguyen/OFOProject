@@ -121,7 +121,7 @@ class DishOptionGroup(db.Model):
         'DishOption',
         back_populates='group',          # <-- Dùng back_populates thay cho backref
         cascade="all, delete-orphan",    # <-- Thêm cascade để xóa theo
-        lazy='dynamic'                   # <-- Dùng lazy='dynamic' cho hiệu quả
+        lazy='subquery'                   # <-- Dùng lazy='dynamic' cho hiệu quả
     )
 class DishOption(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)
