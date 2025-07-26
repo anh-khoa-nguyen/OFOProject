@@ -684,7 +684,8 @@ def add_to_cart():
     dish_id = data.get('dish_id')
     quantity = int(data.get('quantity', 1))
     selected_option_ids = data.get('options', [])
-    item_key_to_edit = data.get('item_key_to_edit') # <-- THAM SỐ MỚI
+    item_key_to_edit = data.get('item_key_to_edit')
+    note = data.get('note', '')
 
     dish = get_dish_by_id(dish_id)
     if not dish:
@@ -693,14 +694,11 @@ def add_to_cart():
     cart = session.get('cart', {})
     restaurant_id_str = str(dish.restaurant_id)
 
-    # --- LOGIC CHỈNH SỬA MỚI ---
-    # Nếu đây là một lần chỉnh sửa, hãy xóa món ăn cũ trước
-    if item_key_to_edit and restaurant_id_str in cart and item_key_to_edit in cart[restaurant_id_str]['items']:
-        print(f"Editing item: Deleting old key {item_key_to_edit}")
-        del cart[restaurant_id_str]['items'][item_key_to_edit]
-        # Không cần xóa nhà hàng ngay cả khi giỏ trống, vì chúng ta sắp thêm món mới vào lại
 
-    # --- PHẦN CÒN LẠI CỦA HÀM GIỮ NGUYÊN ---
+    # Nếu đây là một lần chỉnh sửa, xóa món ăn cũ trước
+    if item_key_to_edit and restaurant_id_str in cart and item_key_to_edit in cart[restaurant_id_str]['items']:
+        del cart[restaurant_id_str]['items'][item_key_to_edit]
+
     if restaurant_id_str not in cart:
         cart[restaurant_id_str] = {
             'restaurant_name': dish.restaurant.restaurant_name,
@@ -723,6 +721,7 @@ def add_to_cart():
 
     if unique_key in cart[restaurant_id_str]['items']:
         cart[restaurant_id_str]['items'][unique_key]['quantity'] += quantity
+        cart[restaurant_id_str]['items'][unique_key]['note'] = note
     else:
         cart[restaurant_id_str]['items'][unique_key] = {
             'dish_id': dish.id,
@@ -730,7 +729,8 @@ def add_to_cart():
             'image': dish.image,
             'price': final_price_per_item,
             'quantity': quantity,
-            'options': options_details
+            'options': options_details,
+            'note': note
         }
 
     session['cart'] = cart

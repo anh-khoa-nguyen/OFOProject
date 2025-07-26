@@ -178,6 +178,7 @@
                     <div class="cart-item-info" data-dish-id="${item.dish_id}" data-item-key="${itemKey}">
                         <p class="item-name">${item.name}</p>
                         <p class="item-options">${item.options.map(opt => opt.name).join(', ')}</p>
+                        ${item.note ? `<p class="item-note text-muted fst-italic small"><i class="bi bi-chat-left-text"></i> ${item.note}</p>` : ''}
                     </div>
                     <!-- Các nút điều khiển -->
                     <div class="cart-item-controls">

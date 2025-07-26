@@ -289,6 +289,10 @@
                         input.checked = true;
                     }
                 });
+                const instructionsInput = offcanvasContentWrapper.querySelector('#specialInstructions');
+                if (instructionsInput && preselectedItemData.note) {
+                    instructionsInput.value = preselectedItemData.note;
+                }
             }
 
             // ===== HÀM VALIDATE ĐÃ ĐƯỢC CẬP NHẬT =====
@@ -476,13 +480,17 @@
             const selectedOptions = [...offcanvasContentWrapper.querySelectorAll('input:checked')].map(input => input.id.replace('option-', ''));
             const itemKeyToEdit = offcanvasElement.dataset.editingItemKey;
 
+            const specialInstructionsInput = document.getElementById('specialInstructions');
+            const note = specialInstructionsInput ? specialInstructionsInput.value.trim() : '';
+
             this.disabled = true;
             this.textContent = 'Đang thêm...';
 
             let payload = {
                 dish_id: dishId,
                 quantity: quantity,
-                options: selectedOptions
+                options: selectedOptions,
+                note: note
             };
             if (itemKeyToEdit) {
                 payload.item_key_to_edit = itemKeyToEdit;

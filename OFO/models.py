@@ -28,7 +28,7 @@ class User(db.Model, UserMixin):
     restaurants_owned = relationship('Restaurant', backref='user', lazy=True)
     orders = relationship('Order', backref='user', lazy=True)
     reviews = relationship('Review', backref='user', lazy=True)
-    carts = relationship('Cart', backref='user', lazy=True)
+    # carts = relationship('Cart', backref='user', lazy=True)
 
 
 # 3. Bảng trung gian FavoriteRestaurants
@@ -78,7 +78,7 @@ class Restaurant(db.Model):
     dishes = relationship('Dish', backref='restaurant', lazy=True)
     orders = relationship('Order', backref='restaurant', lazy=True)
     reviews = relationship('Review', backref='restaurant', lazy=True)
-    carts = relationship('Cart', backref='restaurant', lazy=True)
+    # carts = relationship('Cart', backref='restaurant', lazy=True)
 
 
 class DishGroup(db.Model):
@@ -132,27 +132,27 @@ class DishOption(db.Model):
 
 
 
-class Cart(db.Model):
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey(User.id), nullable=False)
-    restaurant_id = Column(Integer, ForeignKey(Restaurant.id), nullable=False)
-    items = relationship('CartItem', backref='cart', lazy=True, cascade="all, delete-orphan")
+# class Cart(db.Model):
+#     id = Column(Integer, primary_key=True, autoincrement=True)
+#     user_id = Column(Integer, ForeignKey(User.id), nullable=False)
+#     restaurant_id = Column(Integer, ForeignKey(Restaurant.id), nullable=False)
+#     items = relationship('CartItem', backref='cart', lazy=True, cascade="all, delete-orphan")
 
-class CartItem(db.Model):
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    cart_id = Column(Integer, ForeignKey(Cart.id), nullable=False)
-    dish_id = Column(Integer, ForeignKey(Dish.id), nullable=False)
-    quantity = Column(Integer, nullable=False, default=1)
-
-    dish = relationship('Dish', lazy='joined')
-    selected_options = relationship('DishOption', secondary='cart_item_option', backref='cart_item',
-                                    lazy='joined'
-                                    )
-
-class CartItemOption(db.Model):
-    cart_item_id = Column(Integer, ForeignKey(CartItem.id), primary_key=True, nullable=False)
-    dish_option_id = Column(Integer, ForeignKey(DishOption.id), primary_key=True, nullable=False)
-    quantity = Column(Integer, default=1)
+# class CartItem(db.Model):
+#     id = Column(Integer, primary_key=True, autoincrement=True)
+#     cart_id = Column(Integer, ForeignKey(Cart.id), nullable=False)
+#     dish_id = Column(Integer, ForeignKey(Dish.id), nullable=False)
+#     quantity = Column(Integer, nullable=False, default=1)
+#
+#     dish = relationship('Dish', lazy='joined')
+#     selected_options = relationship('DishOption', secondary='cart_item_option', backref='cart_item',
+#                                     lazy='joined'
+#                                     )
+#
+# class CartItemOption(db.Model):
+#     cart_item_id = Column(Integer, ForeignKey(CartItem.id), primary_key=True, nullable=False)
+#     dish_option_id = Column(Integer, ForeignKey(DishOption.id), primary_key=True, nullable=False)
+#     quantity = Column(Integer, default=1)
 
 
 class OrderState(PyEnum):
