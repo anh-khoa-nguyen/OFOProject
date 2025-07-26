@@ -319,6 +319,7 @@ def login_view():
 def logout_process():
     logout_user()
     session.pop('restaurant_id', None)
+    session.pop('cart', None)
     return redirect('/login')
 
 
