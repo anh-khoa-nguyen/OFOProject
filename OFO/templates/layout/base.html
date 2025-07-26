@@ -6,26 +6,30 @@
     <title>Trang chủ</title>
     <!-- Google Web Fonts -->
     <link rel="preconnect" href="https://fonts.gstatic.com">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&amp;family=Roboto:wght@400;700&amp;display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&amp;family=Roboto:wght@400;700&amp;display=swap"
+          rel="stylesheet">
 
     <!--CDN CSS-->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 
     <!--CDN JS-->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-            crossorigin="anonymous"></script>
+<!--    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"-->
+<!--            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"-->
+<!--            crossorigin="anonymous"></script>-->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}"/>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css">
+    <link rel="icon" href="{{ url_for('static', filename='images/logo.ico') }}" type="image/x-icon">
+    <!-- CSS cho International Telephone Input -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/css/intlTelInput.css"/>
 </head>
-<body>
+<body {% block body_attributes %}{% endblock %}>
 
 {% block header %}
-    {% include 'layout/header.html'%}
+{% include 'layout/header.html'%}
 {% endblock %}
 
 <main class="container"> <!-- Chia phần 80%-->
@@ -34,18 +38,303 @@
 </main>
 
 {% block footer %}
-    {% include 'layout/footer.html'%}
+{% include 'layout/footer.html'%}
 {% endblock %}
 
-<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<div class="modal fade" id="mapModal" tabindex="-1" aria-labelledby="mapModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="mapModalLabel">Chọn địa chỉ trên bản đồ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body position-relative">
+                <div id="map-modal-container" style="height: 450px; width: 100%;"></div>
+                <pre id="coordinates" class="coordinates"></pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" id="select-address-from-map-btn" disabled>Chọn địa chỉ
+                    này
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Offcanvas cho Giỏ hàng -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="cartOffcanvas" aria-labelledby="cartOffcanvasLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="cartOffcanvasLabel">Giỏ đồ ăn</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body" id="cart-offcanvas-body">
+        <!-- Nội dung giỏ hàng sẽ được JS chèn vào đây -->
+    </div>
+    <div class="offcanvas-footer" id="cart-offcanvas-footer">
+        <!-- Phần tổng cộng sẽ được JS chèn vào đây -->
+    </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/moment.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/moment-with-locales.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/js/intlTelInput.min.js"></script>
 <script>
     window.onload = function(){
         let dates = document.getElementsByClassName("date");
         for (let d of dates)
             d.innerText = moment(d.innerText).locale("vi").fromNow();
+
+         // --- PHẦN CODE MỚI ĐỂ KHỞI TẠO Ô NHẬP SỐ ĐIỆN THOẠI ---
+        // 1. Tìm phần tử input có id="phone"
+        var phoneInput = document.querySelector("#phone");
+
+        // 2. Chỉ khởi tạo thư viện NẾU tìm thấy phần tử đó trên trang hiện tại
+        if (phoneInput) {
+            window.intlTelInput(phoneInput, {
+                initialCountry: "vn", // Mặc định là Việt Nam
+                separateDialCode: true, // Hiển thị mã vùng riêng (+84)
+                utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/js/utils.js",
+            });
+        }
     }
 </script>
+{% block scripts %}
+<script>
+    const SEARCH_URL = "{{ url_for('search') }}";
+</script>
+
+<!-- 1. Thư viện Goong Maps chính (vẫn cần thiết) -->
+<script src='https://cdn.jsdelivr.net/npm/@goongmaps/goong-js@1.0.9/dist/goong-js.js'></script>
+<link href='https://cdn.jsdelivr.net/npm/@goongmaps/goong-js@1.0.9/dist/goong-js.css' rel='stylesheet'/>
+
+<!-- 2. Plugin Goong Geocoder (đây là phần quan trọng nhất) -->
+<script src="https://cdn.jsdelivr.net/npm/@goongmaps/goong-geocoder@1.1.1/dist/goong-geocoder.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/@goongmaps/goong-geocoder@1.1.1/dist/goong-geocoder.css" rel="stylesheet"
+      type="text/css"/>
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.13.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.13.0/mapbox-gl.js"></script>
+
+<!-- 3. Promise polyfill script (cần thiết cho một số trình duyệt) -->
+<script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.auto.min.js"></script>
+
+<script src="{{ url_for('static', filename='js/maps.js') }}"></script>
+
+<script>
+    // Hàm định dạng tiền tệ
+    function formatCurrency(value) {
+        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
+    }
+
+    /**
+     * Hàm render lại toàn bộ nội dung của Offcanvas giỏ hàng.
+     * @param {object} cartData - Dữ liệu giỏ hàng từ session.
+     */
+    function updateCartOffcanvas(cartData) {
+    const cartBody = document.getElementById('cart-offcanvas-body');
+    const cartFooter = document.getElementById('cart-offcanvas-footer');
+    const cartBadge = document.getElementById('cart-badge');
+    const offcanvasTitle = document.getElementById('cartOffcanvasLabel');
+
+    const currentRestaurantId = document.body.dataset.restaurantId || null;
+    // Kiểm tra xem có đang ở trang chủ không (bằng cách thêm data-page="index" vào body của index.html)
+    const currentPage = document.body.dataset.page || '';
+
+    // Nếu giỏ hàng rỗng
+    if (!cartData || Object.keys(cartData).length === 0) {
+        cartBody.innerHTML = `<div id="cart-empty-state" class="text-center p-5 d-flex flex-column justify-content-center align-items-center h-100"><i class="bi bi-bag-x" style="font-size: 4rem; color: #ccc;"></i><p class="text-muted mt-3">Giỏ hàng của bạn đang trống</p></div>`;
+        cartFooter.innerHTML = '';
+        if (cartBadge) cartBadge.style.display = 'none';
+        offcanvasTitle.textContent = 'Giỏ đồ ăn';
+        return;
+    }
+
+    // Cập nhật badge
+    if (cartBadge) {
+        const totalRestaurantsInCart = Object.keys(cartData).length;
+        cartBadge.textContent = totalRestaurantsInCart;
+        cartBadge.style.display = totalRestaurantsInCart > 0 ? 'inline-block' : 'none';
+    }
+
+    let bodyHtml = '';
+    let grandTotal = 0;
+    let isSingleRestaurantView = currentRestaurantId && cartData[currentRestaurantId];
+
+
+    if (isSingleRestaurantView) {
+        // CHẾ ĐỘ CHI TIẾT
+        const restaurant = cartData[currentRestaurantId];
+        offcanvasTitle.textContent = restaurant.restaurant_name;
+        const checkoutUrl = `/checkout/${currentRestaurantId}`;
+
+        bodyHtml += `<div class="cart-restaurant-group">`;
+        for (const itemKey in restaurant.items) {
+            const item = restaurant.items[itemKey];
+            grandTotal += item.price * item.quantity;
+            bodyHtml += `
+                <div class="cart-item">
+                    <!-- Bọc thông tin món ăn để có thể click -->
+                    <div class="cart-item-info" data-dish-id="${item.dish_id}" data-item-key="${itemKey}">
+                        <p class="item-name">${item.name}</p>
+                        <p class="item-options">${item.options.map(opt => opt.name).join(', ')}</p>
+                        ${item.note ? `<p class="item-note text-muted fst-italic small"><i class="bi bi-chat-left-text"></i> ${item.note}</p>` : ''}
+                    </div>
+                    <!-- Các nút điều khiển -->
+                    <div class="cart-item-controls">
+                        <button class="btn-change-qty" data-restaurant-id="${currentRestaurantId}" data-item-key="${itemKey}" data-change="-1">-</button>
+                        <span class="fw-bold">${item.quantity}</span>
+                        <button class="btn-change-qty" data-restaurant-id="${currentRestaurantId}" data-item-key="${itemKey}" data-change="1">+</button>
+                    </div>
+                    <span class="cart-item-price">${formatCurrency(item.price * item.quantity)}</span>
+                    <button class="btn-delete-item" data-restaurant-id="${currentRestaurantId}" data-item-key="${itemKey}"><i class="bi bi-x-lg"></i></button>
+                </div>`;
+        }
+        bodyHtml += `</div>`;
+
+        // Cập nhật footer
+        const footerHtml = `
+            <div class="cart-total-row"><span class="label">Tổng cộng</span><span class="value">${formatCurrency(grandTotal)}</span></div>
+            <p class="text-muted small">Phí giao hàng sẽ được tính ở bước thanh toán.</p>
+            <a href="${checkoutUrl}" class="btn btn-pink w-100 fw-bold py-2 text-decoration-none">Thanh toán</a>`;
+        cartFooter.innerHTML = footerHtml;
+
+    } else {
+        // CHẾ ĐỘ TOÀN CỤC (Mặc định cho TẤT CẢ các trang khác): Hiển thị danh sách nhà hàng
+        offcanvasTitle.textContent = 'Các giỏ hàng đang chờ';
+        cartFooter.innerHTML = ''; // Không có footer ở chế độ này
+
+        for (const restaurantId in cartData) {
+            const restaurant = cartData[restaurantId];
+            const restaurantImage = restaurant.restaurant_image || 'https://via.placeholder.com/150';
+
+            bodyHtml += `
+                <a href="/restaurant/${restaurantId}" class="cart-index-item text-decoration-none text-dark">
+                    <img src="${restaurantImage}" class="cart-index-item-img" alt="${restaurant.restaurant_name}">
+                    <div class="cart-index-item-details">
+                        <h6 class="fw-bold mb-1">${restaurant.restaurant_name}</h6>
+                        <p class="text-muted small mb-0">${Object.keys(restaurant.items).length} món trong giỏ</p>
+                    </div>
+                    <i class="bi bi-chevron-right ms-auto text-muted"></i>
+                </a>
+            `;
+        }
+    }
+
+    cartBody.innerHTML = bodyHtml;
+}
+// TẠO MỘT BIẾN TOÀN CỤC ĐỂ LƯU TRỮ GIỎ HÀNG
+ window.currentCart = {};
+
+// Lắng nghe sự kiện tùy chỉnh để cập nhật giỏ hàng
+document.addEventListener('cartUpdated', (e) => {
+    currentCart = e.detail.cart; // Cập nhật biến toàn cục
+    updateCartOffcanvas(window.currentCart);// Render lại UI
+});
+
+// ... (các hàm và sự kiện còn lại giữ nguyên) ...
+document.addEventListener('cartUpdated', (e) => updateCartOffcanvas(e.detail.cart));
+document.addEventListener('DOMContentLoaded', () => {
+    const initialCartData = {{ cart | tojson }};
+    window.currentCart = initialCartData; // Gán dữ liệu ban đầu
+    updateCartOffcanvas(window.currentCart);
+
+    const cartBody = document.getElementById('cart-offcanvas-body');
+    const cartOffcanvasElement = document.getElementById('cartOffcanvas');
+
+    // 3. Sử dụng event delegation để xử lý click cho các nút được tạo động
+    cartBody.addEventListener('click', function(event) {
+        const changeQtyBtn = event.target.closest('.btn-change-qty');
+        const deleteBtn = event.target.closest('.btn-delete-item');
+        const editBtn = event.target.closest('.cart-item-info');
+
+        if (changeQtyBtn) {
+            const restaurantId = changeQtyBtn.dataset.restaurantId;
+            const itemKey = changeQtyBtn.dataset.itemKey;
+            const change = parseInt(changeQtyBtn.dataset.change);
+            const currentQuantity = parseInt(changeQtyBtn.parentElement.querySelector('span').textContent);
+            const newQuantity = currentQuantity + change;
+            updateCartItemQuantity(restaurantId, itemKey, newQuantity);
+        }
+
+        if (deleteBtn) {
+            if (confirm('Bạn có chắc muốn xóa món này khỏi giỏ hàng?')) {
+                const restaurantId = deleteBtn.dataset.restaurantId;
+                const itemKey = deleteBtn.dataset.itemKey;
+                deleteCartItem(restaurantId, itemKey);
+            }
+        }
+
+        if (editBtn) {
+            const dishId = editBtn.dataset.dishId;
+            const itemKeyToEdit = editBtn.dataset.itemKey;
+            const addButtonOnPage = document.querySelector(`.btn-add-to-cart[data-dish-id="${dishId}"]`);
+            if (addButtonOnPage) {
+                const productOptionsOffcanvas = document.getElementById('productOptionsOffcanvas');
+                productOptionsOffcanvas.dataset.editingItemKey = itemKeyToEdit;
+
+                const cartOffcanvas = bootstrap.Offcanvas.getInstance(cartOffcanvasElement);
+                cartOffcanvas.hide();
+                addButtonOnPage.click();
+            } else {
+                // Chỉ hiển thị alert nếu không tìm thấy nút, thường là khi ở trang khác
+                if (!document.body.dataset.restaurantId) {
+                     alert('Để sửa món này, vui lòng quay lại trang của nhà hàng.');
+                }
+            }
+        }
+    });
+
+    // 4. Các hàm gọi API
+    function updateCartItemQuantity(restaurantId, itemKey, quantity) {
+        fetch('/api/update-cart-item', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ restaurant_id: restaurantId, item_key: itemKey, quantity: quantity })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                document.dispatchEvent(new CustomEvent('cartUpdated', { detail: { cart: data.cart } }));
+            }
+        });
+    }
+
+    function deleteCartItem(restaurantId, itemKey) {
+        fetch('/api/delete-cart-item', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ restaurant_id: restaurantId, item_key: itemKey })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                document.dispatchEvent(new CustomEvent('cartUpdated', { detail: { cart: data.cart } }));
+            }
+        });
+    }
+});
+</script>
+
+{% endblock %}
+
+<!-- Confirmation Modal (Modal Xác nhận) -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="confirmationModalLabel">Xác nhận hành động</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmationModalBody">Bạn có chắc chắn muốn thực hiện hành động này?</p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+                <button type="button" class="btn btn-danger" id="confirmActionBtn">Đồng ý</button>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>
