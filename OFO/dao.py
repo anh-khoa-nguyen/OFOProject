@@ -953,5 +953,44 @@ def create_momo_payment_request(payment: Payment):
         print(f"Lỗi khi gọi MoMo API: {e}")
         return None
 
+import google.generativeai as genai
+
+def call_gemini_api(user_message):
+    """
+    Gửi tin nhắn đến Google Gemini API và nhận phản hồi.
+    """
+    GOOGLE_API_KEY = app.config.get('GOOGLE_API_KEY')
+
+    try:
+        # Lấy API key từ biến môi trường đã được tải
+        api_key = GOOGLE_API_KEY
+        if not api_key:
+            return "Lỗi: API Key của Google chưa được cấu hình."
+
+        genai.configure(api_key=api_key)
+
+        # Cấu hình model
+        generation_config = {
+            "temperature": 0.9,
+            "top_p": 1,
+            "top_k": 1,
+            "max_output_tokens": 2048,
+        }
+        model = genai.GenerativeModel(
+            model_name="gemini-2.0-flash-lite",
+            generation_config=generation_config
+        )
+
+        # Bắt đầu cuộc trò chuyện và gửi tin nhắn
+        convo = model.start_chat(history=[])
+        convo.send_message(user_message)
+
+        # Trả về phần văn bản của phản hồi
+        return convo.last.text
+
+    except Exception as e:
+        print(f"Lỗi khi gọi Gemini API: {e}")
+        return "Xin lỗi, trợ lý ảo đang gặp sự cố. Vui lòng thử lại sau."
+
 if __name__ == "__main__":
     print(auth_user("user", 123))
