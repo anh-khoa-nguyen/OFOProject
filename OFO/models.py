@@ -167,8 +167,9 @@ class Order(db.Model):
     user_id = Column(Integer, ForeignKey(User.id), nullable=False, index=True)
     restaurant_id = Column(Integer, ForeignKey(Restaurant.id), nullable=False, index=True)
     order_date = Column(DateTime, default=datetime.datetime.now)
+    shipping_fee = Column(Float, default=0)
     subtotal = Column(Float, nullable=False)  # tổng tiền
-    discount = Column(Float, default=0)  # giảm giá
+    discount = Column(Float, default=0)
     total = Column(Float, nullable=False)  # thành tiền
     delivery_address = Column(String(50), nullable=False)
     note = Column(String(100))
@@ -213,6 +214,7 @@ class Voucher(db.Model):
     start_date = Column(DateTime, nullable=False)
     end_date = Column(DateTime, nullable=False)
     active = Column(Boolean, default=True)
+    restaurant_id = Column(Integer, ForeignKey(Restaurant.id), nullable=False, index=True)
 
 
 voucher_applied = db.Table('voucher_applied',
@@ -222,6 +224,7 @@ voucher_applied = db.Table('voucher_applied',
 
 Order.vouchers = relationship('Voucher', secondary=voucher_applied, lazy='subquery',
                               backref=db.backref('orders_applied', lazy=True))
+restaurant = relationship('Restaurant', backref='vouchers')
 
 if __name__ == '__main__':
     with app.app_context():
@@ -625,10 +628,10 @@ if __name__ == '__main__':
         # 6. TẠO VOUCHER
         voucher1 = Voucher(code='GIAM10K', name='Giảm 10k cho đơn từ 50k', percent=0, limit=10000, min=50000, max=10000,
                            start_date=datetime.datetime.now(),
-                           end_date=datetime.datetime.now() + datetime.timedelta(days=30))
+                           end_date=datetime.datetime.now() + datetime.timedelta(days=30),restaurant_id=restaurant1.id)
         voucher2 = Voucher(code='FREESHIP', name='Miễn phí vận chuyển', percent=0, limit=15000, min=30000, max=15000,
                            start_date=datetime.datetime.now(),
-                           end_date=datetime.datetime.now() + datetime.timedelta(days=30))
+                           end_date=datetime.datetime.now() + datetime.timedelta(days=30),restaurant_id=restaurant1.id)
         db.session.add_all([voucher1, voucher2])
         db.session.commit()
 
