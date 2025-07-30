@@ -771,5 +771,105 @@ def get_order_details_by_id(order_id):
         print(f"Đã xảy ra lỗi khi lấy chi tiết đơn hàng: {e}")
         return None
 
+#Xử lý thanh toán và voucher
+def get_valid_vouchers(restaurant_id, subtotal):
+    """
+    Lấy danh sách các voucher đang hoạt động của một nhà hàng
+    mà đơn hàng hiện tại đủ điều kiện áp dụng.
+    """
+    now = datetime.datetime.now()
+    return Voucher.query.filter(
+        Voucher.restaurant_id == restaurant_id,
+        Voucher.active == True,
+        Voucher.start_date <= now,
+        Voucher.end_date >= now,
+        Voucher.min <= subtotal
+    ).all()
+
+
+def apply_voucher(code, restaurant_id, subtotal):
+    """
+    Kiểm tra một mã voucher và tính toán số tiền được giảm.
+    """
+    now = datetime.datetime.now()
+    voucher = Voucher.query.filter(
+        Voucher.code == code.upper(),  # Chuyển mã về chữ hoa để khớp
+        Voucher.restaurant_id == restaurant_id,
+        Voucher.active == True,
+        Voucher.start_date <= now,
+        Voucher.end_date >= now
+    ).first()
+
+    if not voucher:
+        return {'success': False, 'message': 'Mã khuyến mãi không hợp lệ hoặc đã hết hạn.'}
+
+    if subtotal < voucher.min:
+        return {'success': False, 'message': f'Đơn hàng cần tối thiểu {voucher.min:,.0f}đ để áp dụng mã này.'}
+
+    # Tính toán giảm giá
+    discount = 0
+    if voucher.percent and voucher.percent > 0:
+        discount = subtotal * (voucher.percent / 100)
+        if voucher.max and discount > voucher.max:
+            discount = voucher.max
+    elif voucher.limit:
+        discount = voucher.limit
+
+    return {
+        'success': True,
+        'discount': discount,
+        'voucher_id': voucher.id,
+        'message': f'Áp dụng thành công mã "{voucher.name}"!'
+    }
+
+
+def create_order_from_cart(user_id, restaurant_id, cart_data, delivery_address, note, subtotal, shipping_fee, discount,
+                           voucher_ids=None):
+    """
+    Tạo một bản ghi Order và các OrderDetail tương ứng từ dữ liệu giỏ hàng trong session.
+    """
+    try:
+        with db.session.begin_nested():
+            total = subtotal + shipping_fee - discount
+            new_order = Order(
+                user_id=user_id,
+                restaurant_id=restaurant_id,
+                subtotal=subtotal,
+                shipping_fee=shipping_fee,
+                discount=discount,
+                total=total,
+                delivery_address=delivery_address,
+                note=note,
+                order_status=OrderState.PENDING  # Bắt đầu từ trạng thái "Đã xác nhận"
+            )
+
+            if voucher_ids:
+                vouchers = Voucher.query.filter(Voucher.id.in_(voucher_ids)).all()
+                if vouchers:
+                    new_order.vouchers.extend(vouchers)
+
+            db.session.add(new_order)
+
+            for item_key, item_info in cart_data['items'].items():
+                detail = OrderDetail(
+                    order=new_order,
+                    dish_id=item_info['dish_id'],
+                    quantity=item_info['quantity'],
+                    price=item_info['price'],
+                    dish_name=item_info['name'],
+                    selected_options_luc_dat={
+                        'options': item_info['options'],
+                        'note': item_info.get('note', '')
+                    }
+                )
+                db.session.add(detail)
+
+        db.session.commit()
+        return new_order
+    except Exception as e:
+        db.session.rollback()
+        print(f"Lỗi khi tạo đơn hàng từ giỏ hàng: {e}")
+        raise e
+
 if __name__ == "__main__":
     print(auth_user("user", 123))

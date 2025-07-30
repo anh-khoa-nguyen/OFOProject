@@ -6,6 +6,7 @@ from models import *
 from flask import session
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 import cloudinary.uploader
+from geopy.distance import geodesic
 
 @app.route("/", methods=['GET','POST'])
 def index():
@@ -457,14 +458,14 @@ def get_dish_details_api(dish_id):
         return jsonify({"error": "Không tìm thấy món ăn"}), 404
 
 
-# SỬA LẠI HOÀN TOÀN ROUTE UPDATE MÓN ĂN
+
 @app.route('/update_dish', methods=['POST'])
 def update_dish_route():
     """
     Nhận dữ liệu từ form sửa món ăn và gọi hàm DAO để xử lý.
     """
     try:
-        # Gọi thẳng hàm DAO, truyền toàn bộ request.form và request.files vào
+
         success, message = dao.update_dish_with_options(
             form_data=request.form,
             image_file=request.files.get('image')
@@ -836,6 +837,147 @@ def inject_cart():
     return {
         'cart': session.get('cart', {})
     }
+
+@app.template_filter('format_currency')
+def format_currency_filter(value):
+    """
+    Một bộ lọc Jinja2 an toàn để định dạng số thành tiền tệ.
+    Nếu giá trị là None hoặc không phải là số, trả về một chuỗi rỗng.
+    """
+    if value is None:
+        return "0đ"
+    try:
+        return f"{int(value):,}đ"
+    except (ValueError, TypeError):
+        return "0đ"
+
+
+# Trong file index.py
+
+# Trong file index.py
+
+@app.route('/checkout/<int:restaurant_id>', methods=['GET', 'POST'])
+@login_required
+def checkout(restaurant_id):
+    cart = session.get('cart', {})
+    restaurant_id_str = str(restaurant_id)
+
+    if restaurant_id_str not in cart:
+        flash('Giỏ hàng của bạn cho nhà hàng này đang trống.', 'warning')
+        return redirect(url_for('restaurant_detail', restaurant_id=restaurant_id))
+
+    restaurant_cart = cart[restaurant_id_str]
+    restaurant = dao.get_restaurant_by_id(restaurant_id)
+    subtotal = sum(item['price'] * item['quantity'] for item in restaurant_cart['items'].values())
+
+    user_lat = session.get('delivery_latitude')
+    user_lng = session.get('delivery_longitude')
+    distance_km = None
+    delivery_time = None
+    shipping_fee = 15000
+
+    if user_lat and user_lng and restaurant.lat and restaurant.lng:
+        distance_km = round(geodesic((user_lat, user_lng), (restaurant.lat, restaurant.lng)).km, 1)
+        delivery_time = round(10 + (distance_km * 5))
+        if distance_km <= 3:
+            shipping_fee = 15000
+        else:
+            shipping_fee = 15000 + (distance_km - 3) * 4000
+        shipping_fee = round(shipping_fee / 1000) * 1000
+
+    # --- XỬ LÝ POST REQUEST ---
+    if request.method == 'POST':
+        delivery_address = request.form.get('delivery_address')
+        note = request.form.get('note')
+        # SỬA LỖI 2: Nhận đúng tên 'voucher_ids'
+        voucher_ids_str = request.form.get('voucher_ids')
+        discount_amount = float(request.form.get('discount_amount', 0))
+        payment_method = request.form.get('payment_method')
+
+        voucher_ids = []
+        if voucher_ids_str:
+            voucher_ids = [int(vid) for vid in voucher_ids_str.split(',')]
+
+        if not delivery_address:
+            flash('Vui lòng nhập địa chỉ giao hàng.', 'danger')
+            # Nếu lỗi, phải render lại trang với đầy đủ context
+            all_valid_vouchers = dao.get_valid_vouchers(restaurant_id, subtotal)
+            shipping_vouchers_data = [v for v in all_valid_vouchers if 'FREESHIP' in v.code.upper()]
+            shop_vouchers_data = [v for v in all_valid_vouchers if 'FREESHIP' not in v.code.upper()]
+            return render_template('User/Order_Pay.html',
+                                   restaurant=restaurant,
+                                   cart_items=restaurant_cart['items'],
+                                   subtotal=subtotal,
+                                   shipping_fee=shipping_fee,
+                                   delivery_time=delivery_time,
+                                   distance_km=distance_km,
+                                   shipping_vouchers=shipping_vouchers_data,
+                                   shop_vouchers=shop_vouchers_data)
+
+        try:
+            order = dao.create_order_from_cart(
+                user_id=current_user.id,
+                restaurant_id=restaurant_id,
+                cart_data=restaurant_cart,
+                delivery_address=delivery_address,
+                note=note,
+                subtotal=subtotal,
+                shipping_fee=shipping_fee,
+                discount=discount_amount,
+                voucher_ids=voucher_ids  # <-- Truyền danh sách ID
+            )
+
+            del session['cart'][restaurant_id_str]
+            session.modified = True
+
+            if payment_method == 'vnpay':
+                flash('Chức năng thanh toán VNPay đang được phát triển.', 'info')
+                return redirect(url_for('index'))
+            else:  # Thanh toán COD
+                flash(f'Đặt hàng thành công! Đơn hàng #{order.id} đang được chuẩn bị.', 'success')
+                return redirect(url_for('index'))
+
+        except Exception as e:
+            flash(f'Đã có lỗi xảy ra khi đặt hàng: {e}', 'danger')
+            # SỬA LỖI 1: Thêm 'return' ở đây
+            return redirect(url_for('checkout', restaurant_id=restaurant_id))
+
+    # --- XỬ LÝ GET REQUEST ---
+    all_valid_vouchers = dao.get_valid_vouchers(restaurant_id, subtotal)
+    shipping_vouchers_data = []
+    shop_vouchers_data = []
+    for v in all_valid_vouchers:
+        voucher_dict = {"id": v.id, "code": v.code, "name": v.name, "description": v.description, "percent": v.percent,
+                        "limit": v.limit, "max": v.max, "min": v.min}
+        if 'FREESHIP' in v.code.upper():
+            shipping_vouchers_data.append(voucher_dict)
+        else:
+            shop_vouchers_data.append(voucher_dict)
+
+    return render_template('User/Order_Pay.html',
+                           restaurant=restaurant,
+                           cart_items=restaurant_cart['items'],
+                           subtotal=subtotal,
+                           delivery_time=delivery_time,
+                           distance_km=distance_km,
+                           shipping_fee=shipping_fee,
+                           shipping_vouchers=shipping_vouchers_data,
+                           shop_vouchers=shop_vouchers_data)
+
+
+@app.route('/api/apply-voucher', methods=['POST'])
+@login_required
+def apply_voucher_api():
+    data = request.json
+    voucher_code = data.get('voucher_code', '')
+    restaurant_id = data.get('restaurant_id')
+    subtotal = data.get('subtotal')
+
+    if not all([voucher_code, restaurant_id, subtotal]):
+        return jsonify({'success': False, 'message': 'Dữ liệu không hợp lệ.'}), 400
+
+    result = dao.apply_voucher(voucher_code, restaurant_id, subtotal)
+    return jsonify(result)
 import admin
 if __name__ == '__main__':
     with app.app_context():
