@@ -177,7 +177,6 @@ class Order(db.Model):
     details = relationship('OrderDetail', backref='order', lazy=True)
     review = relationship('Review', backref='order', uselist=False, cascade="all, delete-orphan")
 
-
 class OrderDetail(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)
     order_id = Column(Integer, ForeignKey(Order.id), nullable=False, index=True)

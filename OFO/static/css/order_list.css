@@ -1,0 +1,85 @@
+body {
+    background-color: #f8f9fa !important;
+}
+
+.order-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    transition: all 0.2s ease-in-out;
+    background-color: #fff;
+}
+
+.order-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.order-card .card-header,
+.order-card .card-footer {
+    background-color: transparent;
+    border-bottom: 1px solid #f0f0f0;
+    border-top: 1px solid #f0f0f0;
+    padding: 0.75rem 1.25rem;
+}
+.order-card .card-header {
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+}
+.order-card .card-footer {
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+}
+
+.order-image {
+    width: 90px;
+    height: 90px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.restaurant-name {
+    font-weight: 700;
+    color: #212529;
+    text-decoration: none;
+}
+.restaurant-name:hover {
+    color: #dc3545;
+}
+
+.favorite-tag {
+    display: inline-block;
+    background-color: #fff5e6;
+    color: #ff8c00;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+.favorite-tag .bi-check-circle-fill {
+    font-size: 0.7rem;
+}
+
+.order-price {
+    font-weight: 700;
+    color: #212529;
+}
+
+.order-item-count a {
+    font-size: 0.9rem;
+    text-decoration: none;
+    color: #6c757d;
+}
+.order-item-count a:hover {
+    color: #dc3545;
+}
+
+.status {
+    font-weight: 700;
+}
+.status-completed { color: #198754; }
+.status-delivering { color: #0d6efd; }
+.status-cancelled { color: #dc3545; }
+
+.btn-pink{
+
+}

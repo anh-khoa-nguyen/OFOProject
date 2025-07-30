@@ -689,7 +689,6 @@ def toggle_favorite(user_id, restaurant_id):
         return 'added'
 
 
-
 def get_dish_by_id(dish_id):
     try:
         return db.session.get(Dish, int(dish_id))
@@ -747,5 +746,30 @@ def get_dish_details_by_id(dish_id):
         return dish_data
     except (ValueError, TypeError):
         return None
+
+# 3.3.6 Module Lịch sử và chi tiết đơn hàng, nhà hàng yêu thích
+def get_orders_by_user_id(user_id):
+    """
+    Lấy danh sách các đơn hàng của một người dùng, sắp xếp theo ngày đặt mới nhất.
+    Tải sẵn thông tin nhà hàng và chi tiết đơn hàng để tối ưu.
+    """
+    return db.session.query(Order).options(
+        joinedload(Order.restaurant),
+        joinedload(Order.details).joinedload(OrderDetail.dish)
+    ).filter(Order.user_id == user_id).order_by(Order.order_date.desc()).all()
+
+def get_order_details_by_id(order_id):
+    try:
+        order = db.session.query(Order).options(
+            joinedload(Order.details).joinedload(OrderDetail.dish),
+            joinedload(Order.restaurant),
+            joinedload(Order.user)
+        ).filter(Order.id == order_id).one_or_none()
+
+        return order
+    except Exception as e:
+        print(f"Đã xảy ra lỗi khi lấy chi tiết đơn hàng: {e}")
+        return None
+
 if __name__ == "__main__":
     print(auth_user("user", 123))

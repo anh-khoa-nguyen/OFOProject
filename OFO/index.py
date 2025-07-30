@@ -26,8 +26,6 @@ def index():
 
     return render_template('index.html', categories=categories, restaurants=restaurants_to_show)
 
-
-
 @app.route('/search')
 def search():
     """
@@ -73,6 +71,7 @@ def search():
                            other_restaurants_json=json.dumps(other_restaurants_data),
                            categories=all_categories,
                            searched_category=searched_category)
+
 @app.route('/search/<string:category_name>')
 def search_by_category(category_name):
     """
@@ -657,6 +656,40 @@ def handle_restaurant_registration():
 @app.route("/tim-kiem")
 def tim_kiem():
     return render_template('tim-kiem.html')
+
+# 3.3.6 Module Lịch sử và chi tiết đơn hàng, nhà hàng yêu thích
+@app.route('/history')
+@login_required
+def order_history():
+    # Lấy tất cả đơn hàng của người dùng hiện tại, sắp xếp từ mới nhất đến cũ nhất
+    orders = dao.get_orders_by_user_id(current_user.id)
+    return render_template('User/order_list.html', orders=orders)
+
+@app.route('/order/<int:order_id>')
+@login_required
+def order_detail_page(order_id):
+    # 1. Lấy thông tin chi tiết đơn hàng từ DAO
+    order = dao.get_order_details_by_id(order_id)
+
+    # 2. Kiểm tra xem đơn hàng có tồn tại không
+    if not order:
+        # Nếu không tìm thấy, trả về lỗi 404 Not Found
+        return jsonify({'success': False, 'message': 'Không tìm thấy nhóm món'}), 404
+
+    # 3. KIỂM TRA QUYỀN TRUY CẬP
+    # Khai báo các điều kiện để dễ đọc
+    is_the_customer = (current_user.id == order.user_id)
+    is_an_admin = (current_user.role == UserRole.ADMIN)
+    # Hàm DAO đã tải sẵn thông tin nhà hàng, nên truy cập order.restaurant không tốn thêm query
+    is_the_restaurant_owner = (current_user.id == order.restaurant.owner_user_id)
+
+    # Nếu người dùng không thỏa mãn BẤT KỲ điều kiện nào ở trên
+    if not (is_the_customer or is_an_admin or is_the_restaurant_owner):
+        # Trả về lỗi 403 Forbidden (Cấm truy cập)
+        return jsonify({'success': False, 'message': 'Không tìm thấy nhóm món'}), 404
+
+    # 4. Nếu tất cả kiểm tra đều qua, hiển thị trang
+    return render_template('User/order_details.html', order=order)
 
 @login.user_loader
 def get_user_by_id(user_id):

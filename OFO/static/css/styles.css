@@ -92,6 +92,7 @@ header .navbar {
     background-color: #fff;  /* Một màu xám nhạt khi hover */
 }
 
+<<<<<<< Updated upstream
 /* Tùy chỉnh Offcanvas Giỏ hàng */
 #cartOffcanvas {
 width: 420px !important;
@@ -210,4 +211,14 @@ background-color: white; margin-bottom: 1rem; border-bottom: 1px solid #e9ecef;
 #confirmationModal .modal-body {
     padding: 0 1.5rem 1.5rem;
     font-size: 1.1rem;
+=======
+.custom-address-search {
+    display: flex; /* Sử dụng Flexbox để sắp xếp các phần tử */
+    align-items: center; /* Căn giữa các phần tử theo chiều dọc */
+    background-color: #fff; /* Nền trắng */
+    border: 1px solid #e0e0e0; /* Viền xám nhạt */
+    border-radius: 12px; /* Bo góc */
+    padding: 4px; /* Khoảng đệm nhỏ bên trong */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05); /* Đổ bóng nhẹ */
+>>>>>>> Stashed changes
 }
