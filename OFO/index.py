@@ -856,13 +856,122 @@ def format_currency_filter(value):
 
 # Trong file index.py
 
+# @app.route('/checkout/<int:restaurant_id>', methods=['GET', 'POST'])
+# @login_required
+# def checkout(restaurant_id):
+#     cart = session.get('cart', {})
+#     restaurant_id_str = str(restaurant_id)
+#
+#     if restaurant_id_str not in cart:
+#         flash('Giỏ hàng của bạn cho nhà hàng này đang trống.', 'warning')
+#         return redirect(url_for('restaurant_detail', restaurant_id=restaurant_id))
+#
+#     restaurant_cart = cart[restaurant_id_str]
+#     restaurant = dao.get_restaurant_by_id(restaurant_id)
+#     subtotal = sum(item['price'] * item['quantity'] for item in restaurant_cart['items'].values())
+#
+#     user_lat = session.get('delivery_latitude')
+#     user_lng = session.get('delivery_longitude')
+#     distance_km = None
+#     delivery_time = None
+#     shipping_fee = 15000
+#
+#     if user_lat and user_lng and restaurant.lat and restaurant.lng:
+#         distance_km = round(geodesic((user_lat, user_lng), (restaurant.lat, restaurant.lng)).km, 1)
+#         delivery_time = round(10 + (distance_km * 5))
+#         if distance_km <= 3:
+#             shipping_fee = 15000
+#         else:
+#             shipping_fee = 15000 + (distance_km - 3) * 4000
+#         shipping_fee = round(shipping_fee / 1000) * 1000
+#
+#     # --- XỬ LÝ POST REQUEST ---
+#     if request.method == 'POST':
+#         delivery_address = request.form.get('delivery_address')
+#         note = request.form.get('note')
+#         # SỬA LỖI 2: Nhận đúng tên 'voucher_ids'
+#         voucher_ids_str = request.form.get('voucher_ids')
+#         discount_amount = float(request.form.get('discount_amount', 0))
+#         payment_method = request.form.get('payment_method')
+#
+#         voucher_ids = []
+#         if voucher_ids_str:
+#             voucher_ids = [int(vid) for vid in voucher_ids_str.split(',')]
+#
+#         if not delivery_address:
+#             flash('Vui lòng nhập địa chỉ giao hàng.', 'danger')
+#             # Nếu lỗi, phải render lại trang với đầy đủ context
+#             all_valid_vouchers = dao.get_valid_vouchers(restaurant_id, subtotal)
+#             shipping_vouchers_data = [v for v in all_valid_vouchers if 'FREESHIP' in v.code.upper()]
+#             shop_vouchers_data = [v for v in all_valid_vouchers if 'FREESHIP' not in v.code.upper()]
+#             return render_template('User/Order_Pay.html',
+#                                    restaurant=restaurant,
+#                                    cart_items=restaurant_cart['items'],
+#                                    subtotal=subtotal,
+#                                    shipping_fee=shipping_fee,
+#                                    delivery_time=delivery_time,
+#                                    distance_km=distance_km,
+#                                    shipping_vouchers=shipping_vouchers_data,
+#                                    shop_vouchers=shop_vouchers_data)
+#
+#         try:
+#             order = dao.create_order_from_cart(
+#                 user_id=current_user.id,
+#                 restaurant_id=restaurant_id,
+#                 cart_data=restaurant_cart,
+#                 delivery_address=delivery_address,
+#                 note=note,
+#                 subtotal=subtotal,
+#                 shipping_fee=shipping_fee,
+#                 discount=discount_amount,
+#                 voucher_ids=voucher_ids  # <-- Truyền danh sách ID
+#             )
+#
+#             del session['cart'][restaurant_id_str]
+#             session.modified = True
+#
+#             if payment_method == 'vnpay':
+#                 flash('Chức năng thanh toán VNPay đang được phát triển.', 'info')
+#                 return redirect(url_for('index'))
+#             else:  # Thanh toán COD
+#                 flash(f'Đặt hàng thành công! Đơn hàng #{order.id} đang được chuẩn bị.', 'success')
+#                 return redirect(url_for('index'))
+#
+#         except Exception as e:
+#             flash(f'Đã có lỗi xảy ra khi đặt hàng: {e}', 'danger')
+#             # SỬA LỖI 1: Thêm 'return' ở đây
+#             return redirect(url_for('checkout', restaurant_id=restaurant_id))
+#
+#     # --- XỬ LÝ GET REQUEST ---
+#     all_valid_vouchers = dao.get_valid_vouchers(restaurant_id, subtotal)
+#     shipping_vouchers_data = []
+#     shop_vouchers_data = []
+#     for v in all_valid_vouchers:
+#         voucher_dict = {"id": v.id, "code": v.code, "name": v.name, "description": v.description, "percent": v.percent,
+#                         "limit": v.limit, "max": v.max, "min": v.min}
+#         if 'FREESHIP' in v.code.upper():
+#             shipping_vouchers_data.append(voucher_dict)
+#         else:
+#             shop_vouchers_data.append(voucher_dict)
+#
+#     return render_template('User/Order_Pay.html',
+#                            restaurant=restaurant,
+#                            cart_items=restaurant_cart['items'],
+#                            subtotal=subtotal,
+#                            delivery_time=delivery_time,
+#                            distance_km=distance_km,
+#                            shipping_fee=shipping_fee,
+#                            shipping_vouchers=shipping_vouchers_data,
+#                            shop_vouchers=shop_vouchers_data)
+
 @app.route('/checkout/<int:restaurant_id>', methods=['GET', 'POST'])
 @login_required
 def checkout(restaurant_id):
     cart = session.get('cart', {})
     restaurant_id_str = str(restaurant_id)
 
-    if restaurant_id_str not in cart:
+    # --- KIỂM TRA GIỎ HÀNG (Giữ nguyên) ---
+    if restaurant_id_str not in cart or not cart[restaurant_id_str]['items']:
         flash('Giỏ hàng của bạn cho nhà hàng này đang trống.', 'warning')
         return redirect(url_for('restaurant_detail', restaurant_id=restaurant_id))
 
@@ -870,51 +979,31 @@ def checkout(restaurant_id):
     restaurant = dao.get_restaurant_by_id(restaurant_id)
     subtotal = sum(item['price'] * item['quantity'] for item in restaurant_cart['items'].values())
 
+    # --- TÍNH TOÁN PHÍ SHIP (Giữ nguyên) ---
     user_lat = session.get('delivery_latitude')
     user_lng = session.get('delivery_longitude')
-    distance_km = None
-    delivery_time = None
-    shipping_fee = 15000
-
+    distance_km, delivery_time, shipping_fee = None, None, 15000
     if user_lat and user_lng and restaurant.lat and restaurant.lng:
         distance_km = round(geodesic((user_lat, user_lng), (restaurant.lat, restaurant.lng)).km, 1)
         delivery_time = round(10 + (distance_km * 5))
-        if distance_km <= 3:
-            shipping_fee = 15000
-        else:
-            shipping_fee = 15000 + (distance_km - 3) * 4000
-        shipping_fee = round(shipping_fee / 1000) * 1000
+        shipping_fee = round((15000 + max(0, distance_km - 3) * 4000) / 1000) * 1000
 
-    # --- XỬ LÝ POST REQUEST ---
+    # --- XỬ LÝ POST REQUEST (Phần quan trọng nhất) ---
     if request.method == 'POST':
+        # 1. Lấy dữ liệu từ form
         delivery_address = request.form.get('delivery_address')
         note = request.form.get('note')
-        # SỬA LỖI 2: Nhận đúng tên 'voucher_ids'
         voucher_ids_str = request.form.get('voucher_ids')
         discount_amount = float(request.form.get('discount_amount', 0))
-        payment_method = request.form.get('payment_method')
-
-        voucher_ids = []
-        if voucher_ids_str:
-            voucher_ids = [int(vid) for vid in voucher_ids_str.split(',')]
+        payment_method = request.form.get('payment_method')  # 'cod' hoặc 'vnpay' (bạn đặt tên là vnpay trong HTML)
 
         if not delivery_address:
-            flash('Vui lòng nhập địa chỉ giao hàng.', 'danger')
-            # Nếu lỗi, phải render lại trang với đầy đủ context
-            all_valid_vouchers = dao.get_valid_vouchers(restaurant_id, subtotal)
-            shipping_vouchers_data = [v for v in all_valid_vouchers if 'FREESHIP' in v.code.upper()]
-            shop_vouchers_data = [v for v in all_valid_vouchers if 'FREESHIP' not in v.code.upper()]
-            return render_template('User/Order_Pay.html',
-                                   restaurant=restaurant,
-                                   cart_items=restaurant_cart['items'],
-                                   subtotal=subtotal,
-                                   shipping_fee=shipping_fee,
-                                   delivery_time=delivery_time,
-                                   distance_km=distance_km,
-                                   shipping_vouchers=shipping_vouchers_data,
-                                   shop_vouchers=shop_vouchers_data)
+            flash('Vui lòng chọn địa chỉ giao hàng.', 'danger')
+            return redirect(url_for('checkout', restaurant_id=restaurant_id))
 
+        # 2. Tạo đơn hàng trong CSDL
         try:
+            voucher_ids = [int(vid) for vid in voucher_ids_str.split(',')] if voucher_ids_str else []
             order = dao.create_order_from_cart(
                 user_id=current_user.id,
                 restaurant_id=restaurant_id,
@@ -924,25 +1013,38 @@ def checkout(restaurant_id):
                 subtotal=subtotal,
                 shipping_fee=shipping_fee,
                 discount=discount_amount,
-                voucher_ids=voucher_ids  # <-- Truyền danh sách ID
+                voucher_ids=voucher_ids
             )
-
-            del session['cart'][restaurant_id_str]
-            session.modified = True
-
-            if payment_method == 'vnpay':
-                flash('Chức năng thanh toán VNPay đang được phát triển.', 'info')
-                return redirect(url_for('index'))
-            else:  # Thanh toán COD
-                flash(f'Đặt hàng thành công! Đơn hàng #{order.id} đang được chuẩn bị.', 'success')
-                return redirect(url_for('index'))
-
         except Exception as e:
-            flash(f'Đã có lỗi xảy ra khi đặt hàng: {e}', 'danger')
-            # SỬA LỖI 1: Thêm 'return' ở đây
+            flash(f'Đã có lỗi xảy ra khi tạo đơn hàng: {e}', 'danger')
             return redirect(url_for('checkout', restaurant_id=restaurant_id))
 
-    # --- XỬ LÝ GET REQUEST ---
+        # 3. Xử lý theo phương thức thanh toán
+        # Sửa 'vnpay' thành 'momo' để khớp với logic mới
+        if payment_method == 'vnpay':  # Giả sử 'vnpay' trong HTML của bạn tương ứng với MoMo
+            # 3.1. Tạo một bản ghi Payment
+            print("1")
+            payment = dao.create_payment_record(order=order, payment_method='momo')
+            # 3.2. Gọi MoMo để lấy URL thanh toán
+            pay_url = dao.create_momo_payment_request(payment)
+
+            if pay_url:
+                # Quan trọng: Không xóa giỏ hàng ở đây. Chỉ xóa sau khi MoMo xác nhận thanh toán thành công qua IPN.
+                return redirect(pay_url)
+            else:
+                flash('Không thể tạo thanh toán MoMo. Vui lòng thử lại hoặc chọn phương thức khác.', 'danger')
+                # (Tùy chọn) Có thể xóa đơn hàng vừa tạo hoặc để đó cho người dùng thử lại
+                return redirect(url_for('checkout', restaurant_id=restaurant_id))
+
+        else:  # Mặc định là thanh toán COD
+            # Xóa giỏ hàng của nhà hàng này sau khi đặt thành công
+            del session['cart'][restaurant_id_str]
+            session.modified = True
+            flash(f'Đặt hàng thành công! Đơn hàng #{order.id} đang được chuẩn bị.', 'success')
+            return redirect(url_for('order_detail_page', order_id=order.id))
+
+    # --- XỬ LÝ GET REQUEST (Giữ nguyên) ---
+    # ... (phần code để lấy voucher và render template giữ nguyên như cũ)
     all_valid_vouchers = dao.get_valid_vouchers(restaurant_id, subtotal)
     shipping_vouchers_data = []
     shop_vouchers_data = []
@@ -964,7 +1066,6 @@ def checkout(restaurant_id):
                            shipping_vouchers=shipping_vouchers_data,
                            shop_vouchers=shop_vouchers_data)
 
-
 @app.route('/api/apply-voucher', methods=['POST'])
 @login_required
 def apply_voucher_api():
@@ -979,6 +1080,37 @@ def apply_voucher_api():
     result = dao.apply_voucher(voucher_code, restaurant_id, subtotal)
     return jsonify(result)
 import admin
+
+# 3.3.10 Module VNPay, chatbot
+@app.route('/momo/confirm-payment/<int:payment_id>', methods=['POST'])
+def momo_ipn_handler(payment_id):
+    """
+    Lắng nghe kết quả giao dịch từ MoMo (IPN - Instant Payment Notification).
+    """
+    response_data = request.get_json()
+
+    # --- BẠN NÊN XÁC THỰC CHỮ KÝ Ở ĐÂY TRONG MÔI TRƯỜNG THẬT ---
+
+    payment = Payment.query.get(payment_id)
+    if not payment:
+        # Không tìm thấy payment, trả lỗi để MoMo không gọi lại nữa
+        return jsonify({"status": "error", "message": "Payment not found"}), 404
+
+    if response_data.get('resultCode') == 0:
+        # Thanh toán thành công
+        payment.payment_status = PaymentStatus.PAID
+        payment.order.order_status = OrderState.CONFIRMED
+        db.session.commit()
+        print(f"Thanh toán {payment_id} đã được xác nhận thành công.")
+    else:
+        # Thanh toán thất bại
+        payment.payment_status = PaymentStatus.FAILED
+        db.session.commit()
+        print(f"Thanh toán {payment_id} thất bại. Lý do: {response_data.get('message')}")
+
+    # Phải trả về response với status 204 để MoMo biết đã nhận được
+    return '', 204
+
 if __name__ == '__main__':
     with app.app_context():
         import admin

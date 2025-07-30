@@ -177,6 +177,26 @@ class Order(db.Model):
 
     details = relationship('OrderDetail', backref='order', lazy=True)
     review = relationship('Review', backref='order', uselist=False, cascade="all, delete-orphan")
+    payments = relationship('Payment', back_populates='order', lazy=True, cascade="all, delete-orphan")
+
+class PaymentStatus(PyEnum):
+    UNPAID = "Chưa thanh toán"
+    PAID = "Đã thanh toán"
+    FAILED = "Thất bại"
+
+class Payment(db.Model):
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    order_id = Column(Integer, ForeignKey('order.id'), nullable=False, index=True)
+    amount = Column(Float, nullable=False)
+    payment_method = Column(String(20), nullable=False)
+    payment_status = Column(Enum(PaymentStatus), default=PaymentStatus.UNPAID, nullable=False)
+    created_date = Column(DateTime, default=datetime.datetime.now)
+
+    # Các trường dành riêng cho MoMo
+    pay_url = Column(String(500), nullable=True)
+    momo_order_id = Column(String(255), nullable=True, unique=True)
+    order = relationship('Order', back_populates='payments')
+
 
 class OrderDetail(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)
