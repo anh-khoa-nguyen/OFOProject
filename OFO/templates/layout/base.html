@@ -14,9 +14,9 @@
           integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 
     <!--CDN JS-->
-<!--    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"-->
-<!--            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"-->
-<!--            crossorigin="anonymous"></script>-->
+    <!--    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"-->
+    <!--            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"-->
+    <!--            crossorigin="anonymous"></script>-->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}"/>
@@ -26,7 +26,11 @@
     <!-- CSS cho International Telephone Input -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/css/intlTelInput.css"/>
 </head>
-<body {% block body_attributes %}{% endblock %}>
+
+
+<!-- CỬA SỔ CHATBOT (ẨN MẶC ĐỊNH) -->
+
+<body data-chat-history='{{ chat_history | tojson }}' {% block body_attributes %}{% endblock %}>
 
 {% block header %}
 {% include 'layout/header.html'%}
@@ -61,6 +65,48 @@
         </div>
     </div>
 </div>
+
+<!-- NÚT TRÒN ĐỂ MỞ CHATBOT -->
+<button class="chat-fab" id="chat-fab-toggle" aria-label="Mở trợ lý ảo">
+    <i class="bi bi-chat-quote-fill"></i>
+</button>
+<div class="chat-widget" id="chat-widget">
+    <!-- Header -->
+    <div class="chat-widget-header">
+        <img src="{{ url_for('static', filename='images/logo.ico') }}" alt="Avatar" class="avatar">
+        <div class="info">
+            <div class="name">Trợ lý ảo Kymie</div>
+            <div class="status">Online</div>
+        </div>
+        <button class="close-btn" id="chat-widget-close" aria-label="Đóng">×</button>
+    </div>
+
+    <!-- Body -->
+    <div class="chat-widget-body" id="chat-widget-body">
+        <!-- Container cho các tin nhắn -->
+        <div id="chat-messages-container">
+            <div class="chat-message assistant">
+                Chào bạn, Kymie có thể giúp gì cho bạn hôm nay?
+            </div>
+        </div>
+        <!-- Gợi ý -->
+        <div class="chat-suggestions">
+            <button class="suggestion-chip">Ăn gì hôm nay?</button>
+            <button class="suggestion-chip">Gợi ý món gần đây</button>
+            <button class="suggestion-chip">Tìm quán trà sữa</button>
+            <button class="suggestion-chip">Ưu đãi hot</button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="chat-widget-footer">
+        <input type="text" id="chat-input" placeholder="Nhập câu hỏi của bạn...">
+        <button class="send-btn" id="chat-send-btn" aria-label="Gửi">
+            <i class="bi bi-send-fill"></i>
+        </button>
+    </div>
+</div>
+
 <!-- Offcanvas cho Giỏ hàng -->
 <div class="offcanvas offcanvas-end" tabindex="-1" id="cartOffcanvas" aria-labelledby="cartOffcanvasLabel">
     <div class="offcanvas-header">
@@ -137,6 +183,7 @@
 <script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.auto.min.js"></script>
 
 <script src="{{ url_for('static', filename='js/maps.js') }}"></script>
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
 
 <script>
     // Hàm định dạng tiền tệ

@@ -283,7 +283,8 @@ def inject_delivery_address():
         random_slogan=dao.get_random_slogan(),
         delivery_address=session.get('delivery_address', '...'),
         delivery_latitude=session.get('delivery_latitude'),
-        delivery_longitude=session.get('delivery_longitude')
+        delivery_longitude=session.get('delivery_longitude'),
+        chat_history = session.get('chat_history', [])
     )
 
 @app.route('/login',methods=['GET', 'POST'])
@@ -322,6 +323,7 @@ def logout_process():
     logout_user()
     session.pop('restaurant_id', None)
     session.pop('cart', None)
+    session.pop('chat_history', None)
     return redirect('/login')
 
 
@@ -1154,6 +1156,33 @@ def handle_connect():
             print(f"Restaurant {restaurant_id} has connected and joined room '{room_name}'")
 
 
+
+@app.route('/api/chat', methods=['POST'])
+def handle_chat():
+    data = request.get_json()
+    user_message = data.get('message')
+
+    if not user_message:
+        return jsonify({'error': 'Không có tin nhắn nào được gửi.'}), 400
+
+    # 1. Lấy lịch sử chat hiện có từ session (hoặc tạo list rỗng nếu chưa có)
+    chat_history = session.get('chat_history', [])
+
+    # 2. Thêm tin nhắn của người dùng vào lịch sử
+    chat_history.append({'sender': 'user', 'text': user_message})
+
+    # 3. Gọi hàm DAO để lấy phản hồi từ AI
+    ai_response = dao.call_gemini_api(user_message)
+
+    # 4. Thêm phản hồi của AI vào lịch sử
+    chat_history.append({'sender': 'assistant', 'text': ai_response})
+
+    # 5. Lưu lại lịch sử đã cập nhật vào session
+    session['chat_history'] = chat_history
+    session.modified = True # Đảm bảo session được lưu
+
+    # 6. Trả về chỉ câu trả lời mới nhất cho frontend
+    return jsonify({'reply': ai_response})
 from __init__ import socketio
 if __name__ == '__main__':
     with app.app_context():

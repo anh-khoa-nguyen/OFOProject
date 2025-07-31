@@ -16,4 +16,6 @@ MOMO_REDIRECT_URL = f'{SERVER}' # Trang thông báo thành công
 # --- Endpoint của MoMo (dùng môi trường test) ---
 MOMO_ENDPOINT = 'https://test-payment.momo.vn/v2/gateway/api/create'
 
+GOOGLE_API_KEY="AIzaSyDLm2z59TLtXOhuy8L6L2tN6uPXJHdhxhQ"
+
 project_dir = os.path.dirname(__file__)
