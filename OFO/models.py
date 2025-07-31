@@ -156,6 +156,7 @@ class DishOption(db.Model):
 
 
 class OrderState(PyEnum):
+    UNPAID = 'Chưa thanh toán'
     PENDING = "Pending"
     CONFIRMED = "Confirmed"
     DELIVERING = "Delivering"
@@ -171,7 +172,7 @@ class Order(db.Model):
     subtotal = Column(Float, nullable=False)  # tổng tiền
     discount = Column(Float, default=0)
     total = Column(Float, nullable=False)  # thành tiền
-    delivery_address = Column(String(50), nullable=False)
+    delivery_address = Column(String(255), nullable=False)
     note = Column(String(100))
     order_status = Column(Enum(OrderState), default=OrderState.PENDING, nullable=False)
 
@@ -584,7 +585,8 @@ if __name__ == '__main__':
         # 10. Tạo DishGroup cho nhà hàng đó
         group_com_chinh = DishGroup(name='Món Cơm Chính', restaurant_id=restaurant1.id)
         group_canh = DishGroup(name='Các Món Canh', restaurant_id=restaurant1.id)
-        db.session.add_all([group_com_chinh, group_canh])
+        group_bun = DishGroup(name='Bún Các Loại', restaurant_id=restaurant2.id)
+        db.session.add_all([group_com_chinh, group_canh, group_bun])
         db.session.commit()
 
         #=====================================================================================================================
@@ -610,8 +612,8 @@ if __name__ == '__main__':
         dish1_1.group= group_com_chinh
         dish1_2.group= group_com_chinh
         dish1_3.group = group_canh
-        dish2_1.group = group_com_chinh
-        dish2_2.group = group_com_chinh
+        dish2_1.group = group_bun
+        dish2_2.group = group_bun
         db.session.commit()
 
         #=====================================================================================================================

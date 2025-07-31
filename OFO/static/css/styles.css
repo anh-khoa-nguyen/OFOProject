@@ -230,15 +230,15 @@ header .navbar {
 
 /* Thanh tìm kiếm địa chỉ tùy chỉnh */
 .custom-address-search {
-    display: flex;
-    align-items: center;
-    background-color: #fff;
-    border: 1px solid #e0e0e0;
-    border-radius: 12px;
-    padding: 4px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-}
+    display: flex; /* Sử dụng Flexbox để sắp xếp các phần tử */
+    align-items: center; /* Căn giữa các phần tử theo chiều dọc */
+    background-color: #fff; /* Nền trắng */
+    border: 1px solid #e0e0e0; /* Viền xám nhạt */
+    border-radius: 12px; /* Bo góc */
+    padding: 4px; /* Khoảng đệm nhỏ bên trong */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05); /* Đổ bóng nhẹ */
 
+}
 /* static/css/chatbot.css */
 
 /* 1. Nút tròn nổi (Floating Action Button) */
@@ -397,3 +397,4 @@ header .navbar {
     color: #d63384;
     cursor: pointer;
 }
+

@@ -7,6 +7,8 @@ from flask import session
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 import cloudinary.uploader
 from geopy.distance import geodesic
+from flask_socketio import join_room
+from __init__ import socketio
 
 @app.route("/", methods=['GET','POST'])
 def index():
@@ -710,7 +712,7 @@ def get_dish_details(dish_id):
         return jsonify(dish_details)
     return jsonify({"error": "Dish not found"}), 404
 
-# Thêm vào đầu file index.py
+
 
 from dao import get_dish_by_id, get_options_by_ids
 
@@ -972,7 +974,7 @@ def checkout(restaurant_id):
     cart = session.get('cart', {})
     restaurant_id_str = str(restaurant_id)
 
-    # --- KIỂM TRA GIỎ HÀNG (Giữ nguyên) ---
+    # --- KIỂM TRA GIỎ HÀNG ---
     if restaurant_id_str not in cart or not cart[restaurant_id_str]['items']:
         flash('Giỏ hàng của bạn cho nhà hàng này đang trống.', 'warning')
         return redirect(url_for('restaurant_detail', restaurant_id=restaurant_id))
@@ -981,7 +983,7 @@ def checkout(restaurant_id):
     restaurant = dao.get_restaurant_by_id(restaurant_id)
     subtotal = sum(item['price'] * item['quantity'] for item in restaurant_cart['items'].values())
 
-    # --- TÍNH TOÁN PHÍ SHIP (Giữ nguyên) ---
+    # --- TÍNH TOÁN PHÍ SHIP  ---
     user_lat = session.get('delivery_latitude')
     user_lng = session.get('delivery_longitude')
     distance_km, delivery_time, shipping_fee = None, None, 15000
@@ -990,14 +992,14 @@ def checkout(restaurant_id):
         delivery_time = round(10 + (distance_km * 5))
         shipping_fee = round((15000 + max(0, distance_km - 3) * 4000) / 1000) * 1000
 
-    # --- XỬ LÝ POST REQUEST (Phần quan trọng nhất) ---
+    # --- XỬ LÝ POST REQUEST  ---
     if request.method == 'POST':
         # 1. Lấy dữ liệu từ form
         delivery_address = request.form.get('delivery_address')
         note = request.form.get('note')
         voucher_ids_str = request.form.get('voucher_ids')
         discount_amount = float(request.form.get('discount_amount', 0))
-        payment_method = request.form.get('payment_method')  # 'cod' hoặc 'vnpay' (bạn đặt tên là vnpay trong HTML)
+        payment_method = request.form.get('payment_method')
 
         if not delivery_address:
             flash('Vui lòng chọn địa chỉ giao hàng.', 'danger')
@@ -1015,38 +1017,30 @@ def checkout(restaurant_id):
                 subtotal=subtotal,
                 shipping_fee=shipping_fee,
                 discount=discount_amount,
-                voucher_ids=voucher_ids
+                voucher_ids=voucher_ids,
+                initial_status=OrderState.UNPAID
             )
+
         except Exception as e:
             flash(f'Đã có lỗi xảy ra khi tạo đơn hàng: {e}', 'danger')
             return redirect(url_for('checkout', restaurant_id=restaurant_id))
 
         # 3. Xử lý theo phương thức thanh toán
-        # Sửa 'vnpay' thành 'momo' để khớp với logic mới
-        if payment_method == 'vnpay':  # Giả sử 'vnpay' trong HTML của bạn tương ứng với MoMo
-            # 3.1. Tạo một bản ghi Payment
-            print("1")
+
+        if payment_method == 'vnpay':
             payment = dao.create_payment_record(order=order, payment_method='momo')
-            # 3.2. Gọi MoMo để lấy URL thanh toán
             pay_url = dao.create_momo_payment_request(payment)
 
             if pay_url:
-                # Quan trọng: Không xóa giỏ hàng ở đây. Chỉ xóa sau khi MoMo xác nhận thanh toán thành công qua IPN.
+                del session['cart'][restaurant_id_str]
+                session.modified = True
                 return redirect(pay_url)
             else:
                 flash('Không thể tạo thanh toán MoMo. Vui lòng thử lại hoặc chọn phương thức khác.', 'danger')
                 # (Tùy chọn) Có thể xóa đơn hàng vừa tạo hoặc để đó cho người dùng thử lại
                 return redirect(url_for('checkout', restaurant_id=restaurant_id))
 
-        else:  # Mặc định là thanh toán COD
-            # Xóa giỏ hàng của nhà hàng này sau khi đặt thành công
-            del session['cart'][restaurant_id_str]
-            session.modified = True
-            flash(f'Đặt hàng thành công! Đơn hàng #{order.id} đang được chuẩn bị.', 'success')
-            return redirect(url_for('order_detail_page', order_id=order.id))
-
-    # --- XỬ LÝ GET REQUEST (Giữ nguyên) ---
-    # ... (phần code để lấy voucher và render template giữ nguyên như cũ)
+    # --- XỬ LÝ GET REQUEST  ---
     all_valid_vouchers = dao.get_valid_vouchers(restaurant_id, subtotal)
     shipping_vouchers_data = []
     shop_vouchers_data = []
@@ -1081,6 +1075,28 @@ def apply_voucher_api():
 
     result = dao.apply_voucher(voucher_code, restaurant_id, subtotal)
     return jsonify(result)
+
+@app.route('/track-order/<int:order_id>')
+@login_required
+def track_order_page(order_id):
+    """
+    Hiển thị trang theo dõi trạng thái đơn hàng theo thời gian thực.
+    """
+    # 1. Lấy thông tin chi tiết đơn hàng từ DAO
+    order = dao.get_order_details_by_id(order_id)
+
+    # 2. Kiểm tra xem đơn hàng có tồn tại không
+    if not order:
+        flash("Đơn hàng không tồn tại!", "danger")
+        return redirect(url_for('index'))
+
+    # 3. KIỂM TRA QUYỀN TRUY CẬP
+    if current_user.id != order.user_id:
+        flash("Bạn không có quyền xem đơn hàng này.", "danger")
+        return redirect(url_for('index'))
+
+    # 4. Nếu tất cả kiểm tra đều qua, hiển thị trang
+    return render_template('track_order.html', order=order)
 import admin
 
 # 3.3.10 Module VNPay, chatbot
@@ -1091,18 +1107,27 @@ def momo_ipn_handler(payment_id):
     """
     response_data = request.get_json()
 
-    # --- BẠN NÊN XÁC THỰC CHỮ KÝ Ở ĐÂY TRONG MÔI TRƯỜNG THẬT ---
 
     payment = Payment.query.get(payment_id)
     if not payment:
         # Không tìm thấy payment, trả lỗi để MoMo không gọi lại nữa
         return jsonify({"status": "error", "message": "Payment not found"}), 404
 
-    if response_data.get('resultCode') == 0:
+    if response_data.get('resultCode') == 0 and payment.order.order_status.value == OrderState.UNPAID.value:
         # Thanh toán thành công
         payment.payment_status = PaymentStatus.PAID
-        payment.order.order_status = OrderState.CONFIRMED
+        payment.order.order_status = OrderState.PENDING
         db.session.commit()
+
+        order = payment.order
+        daily_order_number = dao.count_orders_for_restaurant_today(order.restaurant_id)
+        socketio.emit('new_order', {
+            'order_id': order.id,
+            'daily_order_number': daily_order_number,
+            'total': "{:,.0f}đ".format(order.total),
+            'customer_name': order.user.name
+        }, room=f'restaurant_{order.restaurant_id}')
+
         print(f"Thanh toán {payment_id} đã được xác nhận thành công.")
     else:
         # Thanh toán thất bại
@@ -1112,6 +1137,25 @@ def momo_ipn_handler(payment_id):
 
     # Phải trả về response với status 204 để MoMo biết đã nhận được
     return '', 204
+
+@app.route('/my-active-orders')
+@login_required
+def active_orders_page():
+    active_orders = dao.get_active_orders_for_user(current_user.id)
+    return render_template('active_orders.html', orders=active_orders)
+
+#xử lý thông báo nhà hàng
+@socketio.on('connect')
+def handle_connect():
+    # Chỉ xử lý nếu người dùng đã đăng nhập và là nhà hàng
+    if current_user.is_authenticated and current_user.role == UserRole.RESTAURANT:
+        restaurant_id = session.get('restaurant_id')
+        if restaurant_id:
+            room_name = f'restaurant_{restaurant_id}'
+            join_room(room_name)
+            print(f"Restaurant {restaurant_id} has connected and joined room '{room_name}'")
+
+
 
 @app.route('/api/chat', methods=['POST'])
 def handle_chat():
@@ -1139,8 +1183,9 @@ def handle_chat():
 
     # 6. Trả về chỉ câu trả lời mới nhất cho frontend
     return jsonify({'reply': ai_response})
-
+from __init__ import socketio
 if __name__ == '__main__':
     with app.app_context():
         import admin
-        app.run(debug=True)
+        # app.run(debug=True)
+        socketio.run(app, debug=True,port=5001)

@@ -1,6 +1,6 @@
 import os
 
-SERVER = 'https://presumably-literate-bluejay.ngrok-free.app'
+SERVER = 'https://workable-primarily-ferret.ngrok-free.app'
 
 MOMO_PARTNER_CODE = 'MOMO'
 MOMO_ACCESS_KEY = 'F8BBA842ECF85'
