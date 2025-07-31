@@ -83,3 +83,14 @@ body {
 .btn-pink{
 
 }
+
+.btn-outline-pink {
+    color: #E91E63;
+    border-color: #E91E63;
+}
+
+.btn-outline-pink:hover {
+    color: #fff;
+    background-color: #E91E63;
+    border-color: #E91E63;
+}

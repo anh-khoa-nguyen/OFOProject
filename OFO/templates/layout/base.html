@@ -74,6 +74,24 @@
         <!-- Phần tổng cộng sẽ được JS chèn vào đây -->
     </div>
 </div>
+<!-- Confirmation Modal (Modal Xác nhận) -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="confirmationModalLabel">Xác nhận hành động</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmationModalBody">Bạn có chắc chắn muốn thực hiện hành động này?</p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+                <button type="button" class="btn btn-danger" id="confirmActionBtn">Đồng ý</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/moment.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/moment-with-locales.min.js"></script>
@@ -99,7 +117,6 @@
         }
     }
 </script>
-{% block scripts %}
 <script>
     const SEARCH_URL = "{{ url_for('search') }}";
 </script>
@@ -316,25 +333,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
+{% block scripts %}
 {% endblock %}
-
-<!-- Confirmation Modal (Modal Xác nhận) -->
-<div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header border-0">
-                <h5 class="modal-title" id="confirmationModalLabel">Xác nhận hành động</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p id="confirmationModalBody">Bạn có chắc chắn muốn thực hiện hành động này?</p>
-            </div>
-            <div class="modal-footer border-0">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
-                <button type="button" class="btn btn-danger" id="confirmActionBtn">Đồng ý</button>
-            </div>
-        </div>
-    </div>
-</div>
 </body>
 </html>

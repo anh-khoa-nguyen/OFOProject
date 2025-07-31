@@ -15,6 +15,9 @@ from flask import request, jsonify
 from zoneinfo import ZoneInfo
 import random
 import traceback
+from __init__ import socketio
+from sqlalchemy import inspect
+from sqlalchemy import event
 
 def get_greeting():
     """Lấy lời chào (sáng, trưa, chiều, tối) theo giờ Việt Nam."""
@@ -824,7 +827,7 @@ def apply_voucher(code, restaurant_id, subtotal):
 
 
 def create_order_from_cart(user_id, restaurant_id, cart_data, delivery_address, note, subtotal, shipping_fee, discount,
-                           voucher_ids=None):
+                           voucher_ids=None,initial_status=OrderState.PENDING):
     """
     Tạo một bản ghi Order và các OrderDetail tương ứng từ dữ liệu giỏ hàng trong session.
     """
@@ -840,7 +843,7 @@ def create_order_from_cart(user_id, restaurant_id, cart_data, delivery_address, 
                 total=total,
                 delivery_address=delivery_address,
                 note=note,
-                order_status=OrderState.PENDING  # Bắt đầu từ trạng thái "Đã xác nhận"
+                order_status=initial_status
             )
 
             if voucher_ids:
@@ -910,7 +913,7 @@ def create_momo_payment_request(payment: Payment):
     amount = str(int(payment.amount))
     order_info = f"Thanh toan don hang #{payment.order_id}"
     ipn_url = f"{IPN_URL_BASE}/{payment.id}" # MoMo sẽ gọi về URL này
-    redirect_url = f"{REDIRECT_URL}/order/{REDIRECT_ID}"
+    redirect_url = f"{REDIRECT_URL}/track-order/{REDIRECT_ID}"
     extra_data = ""
 
     raw_signature = (
@@ -952,6 +955,47 @@ def create_momo_payment_request(payment: Payment):
     except Exception as e:
         print(f"Lỗi khi gọi MoMo API: {e}")
         return None
+def get_active_orders_for_user(user_id):
+    """
+    Lấy danh sách các đơn hàng đang hoạt động
+    của một người dùng.
+    """
+    # Các trạng thái được coi là "không hoạt động"
+    inactive_statuses = [OrderState.COMPLETED]
+
+    return Order.query.filter(
+        Order.user_id == user_id,
+        ~Order.order_status.in_(inactive_statuses) # Dấu ~ có nghĩa là NOT IN
+    ).order_by(Order.order_date.desc()).all()
+
+@event.listens_for(Order, 'after_update')
+def emit_status_update_on_change(mapper, connection, target):
+    """
+    Tự động phát sự kiện SocketIO mỗi khi trạng thái đơn hàng được cập nhật.
+    'target' chính là đối tượng Order vừa được cập nhật.
+    """
+    # Lấy lịch sử thay đổi của thuộc tính 'order_status'
+    history = inspect(target).get_history('order_status', True)
+
+    # Kiểm tra xem thuộc tính này có thực sự thay đổi không
+    if history.has_changes():
+        # Phát sự kiện đến client
+        socketio.emit('order_status_updated', {
+            'order_id': target.id,
+            'status': target.order_status.value
+        })
+from datetime import date
+from sqlalchemy import func
+def count_orders_for_restaurant_today(restaurant_id):
+    """Đếm số lượng đơn hàng của một nhà hàng trong ngày hôm nay."""
+    today = date.today()
+    # Câu lệnh này sẽ đếm tất cả các đơn hàng có restaurant_id khớp
+    # và có ngày đặt hàng (chỉ lấy phần ngày, bỏ qua giờ) là ngày hôm nay.
+    count = db.session.query(Order).filter(
+        Order.restaurant_id == restaurant_id,
+        func.date(Order.order_date) == today
+    ).count()
+    return count
 
 if __name__ == "__main__":
     print(auth_user("user", 123))

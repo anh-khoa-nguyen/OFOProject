@@ -56,9 +56,9 @@
                 <div class="checkout-section">
                     <h3>Phương thức thanh toán</h3>
                     <div class="info-box payment-box">
-                        <img src="https://upload.wikimedia.org/wikipedia/vi/9/9d/VNPAY-QR.png" alt="VNPay Logo"
+                        <img src="https://res.cloudinary.com/dbb1oslnw/image/upload/v1753960673/MoMo_Logo_att5zs.png" alt="VNPay Logo"
                              class="payment-logo">
-                        <p class="payment-text">Ví VNPay</p>
+                        <p class="payment-text">Ví MOMO</p>
                     </div>
                 </div>
             </div>
@@ -68,24 +68,42 @@
                 <div class="order-summary">
                     <h3>Tóm tắt đơn hàng</h3>
                     <div class="order-items">
-                        {# Dùng vòng lặp để hiển thị tất cả các món trong chi tiết đơn hàng #}
                         {% for detail in order.details %}
-                        <div class="order-item">
-                            <div class="item-main">
-                                <span class="item-qty">{{ detail.quantity }}x</span>
-                                <span class="item-name">{{ detail.dish_name }}</span>
+                            <!--
+                              ===================================================================
+                              === SỬA LỖI TẠI ĐÂY: Toàn bộ thông tin món ăn nằm trong .order-item ===
+                              ===================================================================
+                            -->
+                            <div class="order-item">
+                                <!-- Dòng chính chứa tên món và giá -->
+                                <div class="item-top-line">
+                                    <div class="item-main">
+                                        <span class="item-qty">{{ detail.quantity }}x</span>
+                                        <span class="item-name">{{ detail.dish_name }}</span>
+                                    </div>
+                                    <span class="item-price">{{ "{:,.0f}đ".format(detail.price * detail.quantity) }}</span>
+                                </div>
+
+                                <!-- Khối chứa các tùy chọn và ghi chú (nếu có) -->
+                                {% if detail.selected_options_luc_dat %}
+                                    <div class="item-options-list">
+                                        {# Chỉ lặp qua 'options' NẾU nó tồn tại và không rỗng #}
+                                        {% if detail.selected_options_luc_dat.options %}
+                                            {% for option in detail.selected_options_luc_dat.options %}
+                                                <div class="option-line">{{ option.name }}</div>
+                                            {% endfor %}
+                                        {% endif %}
+
+                                        {# Chỉ hiển thị 'note' NẾU nó tồn tại và không rỗng #}
+                                        {% if detail.selected_options_luc_dat.note %}
+                                            <div class="note-line">
+                                                <i class="bi bi-chat-left-text-fill"></i>
+                                                <span>{{ detail.selected_options_luc_dat.note }}</span>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
                             </div>
-                            {# Định dạng tiền tệ cho dễ đọc #}
-                            <span class="item-price">{{ "{:,.0f}đ".format(detail.price * detail.quantity) }}</span>
-                        </div>
-                        {# Hiển thị các tùy chọn đã chọn (nếu có) #}
-                        {% if detail.selected_options_luc_dat %}
-                        <p class="item-options">
-                            {% for key, value in detail.selected_options_luc_dat.items() %}
-                            + {{ value }}
-                            {% endfor %}
-                        </p>
-                        {% endif %}
                         {% endfor %}
                     </div>
                     <div class="price-details">
@@ -107,10 +125,6 @@
                         <span>Tổng cộng</span>
                         <span class="total-amount">{{ "{:,.0f}đ".format(order.total) }}</span>
                     </div>
-                </div>
-                <div class="price-total">
-                    <span>Tổng cộng</span>
-                    <span class="total-amount">{{ "{:,.0f}đ".format(order.total) }}</span>
                 </div>
             </div>
         </div>
