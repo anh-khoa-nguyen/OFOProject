@@ -28,7 +28,7 @@ class User(db.Model, UserMixin):
     restaurants_owned = relationship('Restaurant', backref='user', lazy=True)
     orders = relationship('Order', backref='user', lazy=True)
     reviews = relationship('Review', backref='user', lazy=True)
-    carts = relationship('Cart', backref='user', lazy=True)
+    # carts = relationship('Cart', backref='user', lazy=True)
 
 
 # 3. Bảng trung gian FavoriteRestaurants
@@ -78,7 +78,7 @@ class Restaurant(db.Model):
     dishes = relationship('Dish', backref='restaurant', lazy=True)
     orders = relationship('Order', backref='restaurant', lazy=True)
     reviews = relationship('Review', backref='restaurant', lazy=True)
-    carts = relationship('Cart', backref='restaurant', lazy=True)
+    # carts = relationship('Cart', backref='restaurant', lazy=True)
 
 
 class DishGroup(db.Model):
@@ -132,27 +132,27 @@ class DishOption(db.Model):
 
 
 
-class Cart(db.Model):
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey(User.id), nullable=False)
-    restaurant_id = Column(Integer, ForeignKey(Restaurant.id), nullable=False)
-    items = relationship('CartItem', backref='cart', lazy=True, cascade="all, delete-orphan")
+# class Cart(db.Model):
+#     id = Column(Integer, primary_key=True, autoincrement=True)
+#     user_id = Column(Integer, ForeignKey(User.id), nullable=False)
+#     restaurant_id = Column(Integer, ForeignKey(Restaurant.id), nullable=False)
+#     items = relationship('CartItem', backref='cart', lazy=True, cascade="all, delete-orphan")
 
-class CartItem(db.Model):
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    cart_id = Column(Integer, ForeignKey(Cart.id), nullable=False)
-    dish_id = Column(Integer, ForeignKey(Dish.id), nullable=False)
-    quantity = Column(Integer, nullable=False, default=1)
-
-    dish = relationship('Dish', lazy='joined')
-    selected_options = relationship('DishOption', secondary='cart_item_option', backref='cart_item',
-                                    lazy='joined'
-                                    )
-
-class CartItemOption(db.Model):
-    cart_item_id = Column(Integer, ForeignKey(CartItem.id), primary_key=True, nullable=False)
-    dish_option_id = Column(Integer, ForeignKey(DishOption.id), primary_key=True, nullable=False)
-    quantity = Column(Integer, default=1)
+# class CartItem(db.Model):
+#     id = Column(Integer, primary_key=True, autoincrement=True)
+#     cart_id = Column(Integer, ForeignKey(Cart.id), nullable=False)
+#     dish_id = Column(Integer, ForeignKey(Dish.id), nullable=False)
+#     quantity = Column(Integer, nullable=False, default=1)
+#
+#     dish = relationship('Dish', lazy='joined')
+#     selected_options = relationship('DishOption', secondary='cart_item_option', backref='cart_item',
+#                                     lazy='joined'
+#                                     )
+#
+# class CartItemOption(db.Model):
+#     cart_item_id = Column(Integer, ForeignKey(CartItem.id), primary_key=True, nullable=False)
+#     dish_option_id = Column(Integer, ForeignKey(DishOption.id), primary_key=True, nullable=False)
+#     quantity = Column(Integer, default=1)
 
 
 class OrderState(PyEnum):
@@ -167,8 +167,9 @@ class Order(db.Model):
     user_id = Column(Integer, ForeignKey(User.id), nullable=False, index=True)
     restaurant_id = Column(Integer, ForeignKey(Restaurant.id), nullable=False, index=True)
     order_date = Column(DateTime, default=datetime.datetime.now)
+    shipping_fee = Column(Float, default=0)
     subtotal = Column(Float, nullable=False)  # tổng tiền
-    discount = Column(Float, default=0)  # giảm giá
+    discount = Column(Float, default=0)
     total = Column(Float, nullable=False)  # thành tiền
     delivery_address = Column(String(50), nullable=False)
     note = Column(String(100))
@@ -176,6 +177,25 @@ class Order(db.Model):
 
     details = relationship('OrderDetail', backref='order', lazy=True)
     review = relationship('Review', backref='order', uselist=False, cascade="all, delete-orphan")
+    payments = relationship('Payment', back_populates='order', lazy=True, cascade="all, delete-orphan")
+
+class PaymentStatus(PyEnum):
+    UNPAID = "Chưa thanh toán"
+    PAID = "Đã thanh toán"
+    FAILED = "Thất bại"
+
+class Payment(db.Model):
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    order_id = Column(Integer, ForeignKey('order.id'), nullable=False, index=True)
+    amount = Column(Float, nullable=False)
+    payment_method = Column(String(20), nullable=False)
+    payment_status = Column(Enum(PaymentStatus), default=PaymentStatus.UNPAID, nullable=False)
+    created_date = Column(DateTime, default=datetime.datetime.now)
+
+    # Các trường dành riêng cho MoMo
+    pay_url = Column(String(500), nullable=True)
+    momo_order_id = Column(String(255), nullable=True, unique=True)
+    order = relationship('Order', back_populates='payments')
 
 
 class OrderDetail(db.Model):
@@ -213,6 +233,7 @@ class Voucher(db.Model):
     start_date = Column(DateTime, nullable=False)
     end_date = Column(DateTime, nullable=False)
     active = Column(Boolean, default=True)
+    restaurant_id = Column(Integer, ForeignKey(Restaurant.id), nullable=False, index=True)
 
 
 voucher_applied = db.Table('voucher_applied',
@@ -222,6 +243,7 @@ voucher_applied = db.Table('voucher_applied',
 
 Order.vouchers = relationship('Voucher', secondary=voucher_applied, lazy='subquery',
                               backref=db.backref('orders_applied', lazy=True))
+restaurant = relationship('Restaurant', backref='vouchers')
 
 if __name__ == '__main__':
     with app.app_context():
@@ -625,10 +647,10 @@ if __name__ == '__main__':
         # 6. TẠO VOUCHER
         voucher1 = Voucher(code='GIAM10K', name='Giảm 10k cho đơn từ 50k', percent=0, limit=10000, min=50000, max=10000,
                            start_date=datetime.datetime.now(),
-                           end_date=datetime.datetime.now() + datetime.timedelta(days=30))
+                           end_date=datetime.datetime.now() + datetime.timedelta(days=30),restaurant_id=restaurant1.id)
         voucher2 = Voucher(code='FREESHIP', name='Miễn phí vận chuyển', percent=0, limit=15000, min=30000, max=15000,
                            start_date=datetime.datetime.now(),
-                           end_date=datetime.datetime.now() + datetime.timedelta(days=30))
+                           end_date=datetime.datetime.now() + datetime.timedelta(days=30),restaurant_id=restaurant1.id)
         db.session.add_all([voucher1, voucher2])
         db.session.commit()
 

@@ -1,13 +1,14 @@
-/* Header CSS */
+/* static/css/styles.css */
 
+/* Header CSS */
 .btn-custom-light {
     background-color: black;
     color: white;
-    border: 1px solid #e0e0e0; /* Light grey border */
+    border: 1px solid #e0e0e0;
 }
 
 .btn-custom-light:hover {
-    background-color: #f8f9fa; /* Slightly off-white on hover */
+    background-color: #f8f9fa;
     border-color: #dcdcdc;
     color: #333;
 }
@@ -22,17 +23,14 @@ header .navbar {
     background-color: #FFC5D3;
 }
 
-/* Footer Logo */
 .footer-logo {
     width: 140px;
 }
 
-/* Footer Horizontal Line */
 .footer-hr {
     border-color: rgba(255, 255, 255, 0.2);
 }
 
-/* Footer Links */
 .footer-link {
     color: black;
     font-weight: 600;
@@ -58,7 +56,6 @@ header .navbar {
     opacity: 0.8;
 }
 
-/* App Store and Google Play Badges */
 .store-badge {
     height: 40px;
 }
@@ -80,94 +77,60 @@ header .navbar {
 
 /* Ghi đè quy tắc của Bootstrap để nút bản đồ trên header không bị xám đi */
 .address-display-header .input-group .form-control:disabled ~ .btn.btn-outline-secondary {
-  opacity: 1; /* Luôn hiển thị rõ ràng */
-  pointer-events: auto; /* Luôn cho phép click */
-  border-color: #ced4da;  /* Đảm bảo viền có màu chuẩn */
+  opacity: 1;
+  pointer-events: auto;
+  border-color: #ced4da;
   background: #DC3545;
   color: white;
 }
 
-/* (Tùy chọn) Thêm hiệu ứng hover để người dùng biết nút vẫn hoạt động */
 .address-display-header .input-group .btn.btn-outline-secondary:hover {
-    background-color: #fff;  /* Một màu xám nhạt khi hover */
+    background-color: #fff;
 }
 
 /* Tùy chỉnh Offcanvas Giỏ hàng */
 #cartOffcanvas {
-width: 420px !important;
+    width: 420px !important;
 }
 #cartOffcanvas .offcanvas-body {
-padding: 0; background-color: #f8f9fa;
-}
-.cart-restaurant-group {
-background-color: white; margin-bottom: 1rem; border-bottom: 1px solid #e9ecef;
-}
-.cart-restaurant-header { padding: 1rem 1.5rem; border-bottom: 1px solid #e9ecef; }
-.cart-restaurant-header h6 { font-weight: bold; margin-bottom: 0; }
-.cart-item { display: flex; padding: 1rem 1.5rem; gap: 1rem; align-items: center; }
-.cart-item-quantity { font-weight: bold; flex-shrink: 0; }
-.cart-item-details { flex-grow: 1; }
-.cart-item-details .item-name { font-weight: 500; margin-bottom: 0.25rem; }
-.cart-item-details .item-options { font-size: 0.85rem; color: #6c757d; margin-bottom: 0; }
-.cart-item-price { font-weight: bold; flex-shrink: 0; }
-#cartOffcanvas .offcanvas-footer { padding: 1.5rem; background-color: white; border-top: 1px solid #e9ecef; }
-.cart-total-row { display: flex; justify-content: space-between; margin-bottom: 1rem; font-size: 1.1rem; }
-.cart-total-row .label { font-weight: 500; }
-.cart-total-row .value { font-weight: bold; }
-.btn-view-order { width: 100%; padding: 0.75rem; font-weight: bold; background-color: #343a40; color: white; border: none; }
-.btn-view-order:hover { background-color: #23272b; }
-#cart-empty-state { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; }
-.btn-pink {
-    background-color: #E91E63 !important;
-    color: white !important;
-    padding: 0.75rem;
-    border: none;
-}
-
-.btn-pink:hover {
-    background-color: #c2185b !important;
-    color: white !important;
-}
-.cart-index-item {
-    display: flex;
-    align-items: center;
-    padding: 1rem 1.5rem;
-    gap: 1rem;
-    border-bottom: 1px solid #e9ecef;
-    transition: background-color 0.2s;
-}
-
-.cart-index-item:hover {
+    padding: 0;
     background-color: #f8f9fa;
 }
-
-.cart-index-item-img {
-    width: 60px;
-    height: 60px;
-    object-fit: cover;
-    border-radius: 8px;
-    flex-shrink: 0;
-}
-
-.cart-index-item-details {
-    flex-grow: 1;
+.cart-restaurant-group {
+    background-color: white;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #e9ecef;
 }
 .cart-item {
-    position: relative;
+    display: flex;
+    padding: 1rem 1.5rem;
+    gap: 1rem;
+    align-items: center;
+    position: relative; /* Thêm để định vị nút xóa */
 }
-
 .cart-item-info {
     flex-grow: 1;
     cursor: pointer;
 }
-
+.cart-item-info .item-name {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+.cart-item-info .item-options {
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-bottom: 0;
+}
+.cart-item-price {
+    font-weight: bold;
+    flex-shrink: 0;
+}
 .cart-item-controls {
     display: flex;
     align-items: center;
     gap: 0.5rem;
     margin-left: 1rem;
 }
-
 .btn-change-qty {
     width: 28px;
     height: 28px;
@@ -181,7 +144,6 @@ background-color: white; margin-bottom: 1rem; border-bottom: 1px solid #e9ecef;
     justify-content: center;
     line-height: 1;
 }
-
 .btn-delete-item {
     position: absolute;
     top: 5px;
@@ -196,18 +158,242 @@ background-color: white; margin-bottom: 1rem; border-bottom: 1px solid #e9ecef;
     color: #dc3545;
 }
 
+#cartOffcanvas .offcanvas-footer {
+    padding: 1.5rem;
+    background-color: white;
+    border-top: 1px solid #e9ecef;
+}
+.cart-total-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+.cart-total-row .label {
+    font-weight: 500;
+}
+.cart-total-row .value {
+    font-weight: bold;
+}
+#cart-empty-state {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+.btn-pink {
+    background-color: #E91E63 !important;
+    color: white !important;
+    padding: 0.75rem;
+    border: none;
+}
+.btn-pink:hover {
+    background-color: #c2185b !important;
+}
+.cart-index-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    gap: 1rem;
+    border-bottom: 1px solid #e9ecef;
+    transition: background-color 0.2s;
+}
+.cart-index-item:hover {
+    background-color: #f8f9fa;
+}
+.cart-index-item-img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+.cart-index-item-details {
+    flex-grow: 1;
+}
+
+/* Modal xác nhận */
 #confirmationModal .modal-content {
     border-radius: 12px;
     border: none;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
 }
-
 #confirmationModal .modal-header,
 #confirmationModal .modal-footer {
     padding: 1.5rem;
 }
-
 #confirmationModal .modal-body {
     padding: 0 1.5rem 1.5rem;
     font-size: 1.1rem;
+}
+
+/* Thanh tìm kiếm địa chỉ tùy chỉnh */
+.custom-address-search {
+    display: flex;
+    align-items: center;
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+/* static/css/chatbot.css */
+
+/* 1. Nút tròn nổi (Floating Action Button) */
+.chat-fab {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    width: 60px;
+    height: 60px;
+    background-color: #d63384; /* Màu hồng đậm giống thương hiệu */
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    z-index: 1050;
+    transition: transform 0.2s ease-in-out;
+}
+
+.chat-fab:hover {
+    transform: scale(1.1);
+}
+
+/* 2. Cửa sổ Chat Widget */
+.chat-widget {
+    position: fixed;
+    bottom: 100px; /* Vị trí ngay trên nút FAB */
+    right: 25px;
+    width: 360px;
+    max-height: 70vh;
+    background-color: #fff;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 1049;
+
+    /* Hiệu ứng xuất hiện */
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    pointer-events: none; /* Không thể tương tác khi bị ẩn */
+}
+
+.chat-widget.active {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+
+/* 3. Header của Widget */
+.chat-widget-header {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.chat-widget-header .avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 12px;
+}
+
+.chat-widget-header .info .name {
+    font-weight: 700;
+    color: #212529;
+}
+
+.chat-widget-header .info .status {
+    font-size: 0.8rem;
+    color: #198754; /* Màu xanh lá cho "Online" */
+}
+.chat-widget-header .info .status::before {
+    content: '●';
+    margin-right: 4px;
+}
+
+.chat-widget-header .close-btn {
+    margin-left: auto;
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: #6c757d;
+    cursor: pointer;
+}
+
+/* 4. Phần thân (nội dung chat) */
+.chat-widget-body {
+    flex-grow: 1;
+    padding: 1rem;
+    overflow-y: auto;
+}
+
+.chat-message {
+    max-width: 85%;
+    padding: 10px 15px;
+    border-radius: 20px;
+    margin-bottom: 1rem;
+    line-height: 1.4;
+}
+
+.chat-message.assistant {
+    background-color: #f1f3f5;
+    border-bottom-left-radius: 5px;
+    align-self: flex-start;
+}
+
+.chat-suggestions {
+    margin-top: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.suggestion-chip {
+    padding: 6px 12px;
+    border: 1px solid #dee2e6;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    background-color: #fff;
+    transition: background-color 0.2s;
+}
+.suggestion-chip:hover {
+    background-color: #f8f9fa;
+}
+
+/* 5. Footer (khung nhập liệu) */
+.chat-widget-footer {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.chat-widget-footer input {
+    flex-grow: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    padding: 0 0.5rem;
+}
+
+.chat-widget-footer .send-btn {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: #d63384;
+    cursor: pointer;
 }

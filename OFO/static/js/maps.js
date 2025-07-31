@@ -44,6 +44,7 @@
 
     // --- PHẦN 2: XỬ LÝ GEOCODER CHÍNH (NẾU TỒN TẠI) ---
     const geocoderContainer = document.getElementById('geocoder-container');
+    console.log(geocoderContainer)
     const confirmButton = document.getElementById('confirm-address-btn');
 
     if (geocoderContainer && confirmButton) {

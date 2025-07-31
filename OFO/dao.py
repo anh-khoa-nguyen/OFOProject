@@ -6,7 +6,7 @@ from sqlalchemy.exc import SQLAlchemyError
 import config
 import hashlib
 from  models import *
-from __init__ import db,app
+from __init__ import db, app
 import cloudinary.uploader
 from sqlalchemy import func, event, text
 from sqlalchemy.orm import subqueryload, joinedload
@@ -689,7 +689,6 @@ def toggle_favorite(user_id, restaurant_id):
         return 'added'
 
 
-
 def get_dish_by_id(dish_id):
     try:
         return db.session.get(Dish, int(dish_id))
@@ -747,5 +746,251 @@ def get_dish_details_by_id(dish_id):
         return dish_data
     except (ValueError, TypeError):
         return None
+
+# 3.3.6 Module Lịch sử và chi tiết đơn hàng, nhà hàng yêu thích
+def get_orders_by_user_id(user_id):
+    """
+    Lấy danh sách các đơn hàng của một người dùng, sắp xếp theo ngày đặt mới nhất.
+    Tải sẵn thông tin nhà hàng và chi tiết đơn hàng để tối ưu.
+    """
+    return db.session.query(Order).options(
+        joinedload(Order.restaurant),
+        joinedload(Order.details).joinedload(OrderDetail.dish)
+    ).filter(Order.user_id == user_id).order_by(Order.order_date.desc()).all()
+
+def get_order_details_by_id(order_id):
+    try:
+        order = db.session.query(Order).options(
+            joinedload(Order.details).joinedload(OrderDetail.dish),
+            joinedload(Order.restaurant),
+            joinedload(Order.user)
+        ).filter(Order.id == order_id).one_or_none()
+
+        return order
+    except Exception as e:
+        print(f"Đã xảy ra lỗi khi lấy chi tiết đơn hàng: {e}")
+        return None
+
+#Xử lý thanh toán và voucher
+def get_valid_vouchers(restaurant_id, subtotal):
+    """
+    Lấy danh sách các voucher đang hoạt động của một nhà hàng
+    mà đơn hàng hiện tại đủ điều kiện áp dụng.
+    """
+    now = datetime.datetime.now()
+    return Voucher.query.filter(
+        Voucher.restaurant_id == restaurant_id,
+        Voucher.active == True,
+        Voucher.start_date <= now,
+        Voucher.end_date >= now,
+        Voucher.min <= subtotal
+    ).all()
+
+
+def apply_voucher(code, restaurant_id, subtotal):
+    """
+    Kiểm tra một mã voucher và tính toán số tiền được giảm.
+    """
+    now = datetime.datetime.now()
+    voucher = Voucher.query.filter(
+        Voucher.code == code.upper(),  # Chuyển mã về chữ hoa để khớp
+        Voucher.restaurant_id == restaurant_id,
+        Voucher.active == True,
+        Voucher.start_date <= now,
+        Voucher.end_date >= now
+    ).first()
+
+    if not voucher:
+        return {'success': False, 'message': 'Mã khuyến mãi không hợp lệ hoặc đã hết hạn.'}
+
+    if subtotal < voucher.min:
+        return {'success': False, 'message': f'Đơn hàng cần tối thiểu {voucher.min:,.0f}đ để áp dụng mã này.'}
+
+    # Tính toán giảm giá
+    discount = 0
+    if voucher.percent and voucher.percent > 0:
+        discount = subtotal * (voucher.percent / 100)
+        if voucher.max and discount > voucher.max:
+            discount = voucher.max
+    elif voucher.limit:
+        discount = voucher.limit
+
+    return {
+        'success': True,
+        'discount': discount,
+        'voucher_id': voucher.id,
+        'message': f'Áp dụng thành công mã "{voucher.name}"!'
+    }
+
+
+def create_order_from_cart(user_id, restaurant_id, cart_data, delivery_address, note, subtotal, shipping_fee, discount,
+                           voucher_ids=None):
+    """
+    Tạo một bản ghi Order và các OrderDetail tương ứng từ dữ liệu giỏ hàng trong session.
+    """
+    try:
+        with db.session.begin_nested():
+            total = subtotal + shipping_fee - discount
+            new_order = Order(
+                user_id=user_id,
+                restaurant_id=restaurant_id,
+                subtotal=subtotal,
+                shipping_fee=shipping_fee,
+                discount=discount,
+                total=total,
+                delivery_address=delivery_address,
+                note=note,
+                order_status=OrderState.PENDING  # Bắt đầu từ trạng thái "Đã xác nhận"
+            )
+
+            if voucher_ids:
+                vouchers = Voucher.query.filter(Voucher.id.in_(voucher_ids)).all()
+                if vouchers:
+                    new_order.vouchers.extend(vouchers)
+
+            db.session.add(new_order)
+
+            for item_key, item_info in cart_data['items'].items():
+                detail = OrderDetail(
+                    order=new_order,
+                    dish_id=item_info['dish_id'],
+                    quantity=item_info['quantity'],
+                    price=item_info['price'],
+                    dish_name=item_info['name'],
+                    selected_options_luc_dat={
+                        'options': item_info['options'],
+                        'note': item_info.get('note', '')
+                    }
+                )
+                db.session.add(detail)
+
+        db.session.commit()
+        return new_order
+    except Exception as e:
+        db.session.rollback()
+        print(f"Lỗi khi tạo đơn hàng từ giỏ hàng: {e}")
+        raise e
+
+# 3.3.10 Module VNPay, chatbot
+def create_payment_record(order: Order, payment_method: str):
+    """Tạo một bản ghi thanh toán mới cho một đơn hàng."""
+    payment = Payment(
+        order_id=order.id,
+        amount=order.total,
+        payment_method=payment_method,
+        payment_status=PaymentStatus.UNPAID
+    )
+    db.session.add(payment)
+    db.session.commit()
+    return payment
+
+import uuid
+import hmac
+import requests
+
+def create_momo_payment_request(payment: Payment):
+    """
+    Tạo yêu cầu thanh toán đến MoMo và trả về URL thanh toán.
+    Args:
+        payment: Đối tượng Payment vừa được tạo.
+    Returns:
+        URL thanh toán của MoMo hoặc None nếu có lỗi.
+    """
+    PARTNER_CODE = app.config.get('MOMO_PARTNER_CODE')
+    ACCESS_KEY = app.config.get('MOMO_ACCESS_KEY')
+    SECRET_KEY = app.config.get('MOMO_SECRET_KEY')
+    IPN_URL_BASE = app.config.get('MOMO_IPN_URL_BASE')
+    REDIRECT_ID = payment.order_id
+    REDIRECT_URL = app.config.get('MOMO_REDIRECT_URL')
+    MOMO_ENDPOINT = app.config.get('MOMO_ENDPOINT')
+    print(PARTNER_CODE)
+
+    order_id_momo = str(uuid.uuid4()) # Tạo một ID duy nhất cho giao dịch MoMo
+    request_id = str(uuid.uuid4())
+    amount = str(int(payment.amount))
+    order_info = f"Thanh toan don hang #{payment.order_id}"
+    ipn_url = f"{IPN_URL_BASE}/{payment.id}" # MoMo sẽ gọi về URL này
+    redirect_url = f"{REDIRECT_URL}/order/{REDIRECT_ID}"
+    extra_data = ""
+
+    raw_signature = (
+        f"accessKey={ACCESS_KEY}&amount={amount}&extraData={extra_data}"
+        f"&ipnUrl={ipn_url}&orderId={order_id_momo}&orderInfo={order_info}"
+        f"&partnerCode={PARTNER_CODE}&redirectUrl={redirect_url}"
+        f"&requestId={request_id}&requestType=captureWallet"
+    )
+    print(raw_signature)
+
+    signature = hmac.new(SECRET_KEY.encode(), raw_signature.encode(), hashlib.sha256).hexdigest()
+
+    payload = {
+        'partnerCode': PARTNER_CODE,
+        'requestId': request_id,
+        'amount': amount,
+        'orderId': order_id_momo,
+        'orderInfo': order_info,
+        'redirectUrl': redirect_url,
+        'ipnUrl': ipn_url,
+        'lang': "vi",
+        'extraData': extra_data,
+        'requestType': 'captureWallet',
+        'signature': signature
+    }
+
+    try:
+        response = requests.post(MOMO_ENDPOINT, data=json.dumps(payload), headers={'Content-Type': 'application/json'})
+        response_data = response.json()
+
+        if response_data.get("resultCode") == 0:
+            payment.momo_order_id = order_id_momo
+            payment.pay_url = response_data.get("payUrl")
+            db.session.commit()
+            return response_data.get("payUrl")
+        else:
+            print(f"Lỗi MoMo: {response_data.get('message')}")
+            return None
+    except Exception as e:
+        print(f"Lỗi khi gọi MoMo API: {e}")
+        return None
+
+import google.generativeai as genai
+
+def call_gemini_api(user_message):
+    """
+    Gửi tin nhắn đến Google Gemini API và nhận phản hồi.
+    """
+    GOOGLE_API_KEY = app.config.get('GOOGLE_API_KEY')
+
+    try:
+        # Lấy API key từ biến môi trường đã được tải
+        api_key = GOOGLE_API_KEY
+        if not api_key:
+            return "Lỗi: API Key của Google chưa được cấu hình."
+
+        genai.configure(api_key=api_key)
+
+        # Cấu hình model
+        generation_config = {
+            "temperature": 0.9,
+            "top_p": 1,
+            "top_k": 1,
+            "max_output_tokens": 2048,
+        }
+        model = genai.GenerativeModel(
+            model_name="gemini-2.0-flash-lite",
+            generation_config=generation_config
+        )
+
+        # Bắt đầu cuộc trò chuyện và gửi tin nhắn
+        convo = model.start_chat(history=[])
+        convo.send_message(user_message)
+
+        # Trả về phần văn bản của phản hồi
+        return convo.last.text
+
+    except Exception as e:
+        print(f"Lỗi khi gọi Gemini API: {e}")
+        return "Xin lỗi, trợ lý ảo đang gặp sự cố. Vui lòng thử lại sau."
+
 if __name__ == "__main__":
     print(auth_user("user", 123))

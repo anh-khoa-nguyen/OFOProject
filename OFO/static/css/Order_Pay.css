@@ -387,3 +387,19 @@ h1 {
 .apply-promo-btn:hover {
     opacity: 0.85;
 }
+
+.static-note {
+    background: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    color: #555;
+    font-style: italic;
+}
+.item-options {
+    font-size: 0.85em;
+    color: #777;
+    padding-left: 35px; /* Căn lề với tên món */
+    margin-bottom: 15px;
+    margin-top: -5px;
+}

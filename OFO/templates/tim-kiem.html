@@ -35,11 +35,13 @@
         </a>
 
         {% for category in categories %}
+        <div class="category-card position-relative flex-fill mx-2">
         <a href="{{ url_for('search', category_name=category.name) }}"
-           class="category-card {% if searched_category and category.name == searched_category.name %}active{% endif %}">
+           class="{% if searched_category and category.name == searched_category.name %}active{% endif %}">
             <img src="{{ category.image }}" alt="{{ category.name }}"/>
             <span class="overlay-text">{{ category.name }}</span>
        </a>
+            </div>
         {% endfor %}
 
     </div>
