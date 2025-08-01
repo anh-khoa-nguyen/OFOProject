@@ -424,6 +424,25 @@
 
     </div>
 </div>
+<!--Thông báo cho nhà hàng-->
+
+<!-- 1. Âm thanh thông báo (sẽ không hiển thị) -->
+<audio id="notification-sound" src="{{ url_for('static', filename='sounds/notification.mp3') }}" preload="auto"></audio>
+
+<!-- 2. Toast (popup thông báo) của Bootstrap -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+  <div id="newOrderToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="toast-header">
+      <i class="bi bi-bell-fill me-2 text-danger"></i>
+      <strong class="me-auto">Có đơn hàng mới!</strong>
+      <small>vài giây trước</small>
+      <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+    <div class="toast-body" id="toast-body">
+      <!-- Nội dung thông báo sẽ được chèn vào đây bằng JavaScript -->
+    </div>
+  </div>
+</div>
 
 
 {% endblock %}
@@ -1279,5 +1298,45 @@ if (editDishForm) {
     }, 1500); // Toast sẽ hiển thị trong 3 giây
 }
 
+</script>
+<!--Xử lý thông báo-->
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. Kết nối đến server Socket.IO
+    const socket = io();
+
+    // 2. Lấy các phần tử HTML
+    const audio = document.getElementById('notification-sound');
+    const toastEl = document.getElementById('newOrderToast');
+    const toastBody = document.getElementById('toast-body');
+    const toast = new bootstrap.Toast(toastEl);
+
+    // 3. Lắng nghe sự kiện 'new_order' từ server
+    socket.on('new_order', function(data) {
+        console.log('Nhận được đơn hàng mới:', data);
+
+        // Cập nhật nội dung thông báo
+        toastBody.innerHTML = `
+            <p class="mb-1">Đơn hàng mới <strong>#${data.daily_order_number} trong ngày</strong> từ khách hàng <strong>${data.customer_name}</strong>.</p>
+            <p class="mb-0">Tổng giá trị: <strong>${data.total}</strong></p>
+            <a href="#" class="btn btn-primary btn-sm mt-2">Xem chi tiết</a>
+        `;
+
+        // Hiển thị thông báo
+        toast.show();
+
+        // Phát âm thanh
+        // Cần .catch() để tránh lỗi trên trình duyệt nếu người dùng chưa tương tác với trang
+        audio.play().catch(error => {
+            console.log("Không thể tự động phát âm thanh, cần người dùng tương tác với trang trước.");
+        });
+
+        // (Tùy chọn) Tự động tải lại trang để cập nhật danh sách đơn hàng
+        // setTimeout(() => {
+        //     location.reload();
+        // }, 5000); // Tải lại sau 5 giây
+    });
+});
 </script>
 {% endblock %}
