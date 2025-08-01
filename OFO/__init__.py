@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from urllib.parse import quote  # Do mật khẩu DB có ký tự đặc biệt
 import cloudinary
+import config
 
 app = Flask(__name__)
 
@@ -13,9 +14,31 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:%s@localhost/ofodb
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
 app.config["SO_PHAN_TU"] = 10  # Thông số cấu hình số sản phẩm 1 trang (8)
 app.config.from_pyfile('config.py')
+
 db = SQLAlchemy(app)
 login = LoginManager(app)
 
+def create_app(config_name='development'):
+    """
+    Hàm khởi tạo ứng dụng Flask (Application Factory).
+    """
+    app = Flask(__name__)
+
+    # Load cấu hình từ object dựa vào tên (development hoặc testing)
+    app.config.from_object(config.config_by_name[config_name])
+
+    # Khởi tạo các extension với app
+    db.init_app(app)
+    login.init_app(app)
+
+    # Cấu hình Cloudinary
+    cloudinary.config(
+        cloud_name=app.config['CLOUDINARY_CLOUD_NAME'],
+        api_key=app.config['CLOUDINARY_API_KEY'],
+        api_secret=app.config['CLOUDINARY_API_SECRET']
+    )
+
+    return app
 
 cloudinary.config(  # Paste cấu hình vào
     cloud_name="dq2jtbrda",
