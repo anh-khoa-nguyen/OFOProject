@@ -1,0 +1,143 @@
+<head>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/review.css') }}"/>
+</head>
+{% extends 'layout/base.html' %}
+
+{% block content %}
+<div class="container my-5">
+    <!-- Phần header của trang (giống ảnh 1) -->
+    <nav class="d-none d-lg-block">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="#">Trang chủ</a></li>
+            <li class="breadcrumb-item"><a href="#">Nhà hàng</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ restaurant.restaurant_name }}</li>
+            <li class="breadcrumb-item active" aria-current="page">Đánh giá</li>
+        </ol>
+    </nav>
+    <hr class="d-none d-lg-block mb-4">
+
+    <!-- Phần Đánh giá và Nhận xét -->
+    <h2 class="mb-4">Đánh giá và nhận xét</h2>
+
+    <div class="row">
+        <!-- CỘT BÊN TRÁI - TỔNG QUAN ĐÁNH GIÁ -->
+        <div class="col-lg-4 mb-4 mb-lg-0">
+            <div class="p-4 review-card h-100">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="rating-summary-left">
+                        <h2 class="display-4 mb-0 me-3">{{ restaurant.star_average or 0 }}</h2>
+                    </div>
+                    <div class="rating-summary-right">
+                        <div class="rating-stars">
+                            {# Hiển thị sao động dựa trên star_average #}
+                            {% set avg_rating = restaurant.star_average or 0 %}
+                            {% for i in range(1, 6) %}
+                                {% if i <= avg_rating %}
+                                    <i class="bi bi-star-fill"></i>
+                                {% elif i - 0.5 <= avg_rating %}
+                                    <i class="bi bi-star-half"></i>
+                                {% else %}
+                                    <i class="bi bi-star"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <p class="text-muted mb-0">{{ summary_data.total_reviews }} đánh giá</p>
+                    </div>
+                </div>
+
+                <!-- Phân phối đánh giá -->
+                <div class="rating-breakdown">
+                    {% for star_level in range(5, 0, -1) %}
+                        {% set count = summary_data.breakdown.get(star_level, 0) %}
+                        {% set percentage = (count / summary_data.total_reviews * 100) if summary_data.total_reviews > 0 else 0 %}
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="me-3">{{ star_level }} <i class="bi bi-star-fill"></i></div>
+                            <div class="progress flex-grow-1">
+                                <div class="progress-bar" role="progressbar" style="width: {{ percentage }}%;" aria-valuenow="{{ percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- CỘT BÊN PHẢI - DANH SÁCH REVIEW -->
+        <div class="col-lg-8">
+            <!-- Bộ lọc -->
+            <div class="d-flex flex-wrap gap-2 mb-4">
+                <button class="btn btn-sm btn-outline-secondary">Mới nhất</button>
+                <button class="btn btn-sm btn-success">Đánh giá đã viết</button>
+                <button class="btn btn-sm btn-outline-secondary">Có hình ảnh</button>
+                <button class="btn btn-sm btn-outline-secondary">Lượt thích</button>
+            </div>
+
+            <!-- Review 1 -->
+            {% if reviews %}
+                {% for review in reviews %}
+                    <div class="review-card p-4 mb-3">
+                        <div class="d-flex">
+                            <div class="user-avatar rounded-circle flex-shrink-0 me-3">{{ review.user.name[0] | upper }}</div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-0 fw-bold">{{ review.user.name }}</h6>
+                                <div class="rating-stars mb-2" style="font-size: 1rem;">
+                                    {% for i in range(review.star) %}<i class="bi bi-star-fill"></i>{% endfor %}
+                                    {% for i in range(5 - review.star) %}<i class="bi bi-star"></i>{% endfor %}
+                                    <small class="text-muted ms-2">{{ review.date.strftime('%d-%m-%Y') }}</small>
+                                </div>
+                                <p>{{ review.comment }}</p>
+
+                                {% if review.image %}
+                                    <div class="review-images mb-2">
+                                        {% for image_url in review.image.split(';') %}
+                                            {% if image_url %}
+                                                <img src="{{ image_url }}" alt="Ảnh đánh giá">
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+
+                                {% if review.order and review.order.details %}
+                                    <p class="text-muted small mb-2">
+                                        <strong>Đã đặt:</strong>
+                                        {{ review.order.details | map(attribute='dish_name') | join(', ') }}
+                                    </p>
+                                {% endif %}
+                                <button class="btn btn-light btn-sm"><i class="bi bi-hand-thumbs-up"></i> Có giúp ích cho bạn?</button>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-center text-muted">Chưa có đánh giá nào cho nhà hàng này.</p>
+            {% endif %}
+
+            <!-- Review 2 -->
+            <div class="review-card p-4 mb-3">
+                <div class="d-flex">
+                    <div class="user-avatar rounded-circle flex-shrink-0 me-3">Q</div>
+                    <div class="flex-grow-1">
+                        <h6 class="mb-0 fw-bold">Quân LD</h6>
+                        <div class="rating-stars mb-2" style="font-size: 1rem;">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star"></i>
+                            <i class="bi bi-star"></i>
+                            <i class="bi bi-star"></i>
+                            <small class="text-muted ms-2">6 ngày trước</small>
+                        </div>
+                        <p>Cơm nhão,bị sình.Lần trước mua gà nhiều,lần này cũng đặt y chang thì lượng gà chưa bằng 1 nửa lần trước</p>
+                         <div class="review-images mb-2">
+                            <!-- Sử dụng placeholder cho hình ảnh -->
+                            <img src="https://via.placeholder.com/150/EEEEEE/000000?Text=Food+Image+1" alt="Review Image 1">
+                            <img src="https://via.placeholder.com/150/EEEEEE/000000?Text=Food+Image+2" alt="Review Image 2">
+                        </div>
+                        <p class="text-muted small mb-2"><strong>Đã đặt:</strong> Cơm Gà Mắm Tỏi x3</p>
+                        <button class="btn btn-light btn-sm"><i class="bi bi-hand-thumbs-up"></i> Có giúp ích cho bạn?</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

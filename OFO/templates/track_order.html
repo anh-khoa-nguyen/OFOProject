@@ -1,0 +1,139 @@
+<!-- FILE: templates/track_order.html -->
+
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/track_order.css') }}?v=1.2"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+</head>
+
+{% extends 'layout/base.html' %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="track-order-container">
+        <div class="track-order-header">
+            <h4 class="mb-1 fw-bold">Theo dõi đơn hàng #{{ order.id }}</h4>
+            <p class="restaurant-name mb-0">Từ: {{ order.restaurant.restaurant_name }}</p>
+        </div>
+
+        <div class="status-display">
+            <p class="text-muted mb-2">Trạng thái hiện tại</p>
+            <p id="order-status-text" class="status-text">{{ order.order_status.value }}</p>
+        </div>
+
+        <!-- THANH TIẾN TRÌNH -->
+        <div class="progress-tracker">
+            <div class="progress-line"></div>
+            <div class="progress-line-active" id="progress-line-active"></div>
+            <div class="progress-shimmer" id="progress-shimmer"></div>
+            <div class="steps-container">
+                <div class="step" data-status="PENDING">
+                    <div class="step-icon"><i class="bi bi-search"></i></div>
+                    <div class="step-label">Chờ xác nhận</div>
+                </div>
+                <div class="step" data-status="CONFIRMED">
+                    <div class="step-icon"><i class="bi bi-check-lg"></i></div>
+                    <div class="step-label">Đang chuẩn bị</div>
+                </div>
+                <div class="step" data-status="DELIVERING">
+                    <div class="step-icon"><i class="bi bi-truck"></i></div>
+                    <div class="step-label">Đang giao</div>
+                </div>
+                <div class="step" data-status="COMPLETED">
+                    <div class="step-icon"><i class="bi bi-house-check"></i></div>
+                    <div class="step-label">Hoàn thành</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-5">
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">Quay về trang chủ</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function updateStatusUI(status) {
+        // --- PHẦN 1: CHUẨN BỊ DỮ LIỆU ---
+        const upperCaseStatus = status.toUpperCase();
+        const stepsOrder = ['PENDING', 'CONFIRMED', 'DELIVERING', 'COMPLETED'];
+        const currentStepIndex = stepsOrder.indexOf(upperCaseStatus);
+
+        const statusTranslations = {
+            'PENDING': 'Chờ xác nhận',
+            'CONFIRMED': 'Đang chuẩn bị',
+            'DELIVERING': 'Đang giao',
+            'COMPLETED': 'Đã hoàn thành'
+        };
+
+        const statusText = document.getElementById('order-status-text');
+        const progressLineActive = document.getElementById('progress-line-active');
+        const shimmer = document.getElementById('progress-shimmer');
+        const allSteps = document.querySelectorAll('.step');
+
+        if (currentStepIndex === -1 || !progressLineActive || allSteps.length === 0) return;
+
+        // --- PHẦN 2: CẬP NHẬT GIAO DIỆN ---
+
+        // Cập nhật dòng chữ trạng thái Tiếng Việt
+        if(statusText) statusText.textContent = statusTranslations[upperCaseStatus] || status;
+
+        // 1. Cập nhật các icon (active / completed)
+        allSteps.forEach((step, index) => {
+            step.classList.remove('active', 'completed');
+            if (index < currentStepIndex) {
+                step.classList.add('completed'); // Các bước đã qua -> nền hồng
+            } else if (index === currentStepIndex) {
+                step.classList.add('active'); // Bước hiện tại -> viền hồng
+            }
+        });
+
+        // 2. THANH TIẾN TRÌNH MÀU HỒNG: Phải kéo dài đến TÂM của icon HIỆN TẠI.
+        let activeLineWidth = '0px';
+        if (currentStepIndex >= 0) {
+            const currentStep = allSteps[currentStepIndex];
+            const centerOfCurrent = currentStep.offsetLeft + (currentStep.offsetWidth / 2);
+            activeLineWidth = `${centerOfCurrent}px`;
+        }
+        progressLineActive.style.width = activeLineWidth;
+
+        // 3. HIỆU ỨNG SHIMMER: Chạy trên đoạn cuối của thanh màu hồng.
+        if (currentStepIndex > 0 && currentStepIndex < stepsOrder.length) {
+            const prevStep = allSteps[currentStepIndex - 1];
+            const currentStep = allSteps[currentStepIndex];
+            const startPos = prevStep.offsetLeft + (prevStep.offsetWidth / 2);
+            const endPos = currentStep.offsetLeft + (currentStep.offsetWidth / 2);
+
+            shimmer.style.left = `${startPos}px`;
+            shimmer.style.width = `${endPos - startPos}px`;
+            shimmer.style.display = 'block';
+        } else {
+            shimmer.style.display = 'none'; // Ẩn shimmer ở bước đầu và cuối
+        }
+
+        // 4. Trường hợp đặc biệt: Đơn hàng hoàn thành
+        if (currentStepIndex === stepsOrder.length - 1) {
+            allSteps[currentStepIndex].classList.add('completed', 'active');
+            progressLineActive.style.width = '100%'; // Kéo đầy thanh khi hoàn thành
+        }
+    }
+
+    // --- PHẦN 3: KÍCH HOẠT KHI TẢI TRANG ---
+    try {
+        const socket = io();
+        socket.on('connect', () => {});
+        socket.on('order_status_updated', (data) => {
+            if (data.order_id === {{ order.id }}) updateStatusUI(data.status);
+        });
+
+        const initialStatus = "{{ order.order_status.value }}";
+        setTimeout(() => updateStatusUI(initialStatus), 200);
+
+    } catch (e) {
+        console.error("Lỗi khi khởi tạo script:", e);
+    }
+});
+</script>
+{% endblock %}

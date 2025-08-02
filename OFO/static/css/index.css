@@ -1,22 +1,220 @@
 body, html {
       height: 100%;
+      margin: 0;
     }
-    .bg-cover {
-      background-image: url('https://images.unsplash.com/photo-1617191513006-0372829aeb80'); /* Thay bằng ảnh của bạn */
+
+    .bg-full {
+      background-image: url('https://images.unsplash.com/photo-1617191513006-0372829aeb80'); /* Replace with your image */
       background-size: cover;
       background-position: center;
+      height: 100vh;
+      position: relative;
     }
-    .search-box {
-      background-color: white;
+
+    .overlay-form {
+      position: absolute;
+      top: 50%;
+      left: 5%;
+      transform: translateY(-50%);
+      background: white;
       padding: 2rem;
       border-radius: 10px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      max-width: 400px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
     }
-    .search-input {
-      border: 1px solid #ccc;
-      border-radius: 6px;
+
+    .btn-pink {
+      background-color: #FFC5D3 !important;
+      color: black !important;
+      font-weight: 600 !important;
     }
-    .btn-search {
+
+    .btn-pink:hover {
+      background-color: white !important;
+    }
+
+
+
+
+    .card-promo {
+      border: none;
+      transition: transform 0.2s;
+    }
+
+    .card-promo:hover {
+      transform: scale(1.01);
+    }
+
+    .card-body {
+    padding: 1rem;
+    }
+
+    .promo-tag {
+      position: absolute;
+      top: 0.5rem;
+      left: 0.5rem;
       background-color: #00b14f;
       color: white;
+      font-size: 0.75rem;
+      padding: 2px 6px;
+      border-radius: 4px;
     }
+
+    .img-food {
+      border-radius: 12px;
+      object-fit: cover;
+      width: 100%;
+      height: 140px;
+    }
+
+    .restaurant-title {
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .text-secondary-small {
+      font-size: 0.9rem;
+      color: #777;
+    }
+
+    .rating i {
+      color: #fbc02d;
+    }
+
+    .offer {
+      font-size: 0.85rem;
+      color: #00b14f;
+    }
+
+    .scrolling-wrapper {
+      display: flex;
+      gap: 1rem; /* khoảng cách giữa các card */
+      overflow-x: auto;
+      padding-bottom: 1rem;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .scrolling-wrapper {
+      display: flex;
+      justify-content: space-between; /* hoặc center, evenly,... */
+      flex-wrap: wrap;
+      width: 100%; /* chiếm đủ chiều ngang */
+    }
+
+    .promo-carousel-wrapper {
+  position: relative;
+}
+
+.scrolling-wrapper {
+  display: flex;
+  gap: 1rem;
+  overflow-x: hidden; /* không cho tự cuộn ngang */
+  scroll-behavior: smooth;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.card.card-promo {
+  min-width: calc(25% - 0.75rem); /* 4 card chia đều, trừ khoảng cách */
+  flex: 0 0 auto;
+}
+
+.carousel-arrow {
+  position: absolute;
+  top: 35%;
+  transform: translateY(-50%);
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.carousel-arrow.left {
+  left: -18px;
+}
+
+.carousel-arrow.right {
+  right: -18px;
+}
+
+.carousel-arrow i {
+  font-size: 20px;
+}
+
+
+
+
+
+
+
+    .category-img {
+      border-radius: 10px;
+      object-fit: cover;
+      height: 160px;
+      width: 100%;
+    }
+    .category-title {
+      text-align: center;
+      margin-top: 8px;
+      font-weight: 500;
+    }.category-img {
+      border-radius: 10px;
+      object-fit: cover;
+      height: 160px;
+      width: 100%;
+    }
+    .category-title {
+      text-align: center;
+      margin-top: 8px;
+      font-weight: 500;
+    }
+
+    .see-all{
+    border: 1px solid #ccc;
+    padding: 0.5rem;
+    border-radius: 10px;
+    }
+
+    .see-all:hover{
+    border: 2px solid #F7665F;
+    padding: 0.5rem;
+    }
+
+    #geocoder-container .goongjs-ctrl-geocoder {
+    width: 100%;
+    min-width: 100%;
+    max-width: none; /* Quan trọng: Gỡ bỏ giới hạn chiều rộng mặc định */
+  }
+
+.mapboxgl-ctrl-geocoder--input {
+
+}
+.mapboxgl-ctrl-geocoder{
+    width: 100% !important;
+}
+
+.coordinates {
+background: rgba(0, 0, 0, 0.6); color: #fff; position: absolute;
+bottom: 10px; left: 10px; padding: 5px 10px; margin: 0;
+font-size: 11px; line-height: 18px; border-radius: 3px; z-index: 1000;
+}
+
+.title-highlight-red {
+  color: #E54D42; /* Một màu đỏ cam, màu của tương ớt, ấm áp */
+}
+
+.title-highlight-green {
+  color: #2A9D8F; /* Một màu xanh mòng két, cảm giác tươi mới, cao cấp */
+}
+
+.bi-patch-check-fill{
+    color: #FFBF00;
+}

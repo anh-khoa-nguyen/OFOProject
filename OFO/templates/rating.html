@@ -1,0 +1,248 @@
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/rating.css') }}">
+</head>
+{% extends 'layout/base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="review-container">
+
+        <!-- Header -->
+        <header class="review-header">
+            <h1>Đánh giá nhà hàng</h1>
+            <p>{{ restaurant.restaurant_name }}</p>
+        </header>
+
+        <form id="review-form" method="POST" action="{{ url_for('rating_page', order_id=order.id) }}"
+              enctype="multipart/form-data">
+            <div class="row g-4 align-items-start">
+                <!-- CỘT TRÁI: ĐÁNH GIÁ VÀ NHẬN XÉT -->
+                <div class="col-md-7">
+                    <!-- Đánh giá chất lượng -->
+                    <div class="mb-3">
+                        <label class="review-form-label" for="rating">
+                            <i class="fas fa-star star-color"></i> Chất lượng nhà hàng
+                        </label>
+                        <div class="interactive-star-rating">
+                            <input type="radio" id="star5" name="rating" value="5"/>
+                            <label for="star5">★</label>
+
+                            <input type="radio" id="star4" name="rating" value="4"/>
+                            <label for="star4">★</label>
+
+                            <input type="radio" id="star3" name="rating" value="3"/>
+                            <label for="star3">★</label>
+
+                            <input type="radio" id="star2" name="rating" value="2"/>
+                            <label for="star2">★</label>
+
+                            <input type="radio" id="star1" name="rating" value="1"/>
+                            <label for="star1">★</label>
+                        </div>
+                    </div>
+
+
+                    <!-- Nhận xét -->
+                    <div>
+                        <label for="commentTextarea" class="review-form-label">
+                            <i class="bi bi-chat-left-text-fill"></i>
+                            Nhận xét
+                        </label>
+                        <textarea class="form-control" id="commentTextarea" name="comment" rows="8"
+                                  placeholder="Chia sẻ cảm nhận của bạn..."></textarea>
+                    </div>
+                </div>
+
+                <!-- CỘT PHẢI: TẢI ẢNH -->
+                <!-- CỘT PHẢI: TẢI ẢNH -->
+                <div class="col-md-5">
+                    <label for="imageUpload" class="review-form-label">
+                        <i class="bi bi-image"></i> Thêm hình ảnh
+                    </label>
+                    <input type="file" id="imageUpload" name="images" class="d-none" accept="image/*" multiple>
+                    <label for="imageUpload" class="image-upload-wrapper">
+                        <div id="upload-prompt">
+                            <i class="bi bi-cloud-arrow-up"></i>
+                            <p class="mb-0 mt-2 text-muted">Nhấp để tải tối đa 3 ảnh</p>
+                        </div>
+                    </label>
+                    <div class="image-preview-container" id="image-preview-container"></div>
+                </div>
+            </div>
+
+            <!-- Nút Gửi -->
+            <div class="d-grid mt-4 pt-3">
+                <button type="submit" class="btn btn-primary btn-lg btn-submit-review">Gửi đánh giá</button>
+            </div>
+        </form>
+
+    </div>
+</div>
+{% endblock %}
+
+
+{% block scripts %}
+<!--<script>-->
+<!--    document.addEventListener('DOMContentLoaded', function () {-->
+<!--        const imageUploadInput = document.getElementById('imageUpload');-->
+<!--        const previewContainer = document.getElementById('image-preview-container');-->
+<!--        const uploadPrompt = document.getElementById('upload-prompt');-->
+
+<!--        let selectedFiles = [];-->
+
+<!--        imageUploadInput.addEventListener('change', function (event) {-->
+<!--            const files = Array.from(event.target.files);-->
+<!--            const totalFiles = selectedFiles.length + files.length;-->
+
+<!--            if (totalFiles > 3) {-->
+<!--                alert("Chỉ được chọn tối đa 3 ảnh.");-->
+<!--                return;-->
+<!--            }-->
+
+<!--            files.forEach(file => {-->
+<!--                const reader = new FileReader();-->
+<!--                reader.onload = function (e) {-->
+<!--                    const previewBox = document.createElement('div');-->
+<!--                    previewBox.classList.add('image-preview-box');-->
+
+<!--                    const img = document.createElement('img');-->
+<!--                    img.src = e.target.result;-->
+
+<!--                    const removeBtn = document.createElement('button');-->
+<!--                    removeBtn.classList.add('remove-image-btn');-->
+<!--                    removeBtn.innerText = '×';-->
+<!--                    removeBtn.addEventListener('click', function () {-->
+<!--                        previewBox.remove();-->
+<!--                        selectedFiles = selectedFiles.filter(f => f !== file);-->
+<!--                        if (selectedFiles.length === 0) {-->
+<!--                            uploadPrompt.classList.remove('d-none');-->
+<!--                        }-->
+<!--                    });-->
+
+<!--                    previewBox.appendChild(img);-->
+<!--                    previewBox.appendChild(removeBtn);-->
+<!--                    previewContainer.appendChild(previewBox);-->
+<!--                };-->
+<!--                reader.readAsDataURL(file);-->
+<!--                selectedFiles.push(file);-->
+<!--                uploadPrompt.classList.add('d-none');-->
+<!--            });-->
+
+<!--            imageUploadInput.value = '';-->
+<!--        });-->
+<!--    });-->
+<!--</script>-->
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const imageUploadInput = document.getElementById('imageUpload');
+        const previewContainer = document.getElementById('image-preview-container');
+        const uploadPrompt = document.getElementById('upload-prompt');
+        const reviewForm = document.getElementById('review-form');
+
+        let selectedFiles = [];
+
+        imageUploadInput.addEventListener('change', function (event) {
+            const files = Array.from(event.target.files);
+            const totalFiles = selectedFiles.length + files.length;
+
+            if (totalFiles > 3) {
+                alert("Chỉ được chọn tối đa 3 ảnh.");
+                imageUploadInput.value = '';
+                return;
+            }
+
+            files.forEach(file => {
+                selectedFiles.push(file);
+                // ... (code preview ảnh giữ nguyên) ...
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const previewBox = document.createElement('div');
+                    previewBox.classList.add('image-preview-box');
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    const removeBtn = document.createElement('button');
+                    removeBtn.classList.add('remove-image-btn');
+                    removeBtn.innerText = '×';
+                    removeBtn.type = 'button';
+                    removeBtn.addEventListener('click', function () {
+                        previewBox.remove();
+                        selectedFiles = selectedFiles.filter(f => f !== file);
+                        if (selectedFiles.length === 0) {
+                            uploadPrompt.classList.remove('d-none');
+                        }
+                        // DEBUG: Kiểm tra mảng sau khi xóa
+                        console.log('Mảng sau khi xóa:', selectedFiles);
+                    });
+                    previewBox.appendChild(img);
+                    previewBox.appendChild(removeBtn);
+                    previewContainer.appendChild(previewBox);
+                };
+                reader.readAsDataURL(file);
+            });
+
+            uploadPrompt.classList.add('d-none');
+            imageUploadInput.value = '';
+
+            // DEBUG: Kiểm tra mảng sau khi thêm
+            console.log('Mảng sau khi thêm:', selectedFiles);
+        });
+
+        reviewForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const form = event.target;
+            const submitButton = form.querySelector('button[type="submit"]');
+            const originalButtonText = submitButton.innerHTML;
+
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang gửi...';
+
+            const formData = new FormData();
+            formData.append('rating', form.querySelector('input[name="rating"]:checked')?.value || '');
+            formData.append('comment', form.querySelector('textarea[name="comment"]').value);
+
+            // ===================================================================
+            // ĐÂY LÀ PHẦN KIỂM TRA QUAN TRỌNG NHẤT
+            // ===================================================================
+            console.log('--- BẮT ĐẦU GỬI FORM ---');
+            console.log('Các file trong mảng selectedFiles ngay trước khi gửi:', selectedFiles);
+
+            selectedFiles.forEach(file => {
+                formData.append('images', file);
+            });
+
+            // DEBUG: Kiểm tra nội dung của FormData trước khi gửi
+            // Bạn không thể console.log(formData) trực tiếp, phải lặp qua nó
+            console.log('Nội dung FormData sẽ được gửi đi:');
+            for (let [key, value] of formData.entries()) {
+                console.log(`${key}:`, value);
+            }
+            // ===================================================================
+
+            fetch(form.action, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    window.location.href = "{{ url_for('restaurant_detail', restaurant_id=restaurant.id) }}";
+                } else {
+                    alert('Lỗi: ' + data.message);
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = originalButtonText;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Đã có lỗi mạng xảy ra. Vui lòng thử lại.');
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalButtonText;
+            });
+        });
+    });
+    </script>
+
+{% endblock %}

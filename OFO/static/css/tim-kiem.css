@@ -1,0 +1,209 @@
+  .search-box {
+    border-radius: 50px;
+    padding: 0.75rem 1rem;
+    background-color: #f6f6f6;
+  }
+
+  .category-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 10px;
+    width: 160px;
+    height: 100px;
+  }
+
+  .category-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: brightness(0.6);
+  }
+
+  .category-card .overlay-text {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;   /* căn giữa theo chiều dọc */
+  justify-content: center; /* căn giữa theo chiều ngang */
+  color: white;
+  font-weight: 600;
+  font-size: 16px;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.3); /* Nếu muốn làm mờ nền chút */
+}
+
+  .category-card span {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;                      /* Căn giữa theo chiều ngang */
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  z-index: 2;
+  white-space: nowrap;            /* Ngăn chữ xuống dòng nếu cần */
+}
+
+  .category-scroll {
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .category-scroll .category-card {
+    display: inline-block;
+    margin-right: 1rem;
+  }
+
+
+  .promo-carousel-wrapper {
+  position: relative;
+}
+
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: white;
+  border: none;
+  font-size: 1.5rem;
+  z-index: 10;
+  padding: 0.5rem;
+  border-radius: 50%;
+  box-shadow: 0 0 5px rgba(0,0,0,0.2);
+  cursor: pointer;
+}
+
+.carousel-arrow.left {
+  left: 0;
+}
+
+.carousel-arrow.right {
+  right: 0;
+}
+
+.scrolling-wrapper {
+  display: flex;
+      justify-content: flex-start; /* hoặc center, evenly,... */
+      flex-wrap: wrap;
+      width: 100%; /* chiếm đủ chiều ngang */
+}
+
+.food-card {
+  min-width: 18rem;
+  flex: 0 0 auto;
+}
+
+.card-promo {
+  min-width: 18rem;
+  margin-right: 1rem;
+}
+
+.card.card-promo {
+  min-width: calc(25% - 0.75rem); /* 4 card chia đều, trừ khoảng cách */
+  flex: 0 0 auto;
+}
+
+.img-food {
+   border-radius: 12px;
+      object-fit: cover;
+      width: 100%;
+      height: 140px;
+}
+
+.promo-tag {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  background-color: red;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  border-radius: 0.25rem;
+}
+
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  background-color: white;
+  border: none;
+  font-size: 1.5rem;
+  padding: 0.5rem;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+}
+.carousel-arrow.left {
+  left: -10px;
+}
+.carousel-arrow.right {
+  right: -10px;
+}
+
+.category-card-link .overlay-text.active {
+    background-color: rgba(233, 30, 99, 0.8);
+    color: white;
+    font-weight: bold;
+}
+
+.category-card-link .img-fluid.category-active-border {
+    border: 3px solid #E91E63;
+    border-radius: 0.5rem;
+}
+.category-scroll .category-card {
+    display: block;
+    position: relative;
+    border-radius: 16px;
+    overflow: hidden;
+    text-decoration: none;
+    flex-shrink: 0;
+    width: 120px;
+    height: 120px;
+    transition: transform 0.2s ease-in-out;
+}
+
+.category-scroll .category-card:hover {
+    transform: scale(1.05);
+}
+
+.category-scroll .category-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: brightness(0.7);
+}
+
+.category-scroll .category-card .overlay-text {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    color: white;
+    font-weight: bold;
+    text-align: center;
+    font-size: 1rem;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.7);
+}
+
+.category-scroll .category-card.all-category {
+    background-color: #E91E63;
+}
+
+.category-scroll .category-card.all-category .overlay-text {
+    top: 50%;
+    left: 50%;
+    bottom: auto;
+    transform: translate(-50%, -50%);
+    width: 100%;
+}
+
+
+.category-scroll .category-card.active {
+    border: 3px solid #E91E63;
+}
+
+.category-scroll .category-card.active.all-category {
+     box-shadow: 0 0 0 3px white, 0 0 0 6px #E91E63;
+}

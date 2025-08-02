@@ -1,0 +1,201 @@
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/Restaurant/Register.css') }}"/>
+</head>
+
+{% extends 'layout/base.html' %}
+{% block content %}
+<div class="signup-page">
+    <div class="signup-container">
+        <h1>Tạo Tài Khoản Quản Lý Nhà Hàng</h1>
+
+        <form id="register-form" method="POST" enctype="multipart/form-data">
+
+            <!-- Hộp chứa 2 cột -->
+            <div class="form-columns-wrapper">
+
+                <!-- ========== CỘT BÊN TRÁI ========== -->
+                <div class="form-column">
+                    <h3 class="column-title-blue">Thông tin tài khoản</h3>
+                    <div class="input-group">
+                    <div class="input-wrapper">
+                        <!-- 'name' của input này sẽ được dùng cho User.name -->
+                        <input type="text" name="username" placeholder="Tên người dùng:" required>
+                        <span class="input-icon">...</span>
+                    </div>
+                </div>
+                    <div class="input-group">
+                        <div class="input-wrapper">
+                            <input type="text" name="res-name" placeholder="Tên nhà hàng:" required>
+                            <span class="input-icon"><svg><!-- ... SVG icon ... --></svg></span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <div class="input-wrapper">
+                            <input type="email" name="email" placeholder="Email:" required>
+                            <span class="input-icon"><svg><!-- ... SVG icon ... --></svg></span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <div class="input-wrapper">
+                            <input type="phone" name="phone" placeholder="Số điện thoại:" required>
+                            <span class="input-icon"><svg><!-- ... SVG icon ... --></svg></span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <div class="input-wrapper">
+                            <input type="password" name="password" placeholder="Mật khẩu:" required>
+                            <span class="input-icon"><svg><!-- ... SVG icon ... --></svg></span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <div class="input-wrapper">
+                            <input type="password" name="confirm-password" placeholder="Xác nhận Mật khẩu:" required>
+                            <span class="input-icon"><svg><!-- ... SVG icon ... --></svg></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========== CỘT BÊN PHẢI ========== -->
+                <div class="form-column">
+                    <h3 class="column-title-green">Chi tiết nhà hàng</h3>
+                    <div class="input-group">
+                        <div class="input-wrapper">
+                            <input type="text" name="address" placeholder="Địa chỉ:" required>
+                            <span class="input-icon"><svg><!-- ... SVG icon ... --></svg></span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+    <div class="input-wrapper">  <!-- Thêm wrapper -->
+        <select name="category_id" required>
+            <option value="" disabled selected>-- Chọn loại hình nhà hàng --</option>
+            {% for cat in categories %}
+                <option value="{{ cat.id }}">{{ cat.name }}</option>
+            {% endfor %}
+        </select>
+        <!-- Thêm Icon -->
+        <span class="input-icon">
+            <!-- Thay bằng SVG icon category của bạn -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M2.5.5A.5.5 0 0 1 3 0h10a.5.5 0 0 1 .5.5c0 .538-.012 1.05-.034 1.536A.5.5 0 0 1 13 2.5v1.118a.5.5 0 0 1-.276.447l-2 1.333a.5.5 0 0 1-.448 0L7.95 4.065a.5.5 0 0 1-.205-.125L6.5 2.5 5.5 4l-1-1L2.5 5V.5z"/>
+                <path d="M1 2.5A1.5 1.5 0 0 0-.5 4v10A1.5 1.5 0 0 0 1 15.5h14a1.5 1.5 0 0 0 1.5-1.5V4A1.5 1.5 0 0 0 15 2.5H1zM2 4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4z"/>
+            </svg>
+        </span>
+    </div>
+</div>
+                    <div class="input-group">
+                        <div class="input-wrapper">
+                            <textarea name="description" placeholder="Mô tả ngắn:" rows="4"></textarea>
+                            <span class="input-icon"><svg><!-- ... SVG icon ... --></svg></span>
+                        </div>
+                    </div>
+                    <div class="time-group">
+                        <div class="input-group">
+                            <div class="input-wrapper">
+                                <input type="text" onfocus="(this.type='time')" onblur="(this.type='text')" name="open-time" placeholder="Giờ mở cửa:" required>
+                                <span class="input-icon right"><svg><!-- ... SVG icon ... --></svg></span>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <div class="input-wrapper">
+                                <input type="text" onfocus="(this.type='time')" onblur="(this.type='text')" name="close-time" placeholder="Giờ đóng cửa:" required>
+                                <span class="input-icon right"><svg><!-- ... SVG icon ... --></svg></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="input-group no-label">
+                        <div class="file-upload-group">
+                            <label for="avatar-upload" class="file-upload-label">
+                                <input type="file" id="avatar-upload" name="avatar" hidden>
+                                Ảnh đại diện
+                            </label>
+                            <label for="cover-upload" class="file-upload-label">
+                                <input type="file" id="cover-upload" name="cover" hidden>
+                                Ảnh bìa
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div> <!-- Kết thúc vùng chứa 2 cột -->
+
+            <!-- Nút bấm và liên kết nằm ngoài vùng 2 cột -->
+            <div class="button-wrapper">
+                <button type="submit" class="signup-button">Đăng kí ngay</button>
+            </div>
+
+        </form>
+
+        <div class="bottom-link">
+            <p>Đã có tài khoản? <a href="{{ url_for('login_view') }}">Đăng nhập</a></p>
+        </div>
+
+    </div>
+</div>
+
+
+{% endblock %}
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('register-form');
+    const signupBtn = document.querySelector('.signup-button');
+
+    if (signupBtn && form) {
+        signupBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            // Xóa các thông báo lỗi cũ
+            form.querySelectorAll('.error-message').forEach(el => el.remove());
+            form.querySelectorAll('input, textarea').forEach(input => {
+                input.classList.remove('input-error');
+            });
+
+            let hasError = false;
+
+            // Kiểm tra tất cả các input và textarea có required
+            const requiredFields = form.querySelectorAll('input[required], textarea[required]');
+
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    hasError = true;
+
+                    // Thêm class lỗi
+                    field.classList.add('input-error');
+
+                    // Tạo thông báo lỗi
+                    const error = document.createElement('div');
+                    error.className = 'error-message';
+                    error.textContent = 'Vui lòng điền thông tin này.';
+
+                    // Chèn lỗi sau ô input
+                    field.parentNode.appendChild(error);
+                }
+            });
+
+            if (hasError) return;
+
+            // Nếu không có lỗi thì gửi form bằng fetch
+            const formData = new FormData(form);
+            for (let [key, value] of formData.entries()) {
+    console.log(`${key}:`, value);
+}
+            fetch('/register_restaurant', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = "/login";
+                } else {
+                    alert("❌ Đăng ký thất bại: " + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Lỗi:', error);
+                alert("❌ Có lỗi xảy ra khi gửi dữ liệu.");
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

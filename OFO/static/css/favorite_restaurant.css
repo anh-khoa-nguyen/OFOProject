@@ -1,0 +1,101 @@
+/* --- Main Content --- */
+        .page-title .icon-heart {
+            color: #d9534f;
+            font-size: 2.25rem;
+        }
+
+        .search-box .form-control:focus {
+             box-shadow: 0 0 0 0.25rem rgba(240, 98, 146, 0.25);
+             border-color: var(--strong-pink);
+        }
+
+        /* --- Restaurant Card --- */
+        .restaurant-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease-in-out;
+            background-color: #fff;
+        }
+        .restaurant-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.07);
+        }
+        .restaurant-card .card-body {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .restaurant-card .info-line {
+            display: flex;
+            align-items: center;
+            color: #6c757d;
+            margin-bottom: 0.75rem;
+        }
+        .restaurant-card .info-line i {
+            font-size: 1.1rem;
+            margin-right: 0.75rem;
+            width: 20px; /* Align icons */
+            text-align: center;
+        }
+        .restaurant-card .star-rating i {
+            color: #f5c542;
+        }
+        .btn-menu {
+            background-color: #E91E63 !important;
+            color: white !important;
+            font-weight: 800;
+            border-color: var(--strong-pink);
+        }
+        .btn-menu:hover {
+            background-color: #ec407a;
+            border-color: #ec407a;
+        }
+        .btn-unfavorite {
+            color: var(--dark-text);
+            border-color: #ced4da;
+        }
+        .btn-unfavorite:hover {
+            background-color: #e9ecef;
+            border-color: #adb5bd;
+            color: var(--dark-text);
+        }
+
+        .restaurant-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease-in-out;
+            background-color: #fff;
+            display: flex; /* Thêm để đảm bảo card co giãn đúng cách */
+            flex-direction: column;
+        }
+        .restaurant-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.07);
+        }
+        .restaurant-card .card-body {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1; /* Đảm bảo card-body chiếm hết không gian còn lại */
+        }
+        .restaurant-card .info-line {
+            display: flex;
+            align-items: center;
+            color: #6c757d;
+            margin-bottom: 0.75rem;
+        }
+        .restaurant-card .info-line i {
+            font-size: 1.1rem;
+            margin-right: 0.75rem;
+            width: 20px;
+            text-align: center;
+        }
+        .restaurant-card .star-rating i {
+            color: #f5c542;
+        }
+        /* ... các style khác ... */
+
+        /* CSS MỚI ĐƯỢC THÊM VÀO */
+        .restaurant-card .card-img-top {
+            height: 180px; /* Đặt chiều cao cố định cho tất cả hình ảnh */
+            object-fit: cover; /* Đảm bảo hình ảnh lấp đầy không gian mà không bị méo */
+        }

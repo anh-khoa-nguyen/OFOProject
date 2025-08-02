@@ -1,0 +1,1213 @@
+/* 1. Tùy chỉnh Breadcrumb */
+.breadcrumb {
+    --bs-breadcrumb-divider: '>';
+}
+
+.breadcrumb-item a {
+    text-decoration: none;
+    color: #E91E63;
+    font-weight: 500;
+}
+
+.breadcrumb-item.active {
+    color: #E91E63;
+}
+
+/* 2. Tùy chỉnh tiêu đề và các thông tin meta */
+.restaurant-title {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.restaurant-meta-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.5rem;
+    color: #5a5a5a;
+    font-size: 0.95rem;
+}
+
+.restaurant-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* 3. Khu vực khuyến mãi */
+.promo-section {
+    color: #E91E63;
+    font-weight: 500;
+}
+
+.promo-section a {
+    color: #E91E63;
+    font-weight: 700;
+    text-decoration: none;
+}
+.category-navbar-wrapper {
+    position: sticky;
+    top: 0;
+    background-color: white;
+    z-index: 1020;
+    border-bottom: 1px solid #e8e8e8;
+}
+
+.category-navbar {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.category-nav-list {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 1.5rem;
+    overflow-x: auto;
+    padding: 0.5rem 0;
+    scroll-behavior: smooth;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+.category-nav-list::-webkit-scrollbar {
+    display: none;
+}
+
+
+.category-nav-item {
+    padding: 0.5rem 0;
+    color: #333;
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+    border-bottom: 3px solid transparent;
+    transition: color 0.2s;
+}
+
+
+.category-nav-item:hover {
+    color: #E91E63;
+}
+
+
+.category-nav-item.active {
+    color: #E91E63;
+    font-weight: 700;
+    border-bottom-color: #E91E63;
+}
+
+
+
+/* Các nút mũi tên cuộn (giữ nguyên) */
+.scroll-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: white;
+    border: 1px solid #e8e8e8;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 2;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.scroll-btn.left {
+    left: -16px;
+}
+.scroll-btn.right {
+    right: -16px;
+}
+
+/* ---- 5. Danh sách sản phẩm (Product Grid) ---- */
+.menu-section {
+    padding-top: 2.5rem; /* Tạo khoảng cách với thanh nav dính ở trên */
+}
+
+.menu-section-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+}
+
+/* Thẻ sản phẩm */
+.product-card {
+    background-color: #fff;
+    border: 1px solid #f0f0f0;
+    border-radius: 8px;
+    padding: 1rem;
+    height: 100%; /* QUAN TRỌNG: Để các card trên cùng 1 hàng cao bằng nhau */
+    display: flex; /* Bắt đầu dùng flexbox cho layout ngang bên trong */
+    gap: 1rem; /* Khoảng cách giữa ảnh và nội dung */
+    transition: box-shadow 0.2s;
+}
+.product-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.product-card-img-wrapper {
+    width: 112px;
+    height: 112px;
+    flex-shrink: 0; /* Ngăn ảnh bị co lại */
+    position: relative;
+}
+.product-card-img-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.product-card-promo-tag {
+    position: absolute;
+    top: 8px;
+    left: -4px;
+    background-color: #ef4444;
+    color: white;
+    padding: 2px 8px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    border-radius: 0 4px 4px 0;
+}
+
+.product-card-body {
+    display: flex;
+    flex-direction: column; /* Sắp xếp nội dung theo chiều dọc */
+    flex-grow: 1; /* Cho phép phần nội dung chiếm hết không gian còn lại */
+}
+
+.product-card-title {
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+.product-card-desc {
+    font-size: 0.875rem;
+    color: #6c757d;
+    flex-grow: 1; /* QUAN TRỌNG: Đẩy phần giá tiền xuống dưới cùng */
+}
+
+.product-card-footer {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.product-card-price .savings-tag {
+    background-color: #fff0e2;
+    color: #fa8219;
+    font-size: 0.8rem;
+    padding: 3px 8px;
+    border-radius: 4px;
+    display: inline-block;
+}
+.product-card-price .current-price {
+    font-weight: 700;
+}
+.product-card-price .original-price {
+    text-decoration: line-through;
+    color: #b5b5b5;
+    font-size: 0.85rem;
+    margin-left: 0.5rem;
+}
+
+.btn-add-to-cart {
+    background-color: #E91E63;
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 1.5rem;
+    line-height: 0;
+    padding-bottom: 2px;
+
+    border: none;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform 0.2s;
+}
+
+.btn-add-to-cart:hover {
+    transform: scale(1.1);
+}
+.btn-add-to-dish_group {
+    background-color: #E91E63;
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 1.5rem;
+    line-height: 0;
+    padding-bottom: 2px;
+
+    border: none;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform 0.2s;
+}
+
+.btn-add-to-dish_group:hover {
+    transform: scale(1.1);
+}
+.product-card {
+    position: relative;
+}
+.btn-delete-group{
+    border: none;
+    color: #E91E63;
+    font-size: 18px;
+    background: white;
+    padding: 10px;
+
+}
+.btn-delete-dish {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: transparent;
+    border: none;
+    color: #E91E63;
+    font-size: 18px;
+    cursor: pointer;
+}
+/* Tùy chỉnh Offcanvas */
+.offcanvas {
+    /* Đặt chiều rộng cho offcanvas */
+    width: 450px !important;
+}
+.offcanvas-body {
+    /* Quan trọng: Sử dụng flexbox để tạo sticky footer */
+    padding: 2rem !important;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+.scrollable-content {
+    /* Phần nội dung sẽ chiếm hết không gian và có thể cuộn */
+    flex-grow: 1;
+    overflow-y: auto;
+}
+ /* Tùy chỉnh thanh cuộn cho đẹp hơn */
+.scrollable-content::-webkit-scrollbar {
+    width: 6px;
+}
+.scrollable-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+.scrollable-content::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 6px;
+}
+.scrollable-content::-webkit-scrollbar-thumb:hover {
+    background: #aaa;
+}
+
+.product-main-info {
+
+}
+.product-image {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+/* Các khu vực tùy chọn */
+.options-section {
+    padding: 1.25rem 2rem;
+    border-top: 8px solid #f0f0f0; /* Đường kẻ ngang dày để phân tách */
+}
+
+.options-section .form-check {
+    padding-left: 0; /* Ghi đè padding mặc định */
+}
+.options-section .form-check-input {
+    margin-left: 20px;
+    margin-top: 0.1em;
+    padding: 8px !important;
+}
+.options-section .form-check-label {
+    margin-left: 1em; /* Tạo khoảng trống để thẳng hàng với checkbox */
+}
+
+/* Footer của Offcanvas */
+.offcanvas-footer {
+    padding: 1rem 1.5rem;
+    background-color: #fff;
+    border-top: 1px solid #e9e9e9;
+    flex-shrink: 0; /* Ngăn footer bị co lại */
+}
+.quantity-selector .btn {
+    border-radius: 50% !important;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #ddd;
+    background-color: #fff;
+    color: #000;
+}
+.quantity-selector input {
+    border: none;
+    text-align: center;
+    width: 40px;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+.quantity-selector input:focus {
+    outline: none;
+}
+
+.btn-pink{
+    background-color: #E91E63 !important;
+    color: white !important;
+}
+
+/*Restaurant_main*/
+.btn-add-to-cart {
+    background-color: #E91E63;
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 1.5rem;
+    line-height: 0;
+    padding-bottom: 2px;
+
+    border: none;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform 0.2s;
+}
+
+.btn-add-to-cart:hover {
+    transform: scale(1.1);
+}
+.btn-add-to-dish_group {
+    background-color: #E91E63;
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 1.5rem;
+    line-height: 0;
+    padding-bottom: 2px;
+
+    border: none;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform 0.2s;
+}
+
+.btn-add-to-dish_group:hover {
+    transform: scale(1.1);
+}
+/* =================================================================== */
+/* ============= CSS HIỆN ĐẠI & CHUYÊN NGHIỆP CHO MODAL ============= */
+/* =================================================================== */
+
+/* 1. LỚP PHỦ VÀ CONTAINER CHÍNH */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+
+    /* Mặc định ẩn modal đi, chuẩn bị cho animation */
+    visibility: hidden;
+    opacity: 0;
+
+    /* Hiệu ứng chuyển động mượt mà cho việc ẩn/hiện */
+    transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.35s;
+
+    /* Dùng flexbox để căn giữa nội dung một cách hoàn hảo */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem; /* Chừa khoảng trống ở màn hình nhỏ */
+}
+
+/* Khi modal có class 'show', nó sẽ hiện ra */
+.modal.show {
+    display: flex !important;
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Lớp phủ màu tối phía sau */
+.modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* Một màu đen hơi ngả xanh, hiện đại hơn màu đen tuyền */
+    background-color: rgba(10, 25, 47, 0.7);
+    cursor: pointer;
+}
+
+
+/* 2. KHUNG NỘI DUNG CỦA MODAL */
+.modal-content {
+    position: relative;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: 520px;
+    padding: 2.5rem; /* Tăng padding để thoáng hơn */
+    z-index: 1001;
+    text-align: left;
+
+    /* Hiệu ứng xuất hiện từ trên xuống */
+    transform: translateY(-30px);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Khi modal hiện ra, nội dung sẽ trượt vào vị trí */
+.modal.show .modal-content {
+    transform: translateY(0);
+}
+
+
+/* 3. CÁC THÀNH PHẦN BÊN TRONG MODAL */
+
+/* Tiêu đề modal */
+.modal-content h2 {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 1.75rem; /* 28px */
+    font-weight: 600;
+    color: #1a202c; /* Màu chữ gần đen, dịu mắt */
+    margin-top: 0;
+    margin-bottom: 1.5rem; /* 24px */
+    padding-bottom: 1rem; /* 16px */
+    border-bottom: 1px solid #e2e8f0; /* Đường kẻ ngang mờ */
+    text-align: center;
+}
+
+/* Nút đóng (dấu X) */
+.close-modal {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 36px;
+    height: 36px;
+    font-size: 1.5rem;
+    line-height: 36px;
+    text-align: center;
+    color: #E91E63; /* Màu xám */
+    background-color: #f1f5f9; /* Nền xám nhạt */
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+
+/* Kiểu dáng cho form */
+.form-group {
+    margin-bottom: 1.75rem; /* Tăng khoảng cách */
+}
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #4a5568;
+}
+.form-group input[type="text"] {
+    display: block;
+    width: 100%;
+    padding: 0.875rem 1rem; /* 14px 16px */
+    font-size: 1rem;
+    color: #2d3748;
+    background-color: #f7fafc; /* Nền input hơi xám */
+    border: 2px solid #e2e8f0; /* Viền dày hơn một chút */
+    border-radius: 8px;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Vầng sáng khi focus vào ô input */
+.form-group input[type="text"]:focus {
+    outline: none;
+    border-color: #4299e1; /* Màu xanh dương hiện đại */
+    background-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+}
+
+/* Nút Submit */
+.btn-submit {
+    display: block;
+    width: 100%;
+    padding: 0.875rem 1rem;
+    border: none;
+    border-radius: 8px;
+    color: black;
+    background-color: #E91E63;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 4px 14px 0 rgba(49, 130, 206, 0.39);
+}
+.btn-submit:hover {
+    background-color: #E91E63; /* Đậm hơn khi hover */
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px 0 rgba(49, 130, 206, 0.5);
+}
+.add-dish-btn {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    display: inline-block;
+    background-color: #FFF0F5;
+    color: #E91E63;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background-color 0.2s ease-in-out;
+    margin: 10px;
+  }
+
+  .add-dish-btn:hover {
+    background-color:#F8BBD0;
+  }
+  //modal thêm món ăn
+  .modal-content h2 {
+    margin-top: 0;
+    margin-bottom: 25px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box; /* Quan trọng */
+}
+
+.btn-submit {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-submit:hover {
+    background-color: #0056b3;
+}
+
+.btn-sm{
+    border-radius: 15px !important;
+}
+
+.toast-notification {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 25px;
+    z-index: 1050;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s, visibility 0.5s;
+}
+.toast-notifications {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #E91E63;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 25px;
+    z-index: 1050;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s, visibility 0.5s;
+}
+.toast-notifications.show {
+    opacity: 1;
+    visibility: visible;
+}
+.toast-notification.show {
+    opacity: 1;
+    visibility: visible;
+}
+<<<<<<< HEAD
+.restaurant-info-block .restaurant-management-nav {
+    width: 100%;
+    padding-bottom: 1rem;
+    margin-top: 1.5rem;
+    margin-bottom: 2rem;
+    text-align: left;
+}
+
+/* Selector này cụ thể hơn, sẽ ghi đè lên style mặc định */
+.restaurant-info-block .restaurant-management-nav ul {
+    display: inline-flex !important; /* Dùng !important để đảm bảo chiến thắng */
+    align-items: center;
+    list-style: none !important; /* Quan trọng: Xóa dấu chấm tròn */
+    padding: 0;
+    margin: 0;
+    gap: 1.5rem;
+}
+
+/* Selector này cụ thể hơn, sẽ ghi đè lên style mặc định */
+.restaurant-info-block .restaurant-management-nav li {
+    display: block !important; /* Bỏ qua 'display: list-item' mặc định */
+    padding-left: 1.5rem;
+    border-left: 1px solid #ced4da; /* Tạo dấu gạch đứng */
+}
+
+/* Mục đầu tiên không cần dấu gạch đứng bên trái */
+.restaurant-info-block .restaurant-management-nav li:first-child {
+    border-left: none;
+    padding-left: 0;
+}
+
+.restaurant-info-block .restaurant-management-nav a {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: #495057;
+    font-weight: 500;
+    font-size: 1.1rem;
+    transition: color 0.2s ease-in-out;
+}
+
+.restaurant-info-block .restaurant-management-nav a:hover,
+.restaurant-info-block .restaurant-management-nav a.active {
+    color: #E91E63; /* Màu xanh nổi bật */
+    font-weight: 700;
+}
+
+.restaurant-info-block .restaurant-management-nav a i {
+    margin-right: 8px;
+    font-size
+}
+#dynamicFormOffcanvas {
+    --bs-offcanvas-width: 500px;
+}
+#dynamicFormOffcanvas .offcanvas-header {
+    background-color: #FFF0F5;
+    border-bottom: 2px solid #E91E63;
+}
+#dynamicFormOffcanvas .offcanvas-title {
+    font-weight: 600;
+    color: #E91E63;
+}
+#dynamicFormOffcanvas .offcanvas-body {
+    background-color: #fff;
+    padding: 1.5rem;
+}
+
+/* --- 2. Thiết kế cho các KHỐI (section) trong form --- */
+.form-section {
+    background-color: #FFF0F5;  /* << Nền hồng rất nhạt >> */
+    border: 1px solid #F8BBD0;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+.form-section-title {
+    font-weight: 600;
+    color: #c2185b; /* Màu hồng tối hơn để dễ đọc */
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #F8BBD0;
+}
+
+/* --- 3. Tùy chỉnh các ô input và label --- */
+.form-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #495057;
+}
+.form-control:focus {
+    border-color: #E91E63;
+    box-shadow: 0 0 0 0.25rem rgba(233, 30, 99, 0.25); /* << Đổ bóng hồng khi focus >> */
+}
+
+/* --- 4. Tùy chỉnh cho nút gạt "Bắt buộc" --- */
+.form-switch {
+    display: flex;
+    justify-content: space-between; /* Đẩy label và nút gạt ra hai bên */
+    align-items: center;
+    padding-left: 0 !important; /* Ghi đè padding mặc định của Bootstrap */
+}
+.form-switch .form-check-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #495057;
+}
+.form-switch .form-check-input {
+    width: 3.25em;
+    height: 1.6em;
+    cursor: pointer;
+    margin-left: 1em;
+}
+/* Nút gạt sẽ có màu hồng khi được bật */
+.form-switch .form-check-input:checked {
+    background-color: #E91E63;
+    border-color: #E91E63;
+}
+
+
+/* --- 5. Các thẻ lựa chọn động --- */
+.option-card { /* Đây là tên class mới cho các thẻ lựa chọn */
+    background-color: #fff; /* Nền trắng để nổi bật trên nền hồng của section */
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    position: relative;
+    transition: all 0.2s ease-in-out;
+}
+.option-card:hover {
+    border-color: #E91E63;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+.btn-delete-option {
+    position: absolute;
+    top: 0.5rem; right: 0.5rem; width: 28px; height: 28px;
+    border-radius: 50%; border: none; background-color: #e9ecef; color: #6c757d;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s ease;
+}
+.btn-delete-option:hover {
+    background-color: #E91E63; color: white; transform: scale(1.1);
+}
+.option-card .form-label {
+    font-size: 0.85rem; margin-bottom: 0.25rem;
+}
+
+
+/* --- 6. Nút "Thêm Lựa Chọn" và "Lưu" --- */
+#addInputButton {
+    border: 2px dashed #E91E63;
+    color: #E91E63;
+    background-color: transparent; /* Nền trong suốt trên nền hồng của section */
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+#addInputButton:hover {
+    background-color: #E91E63;
+    color: white;
+    border-style: solid;
+}
+
+#dynamicFormOffcanvas .offcanvas-footer {
+    padding: 1rem 1.5rem;
+    background-color: #fff;
+    border-top: 1px solid #e9ecef;
+}
+#dynamicFormOffcanvas .btn-success {
+    background: #E91E63;
+    border-color: #E91E63;
+    font-weight: 600;
+    padding: 0.75rem;
+    transition: all 0.2s ease-in-out;
+}
+#dynamicFormOffcanvas .btn-success:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(233, 30, 99, 0.4);
+}
+#editOptionGroupOffcanvas {
+    --bs-offcanvas-width: 500px;
+}
+#editOptionGroupOffcanvas .offcanvas-header {
+    background-color: #e7f1ff; /* Nền xanh dương rất nhạt */
+    border-bottom: 2px solid #E91E63; /* Đường viền xanh dương đậm */
+}
+#editOptionGroupOffcanvas .offcanvas-title {
+    font-weight: 600;
+    color: #E91E63; /* Chữ màu xanh dương đậm */
+}
+#editOptionGroupOffcanvas .offcanvas-body {
+    background-color: #fff;
+    padding: 1.5rem;
+}
+
+/* --- 2. Style cho input và label (Kế thừa từ các class chung) --- */
+/* Các class như .form-label, .form-control sẽ tự động được áp dụng,
+   nhưng chúng ta sẽ tùy chỉnh hiệu ứng :focus cho phù hợp với tông màu xanh */
+#editOptionGroupOffcanvas .form-control:focus {
+    border-color: #E91E63;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); /* Đổ bóng xanh khi focus */
+}
+
+/* --- 3. Style cho nút gạt "Bắt buộc" --- */
+/* Class .form-switch sẽ được áp dụng, chỉ cần đổi màu khi được bật */
+#editOptionGroupOffcanvas .form-switch .form-check-input:checked {
+    background-color: #E91E63;
+    border-color: #E91E63;
+}
+
+/* --- 4. Style cho các thẻ lựa chọn động --- */
+/* Class chung .option-card sẽ được áp dụng, chỉ cần tùy chỉnh màu khi hover */
+#editOptionGroupOffcanvas .option-card:hover {
+    border-color: #E91E63; /* Viền xanh khi hover */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+/* Nút xóa vẫn nên có màu đỏ/hồng để cảnh báo, nên ta giữ nguyên style cũ cho nó */
+#editOptionGroupOffcanvas .btn-delete-option:hover {
+    background-color: #dc3545; /* Màu đỏ nguy hiểm */
+    color: white;
+    transform: scale(1.1);
+}
+.btn-pink {
+    background-color: #E91E63;
+    border-color: #E91E63;
+    color: white; /* Đừng quên đổi màu chữ cho dễ đọc */
+}
+/* --- 5. Style cho các nút hành động --- */
+
+/* Nút "Thêm Lựa Chọn Khác" */
+#addAnotherOptionBtn {
+    border: 2px dashed #E91E63;
+    color: #E91E63;
+    background-color: transparent;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+#addAnotherOptionBtn:hover {
+    background-color: #E91E63;
+    color: white;
+    border-style: solid;
+}
+=======
+.product-card-unavailable {
+    /* Làm mờ toàn bộ card */
+    opacity: 0.6;
+
+    /* Chuyển hình ảnh và màu sắc sang tông xám */
+    filter: grayscale(80%);
+
+    /* Vô hiệu hóa tất cả các sự kiện click, hover bên trong card */
+    pointer-events: none;
+
+    /* (Tùy chọn) Thêm một lớp phủ để có chữ "Tạm hết" */
+    position: relative; /* Cần thiết cho lớp phủ */
+}
+
+/* (Tùy chọn) Lớp phủ hiển thị chữ "Tạm hết" */
+.product-card-unavailable::after {
+    content: 'Tạm hết';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-15deg);
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 1.1rem;
+    z-index: 10;
+}
+
+header.header-hidden {
+    transform: translateY(-100%);
+    transition: transform 0.3s ease-in-out;
+}
+
+header {
+    transition: transform 0.3s ease-in-out;
+}
+.restaurant-info-block .restaurant-management-nav {
+    width: 100%;
+    padding-bottom: 1rem;
+    margin-top: 1.5rem;
+    margin-bottom: 2rem;
+    text-align: left;
+}
+
+/* Selector này cụ thể hơn, sẽ ghi đè lên style mặc định */
+.restaurant-info-block .restaurant-management-nav ul {
+    display: inline-flex !important; /* Dùng !important để đảm bảo chiến thắng */
+    align-items: center;
+    list-style: none !important; /* Quan trọng: Xóa dấu chấm tròn */
+    padding: 0;
+    margin: 0;
+    gap: 1.5rem;
+}
+
+/* Selector này cụ thể hơn, sẽ ghi đè lên style mặc định */
+.restaurant-info-block .restaurant-management-nav li {
+    display: block !important; /* Bỏ qua 'display: list-item' mặc định */
+    padding-left: 1.5rem;
+    border-left: 1px solid #ced4da; /* Tạo dấu gạch đứng */
+}
+
+/* Mục đầu tiên không cần dấu gạch đứng bên trái */
+.restaurant-info-block .restaurant-management-nav li:first-child {
+    border-left: none;
+    padding-left: 0;
+}
+
+.restaurant-info-block .restaurant-management-nav a {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: #495057;
+    font-weight: 500;
+    font-size: 1.1rem;
+    transition: color 0.2s ease-in-out;
+}
+
+.restaurant-info-block .restaurant-management-nav a:hover,
+.restaurant-info-block .restaurant-management-nav a.active {
+    color: #E91E63; /* Màu xanh nổi bật */
+    font-weight: 700;
+}
+
+.restaurant-info-block .restaurant-management-nav a i {
+    margin-right: 8px;
+    font-size
+}
+#dynamicFormOffcanvas {
+    --bs-offcanvas-width: 500px;
+}
+#dynamicFormOffcanvas .offcanvas-header {
+    background-color: #FFF0F5;
+    border-bottom: 2px solid #E91E63;
+}
+#dynamicFormOffcanvas .offcanvas-title {
+    font-weight: 600;
+    color: #E91E63;
+}
+#dynamicFormOffcanvas .offcanvas-body {
+    background-color: #fff;
+    padding: 1.5rem;
+}
+
+/* --- 2. Thiết kế cho các KHỐI (section) trong form --- */
+.form-section {
+    background-color: #FFF0F5;  /* << Nền hồng rất nhạt >> */
+    border: 1px solid #F8BBD0;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+.form-section-title {
+    font-weight: 600;
+    color: #c2185b; /* Màu hồng tối hơn để dễ đọc */
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #F8BBD0;
+}
+
+/* --- 3. Tùy chỉnh các ô input và label --- */
+.form-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #495057;
+}
+.form-control:focus {
+    border-color: #E91E63;
+    box-shadow: 0 0 0 0.25rem rgba(233, 30, 99, 0.25); /* << Đổ bóng hồng khi focus >> */
+}
+
+/* --- 4. Tùy chỉnh cho nút gạt "Bắt buộc" --- */
+.form-switch {
+    display: flex;
+    justify-content: space-between; /* Đẩy label và nút gạt ra hai bên */
+    align-items: center;
+    padding-left: 0 !important; /* Ghi đè padding mặc định của Bootstrap */
+}
+.form-switch .form-check-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #495057;
+}
+.form-switch .form-check-input {
+    width: 3.25em;
+    height: 1.6em;
+    cursor: pointer;
+    margin-left: 1em;
+}
+/* Nút gạt sẽ có màu hồng khi được bật */
+.form-switch .form-check-input:checked {
+    background-color: #E91E63;
+    border-color: #E91E63;
+}
+
+
+/* --- 5. Các thẻ lựa chọn động --- */
+.option-card { /* Đây là tên class mới cho các thẻ lựa chọn */
+    background-color: #fff; /* Nền trắng để nổi bật trên nền hồng của section */
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    position: relative;
+    transition: all 0.2s ease-in-out;
+}
+.option-card:hover {
+    border-color: #E91E63;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+.btn-delete-option {
+    position: absolute;
+    top: 0.5rem; right: 0.5rem; width: 28px; height: 28px;
+    border-radius: 50%; border: none; background-color: #e9ecef; color: #6c757d;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s ease;
+}
+.btn-delete-option:hover {
+    background-color: #E91E63; color: white; transform: scale(1.1);
+}
+.option-card .form-label {
+    font-size: 0.85rem; margin-bottom: 0.25rem;
+}
+
+
+/* --- 6. Nút "Thêm Lựa Chọn" và "Lưu" --- */
+#addInputButton {
+    border: 2px dashed #E91E63;
+    color: #E91E63;
+    background-color: transparent; /* Nền trong suốt trên nền hồng của section */
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+#addInputButton:hover {
+    background-color: #E91E63;
+    color: white;
+    border-style: solid;
+}
+
+#dynamicFormOffcanvas .offcanvas-footer {
+    padding: 1rem 1.5rem;
+    background-color: #fff;
+    border-top: 1px solid #e9ecef;
+}
+#dynamicFormOffcanvas .btn-success {
+    background: #E91E63;
+    border-color: #E91E63;
+    font-weight: 600;
+    padding: 0.75rem;
+    transition: all 0.2s ease-in-out;
+}
+#dynamicFormOffcanvas .btn-success:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(233, 30, 99, 0.4);
+}
+#editOptionGroupOffcanvas {
+    --bs-offcanvas-width: 500px;
+}
+#editOptionGroupOffcanvas .offcanvas-header {
+    background-color: #e7f1ff; /* Nền xanh dương rất nhạt */
+    border-bottom: 2px solid #E91E63; /* Đường viền xanh dương đậm */
+}
+#editOptionGroupOffcanvas .offcanvas-title {
+    font-weight: 600;
+    color: #E91E63; /* Chữ màu xanh dương đậm */
+}
+#editOptionGroupOffcanvas .offcanvas-body {
+    background-color: #fff;
+    padding: 1.5rem;
+}
+
+/* --- 2. Style cho input và label (Kế thừa từ các class chung) --- */
+/* Các class như .form-label, .form-control sẽ tự động được áp dụng,
+   nhưng chúng ta sẽ tùy chỉnh hiệu ứng :focus cho phù hợp với tông màu xanh */
+#editOptionGroupOffcanvas .form-control:focus {
+    border-color: #E91E63;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); /* Đổ bóng xanh khi focus */
+}
+
+/* --- 3. Style cho nút gạt "Bắt buộc" --- */
+/* Class .form-switch sẽ được áp dụng, chỉ cần đổi màu khi được bật */
+#editOptionGroupOffcanvas .form-switch .form-check-input:checked {
+    background-color: #E91E63;
+    border-color: #E91E63;
+}
+
+/* --- 4. Style cho các thẻ lựa chọn động --- */
+/* Class chung .option-card sẽ được áp dụng, chỉ cần tùy chỉnh màu khi hover */
+#editOptionGroupOffcanvas .option-card:hover {
+    border-color: #E91E63; /* Viền xanh khi hover */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+/* Nút xóa vẫn nên có màu đỏ/hồng để cảnh báo, nên ta giữ nguyên style cũ cho nó */
+#editOptionGroupOffcanvas .btn-delete-option:hover {
+    background-color: #dc3545; /* Màu đỏ nguy hiểm */
+    color: white;
+    transform: scale(1.1);
+}
+.btn-pink {
+    background-color: #E91E63;
+    border-color: #E91E63;
+    color: white; /* Đừng quên đổi màu chữ cho dễ đọc */
+}
+/* --- 5. Style cho các nút hành động --- */
+
+/* Nút "Thêm Lựa Chọn Khác" */
+#addAnotherOptionBtn {
+    border: 2px dashed #E91E63;
+    color: #E91E63;
+    background-color: transparent;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+#addAnotherOptionBtn:hover {
+    background-color: #E91E63;
+    color: white;
+    border-style: solid;
+}
+
+
+

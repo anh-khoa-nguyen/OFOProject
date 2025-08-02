@@ -1,0 +1,163 @@
+.login-section {
+    font-family: 'Patrick Hand', sans-serif; /* Áp dụng font chữ viết tay */
+    padding: 60px 20px; /* Tạo khoảng cách trên dưới và trái phải */
+    width: 100%;
+    box-sizing: border-box; /* Đảm bảo padding không làm thay đổi kích thước */
+}
+
+/* Container chính cho form đăng nhập, giới hạn chiều rộng và căn giữa */
+.login-section .login-container {
+    max-width: 450px; /* Giới hạn chiều rộng tối đa của form */
+    margin: 0 auto;   /* Tự động căn giữa form theo chiều ngang */
+}
+
+/* Tiêu đề của form */
+.login-section h1 {
+    font-size: 2.5em;
+    font-weight: normal;
+    text-align: center;
+    margin-bottom: 30px;
+    /* Hiệu ứng gradient cho chữ */
+    background: linear-gradient(45deg, #e73c7e, #ee7752); /* Dải màu hồng - cam */
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent; /* Ẩn màu chữ gốc để nền gradient hiện ra */
+}
+.login-section h1 {
+    font-size: 2.5em;
+    font-weight: normal;
+    text-align: center;
+    margin-bottom: 30px;
+    color: #333;
+}
+.login-container {
+    width: 100%;
+    max-width: 800px;
+    margin: auto;
+    background-color: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    padding: 30px 40px;
+}
+/* Nhóm các trường nhập liệu (label và input) */
+.login-section .input-group {
+    margin-bottom: 20px;
+}
+
+.login-section .input-group label {
+    display: block;
+    font-size: 1.2em;
+    color: #555;
+    margin-bottom: 8px;
+}
+
+.login-section .input-group input {
+    width: 100%;
+    padding: 12px;
+    font-size: 1.1em;
+    border: 2px solid #333;
+    border-radius: 12px !important;
+    font-family: 'Patrick Hand', sans-serif; /* Đảm bảo input cũng dùng font này */
+}
+
+/* Kiểu cho link 'Quên mật khẩu' */
+.login-section .forgot-password {
+    text-align: right;
+    margin-bottom: 25px;
+}
+
+.login-section .forgot-password a {
+    font-size: 1em;
+    color: #555;
+    text-decoration: none;
+}
+
+.login-section .forgot-password a:hover {
+    text-decoration: underline;
+}
+
+/* Nút Đăng nhập */
+.login-section .login-button {
+    width: 100%;
+    padding: 15px;
+    background-color: #000;
+    color: #fff;
+    border: none;
+    font-size: 1.5em;
+    cursor: pointer;
+    font-family: 'Patrick Hand', sans-serif;
+    transition: background-color 0.3s ease;
+}
+
+.login-section .login-button:hover {
+    background-color: #333;
+}
+.login-section .button-wrapper {
+    padding: 3px; /* Độ dày của viền */
+    background: linear-gradient(60deg, #e73c7e, #ee7752, #a166ab, #5073b8);
+    background-size: 300% 300%;
+    animation: animatedgradient 3s ease alternate infinite;
+    border-radius: 5px; /* Bo góc nhẹ */
+}
+
+/* 2. CSS cho nút bên trong */
+.login-section .login-button {
+    width: 100%;
+    padding: 15px;
+    background-color: #000; /* Nền đen để che gradient, chỉ lộ ra viền */
+    color: #fff;
+    border: none;
+    font-size: 1.5em;
+    cursor: pointer;
+    font-family: 'Patrick Hand', sans-serif;
+    transition: background-color 0.3s ease;
+}
+
+.login-section .login-button:hover {
+    background-color: #222; /* Hơi sáng lên khi di chuột */
+}
+
+/* 3. Animation cho gradient chuyển động */
+@keyframes animatedgradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+/* Link đăng ký */
+.login-section .signup-link {
+    text-align: center;
+    margin-top: 25px;
+}
+
+.login-section .signup-link p {
+    font-size: 1em;
+    color: #555;
+}
+
+.login-section .signup-link a {
+    color: #000;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.login-section .signup-link a:hover {
+    text-decoration: underline;
+}
+
+.login-section h2 {
+    font-size: 1.5em;
+    font-weight: normal;
+    color: #fff; /* Chữ màu trắng */
+    background-color: #333; /* Nền màu xám đậm */
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    padding: 10px 15px; /* Thêm đệm cho đẹp */
+    border-radius: 4px; /* Bo góc nhẹ */
+}
+
+/* Đảm bảo icon cũng có màu trắng */
+.login-section h2 svg {
+    margin-right: 10px;
+    /* Thuộc tính color của thẻ h2 sẽ tự áp dụng cho icon */
+}
