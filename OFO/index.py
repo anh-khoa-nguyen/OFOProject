@@ -6,6 +6,7 @@ from models import *
 from flask import session
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 import cloudinary.uploader
+from datetime import datetime, timezone
 from geopy.distance import geodesic
 from flask_socketio import join_room
 from __init__ import socketio
@@ -440,7 +441,7 @@ def add_dish_route():
         restaurant_id = int(request.form.get('restaurant_id'))
         image = request.files.get('image')
         option_group_ids = request.form.getlist('option_group_ids')
-
+        image = request.files.get('image')
         image_url = None
         if image:
             upload_result = cloudinary.uploader.upload(image)
@@ -465,14 +466,15 @@ def get_dish_details_api(dish_id):
 
 @app.route('/update_dish', methods=['POST'])
 def update_dish_route():
-    """
-    Nhận dữ liệu từ form sửa món ăn và gọi hàm DAO để xử lý.
-    """
+    image = request.files.get('image')
+    image_url = None
+    if image:
+        upload_result = cloudinary.uploader.upload(image)
+        image_url = upload_result.get('secure_url')
     try:
-
         success, message = dao.update_dish_with_options(
             form_data=request.form,
-            image_file=request.files.get('image')
+            image_file=image_url
         )
 
         # Trả về kết quả cho frontend
@@ -842,6 +844,93 @@ def inject_cart():
         'cart': session.get('cart', {})
     }
 
+
+def _parse_voucher_form(form_data):
+    """
+    Hàm này phân tích và chuyển đổi dữ liệu từ form thành một dictionary
+    sạch, sẵn sàng để lưu vào CSDL.
+    """
+    data = {}
+    data['name'] = form_data.get('name')
+    data['code'] = form_data.get('code', '').upper()
+    data['description'] = form_data.get('description')
+    data['percent'] = float(form_data.get('percent')) if form_data.get('percent') else None
+    data['limit'] = float(form_data.get('limit')) if form_data.get('limit') else None
+    data['min'] = float(form_data.get('min')) if form_data.get('min') else 0
+    data['max'] = float(form_data.get('max')) if form_data.get('max') else None
+    data['restaurant_id'] = form_data.get('restaurant_id')
+    data['active'] = True if form_data.get('active') == 'on' else False
+
+    start_date_str = form_data.get('start_date')
+    end_date_str = form_data.get('end_date')
+
+    if start_date_str:
+        data['start_date'] = datetime.strptime(start_date_str, '%d/%m/%Y')
+    if end_date_str:
+        data['end_date'] = datetime.strptime(end_date_str, '%d/%m/%Y')
+
+    return data
+
+@app.route('/voucher/<int:restaurant_id>')
+def voucher(restaurant_id):
+    restaurant = dao.get_restaurant_by_id(restaurant_id)
+    vouchers = dao.get_vouchers_by_restaurant(restaurant_id)
+
+    return render_template(
+        'Restaurant/Voucher.html',
+        restaurant=restaurant,
+        vouchers=vouchers
+    )
+@app.route('/api/vouchers/<int:voucher_id>', methods=['GET'])
+def get_voucher_api(voucher_id):
+    voucher = dao.get_voucher_by_id(voucher_id)
+    if voucher:
+        return jsonify({
+            'id': voucher.id, 'name': voucher.name, 'code': voucher.code,
+            'description': voucher.description, 'percent': voucher.percent,
+            'limit': voucher.limit, 'min': voucher.min, 'max': voucher.max,
+            'start_date': voucher.start_date.strftime('%d-%m-%Y'),
+            'end_date': voucher.end_date.strftime('%d-%m-%Y'),
+            'active': voucher.active
+        })
+    return jsonify({'error': 'Voucher not found'}), 404
+
+
+# --- API ĐỂ TẠO MỚI MỘT VOUCHER ---
+@app.route('/api/vouchers', methods=['POST'])
+def create_voucher_api():
+    print("Dữ liệu form nhận được:", request.form)
+    try:
+        data = _parse_voucher_form(request.form)
+        new_voucher = dao.add_voucher(data)
+        if new_voucher:
+            return jsonify({'message': 'Tạo voucher thành công!', 'id': new_voucher.id}), 201
+        return jsonify({'error': 'Không thể tạo voucher'}), 500
+    except Exception as e:
+        return jsonify({'error': f'Dữ liệu không hợp lệ: {e}'}), 400
+
+@app.route('/api/vouchers/<int:voucher_id>', methods=['POST', 'PUT'])
+def update_voucher_api(voucher_id):
+    voucher = dao.get_voucher_by_id(voucher_id)
+    if not voucher:
+        return jsonify({'error': 'Voucher không tồn tại'}), 404
+    try:
+        data = _parse_voucher_form(request.form)
+        data.pop('id', None)  # Bỏ id ra khỏi dữ liệu cập nhật
+        updated_voucher = dao.update_voucher(voucher_id, data)
+        if updated_voucher:
+            return jsonify({'message': 'Cập nhật voucher thành công!'})
+        return jsonify({'error': 'Cập nhật thất bại'}), 500
+    except Exception as e:
+        return jsonify({'error': f'Dữ liệu không hợp lệ: {e}'}), 400
+
+@app.route('/api/vouchers/<int:voucher_id>', methods=['DELETE'])
+def delete_voucher_api(voucher_id):
+    success = dao.delete_voucher(voucher_id)
+    if success:
+        return jsonify({'message': 'Xóa voucher thành công!'})
+    return jsonify({'error': 'Không tìm thấy voucher hoặc lỗi khi xóa'}), 404
+=======
 @app.template_filter('format_currency')
 def format_currency_filter(value):
     """
@@ -1188,6 +1277,7 @@ def handle_chat():
 from __init__ import socketio
 if __name__ == '__main__':
     with app.app_context():
+
         import admin
         # app.run(debug=True)
         socketio.run(app, debug=True,port=5001)
