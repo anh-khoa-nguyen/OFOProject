@@ -403,3 +403,69 @@ h1 {
     margin-bottom: 15px;
     margin-top: -5px;
 }
+
+/* Thêm vào cuối file static/css/Order_Pay.css */
+
+.order-item {
+    display: flex;
+    flex-direction: column; /* Cho phép các dòng xếp chồng lên nhau */
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.order-item:last-child {
+    border-bottom: none; /* Bỏ đường gạch ở món cuối cùng */
+}
+
+.item-top-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 100%;
+}
+
+.item-main {
+    display: flex;
+    align-items: baseline;
+}
+
+.item-qty {
+    font-weight: 600;
+    margin-right: 8px;
+}
+
+.item-name {
+    font-weight: 600;
+}
+
+.item-price {
+    font-weight: 600;
+    white-space: nowrap; /* Ngăn giá tiền bị xuống dòng */
+    margin-left: 1rem;
+}
+
+/* === PHẦN QUAN TRỌNG NHẤT: CĂN CHỈNH OPTIONS VÀ NOTE === */
+
+.item-options-list {
+    /* Thụt vào một khoảng bằng với số lượng (ví dụ: 1x) */
+    padding-left: 30px;
+    margin-top: 5px;
+    font-size: 0.9rem;
+    color: #6c757d; /* Màu xám cho dễ phân biệt */
+}
+
+.option-line {
+    margin-bottom: 2px;
+}
+
+.note-line {
+    display: flex;
+    align-items: center;
+    font-style: italic;
+}
+
+.note-line i {
+    margin-right: 6px;
+    font-size: 0.8rem;
+}
