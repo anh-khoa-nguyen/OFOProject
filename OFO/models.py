@@ -175,6 +175,8 @@ class Order(db.Model):
     delivery_address = Column(String(255), nullable=False)
     note = Column(String(100))
     order_status = Column(Enum(OrderState), default=OrderState.PENDING, nullable=False)
+    delivery_latitude = Column(Numeric(10, 7), nullable=True)
+    delivery_longitude = Column(Numeric(10, 7), nullable=True)
 
     details = relationship('OrderDetail', backref='order', lazy=True)
     review = relationship('Review', backref='order', uselist=False, cascade="all, delete-orphan")
