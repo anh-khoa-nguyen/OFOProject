@@ -1018,7 +1018,9 @@ def checkout(restaurant_id):
                 shipping_fee=shipping_fee,
                 discount=discount_amount,
                 voucher_ids=voucher_ids,
-                initial_status=OrderState.UNPAID
+                initial_status=OrderState.UNPAID,
+                delivery_lat=user_lat,
+                delivery_lng=user_lng,
             )
 
         except Exception as e:
