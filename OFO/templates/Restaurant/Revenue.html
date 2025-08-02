@@ -1,0 +1,265 @@
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/Restaurant/Revenue.css') }}">
+
+</head>
+{% extends 'layout/base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Phần Navigation của bạn (giữ nguyên) -->
+    <div class="restaurant-info-block mb-4">
+        <div class="restaurant-management-nav">
+            <ul>
+                <li><a href="{{ url_for('home', restaurant_id=restaurant.id) }}"><i class="fas fa-utensils"></i><span>Thực Đơn</span></a></li>
+                <li><a href="{{ url_for('restaurant_orders', restaurant_id=restaurant.id) }}" ><i class="fas fa-receipt"></i><span>Đơn Hàng</span></a></li>
+                <li><a href="{{ url_for('revenue', restaurant_id=restaurant.id) }}" class="active"><i class="fas fa-chart-line"></i><span>Doanh Thu</span></a></li>
+                <li><a href="{{ url_for('voucher', restaurant_id=restaurant.id) }}"><i class="fas fa-tags"></i><span>Khuyến Mãi</span></a></li>
+            </ul>
+        </div>
+        <h1 class="restaurant-title mt-3">{{ restaurant.restaurant_name }}</h1>
+    </div>
+
+    <!-- BÁO CÁO DOANH THU -->
+    <!-- SỬA LỖI 1: Truyền ID nhà hàng qua data-attribute để JS đọc, an toàn hơn -->
+    <div class="report-container" data-restaurant-id="{{ restaurant.id }}">
+        <header class="report-header">
+            <h1>Báo cáo Doanh thu</h1>
+            <div class="filter-controls">
+                <div class="time-pills">
+                    <button class="pill active" data-filter="month">Theo Tháng</button>
+                    <button class="pill" data-filter="week">Theo Tuần</button>
+                    <button class="pill" data-filter="day">Theo Ngày</button>
+                    <button class="pill" data-filter="year">Theo Năm</button>
+                </div>
+                <div class="date-selector" id="date-selector-container">
+                    <!-- JS sẽ điền vào đây -->
+                </div>
+            </div>
+        </header>
+
+        <main class="report-body">
+            <div id="data-section">
+                <section class="stats-overview">
+                    <div class="stat-card">
+                        <h3>TỔNG DOANH THU</h3>
+                        <!-- SỬA LỖI 2: Thêm ID để JS tìm chính xác hơn -->
+                        <p class="value" id="total-revenue-value">0 VNĐ</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>TỔNG ĐƠN HÀNG</h3>
+                        <p class="value" id="total-orders-value">0</p>
+                    </div>
+                </section>
+                <section class="chart-container">
+                    <h2 id="chart-title">Đang tải...</h2>
+                    <!-- SỬA LỖI 3: Dùng canvas thay cho ảnh bị lỗi -->
+                    <canvas id="revenueChart"></canvas>
+                </section>
+            </div>
+            <div id="no-data-section" class="hidden">
+                <div class="no-data-placeholder">
+                    <i class="fa-solid fa-box-open"></i>
+                    <p>Không có dữ liệu</p>
+                    <span>Vui lòng chọn khoảng thời gian khác.</span>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+       document.addEventListener('DOMContentLoaded', function() {
+
+            // === CẤU HÌNH VÀ LẤY ĐỐI TƯỢNG DOM ===
+            const reportContainer = document.querySelector('.report-container');
+            const RESTAURANT_ID = reportContainer.dataset.restaurantId;
+
+            const pills = document.querySelectorAll('.pill');
+            const dateSelectorContainer = document.getElementById('date-selector-container');
+            const chartTitle = document.getElementById('chart-title');
+            const totalRevenueEl = document.getElementById('total-revenue-value');
+            const totalOrdersEl = document.getElementById('total-orders-value');
+            const dataSection = document.getElementById('data-section');
+            const noDataSection = document.getElementById('no-data-section');
+            const chartCanvas = document.getElementById('revenueChart');
+            let revenueChartInstance = null;
+
+            // === ĐỊNH NGHĨA TẤT CẢ CÁC HÀM TRƯỚC KHI SỬ DỤNG ===
+
+            function updateChart(labels, data) {
+                if (revenueChartInstance) {
+                    revenueChartInstance.destroy();
+                }
+                revenueChartInstance = new Chart(chartCanvas, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Doanh thu',
+                            data: data,
+                            backgroundColor: 'rgba(0, 123, 255, 0.6)',
+                            borderColor: 'rgba(0, 123, 255, 1)',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: { y: { beginAtZero: true } },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+
+            function renderReport(data, errorMessage = '') {
+                const hasData = data && data.overview && data.overview.order_count > 0;
+
+                if (!hasData) {
+                    dataSection.classList.add('hidden');
+                    noDataSection.classList.remove('hidden');
+                    noDataSection.querySelector('p').textContent = errorMessage || 'Không có dữ liệu trong thời gian này';
+                } else {
+                    dataSection.classList.remove('hidden');
+                    noDataSection.classList.add('hidden');
+                    totalRevenueEl.textContent = `${data.overview.total_revenue.toLocaleString('vi-VN')} VNĐ`;
+                    totalOrdersEl.textContent = data.overview.order_count;
+                    updateChart(data.chart.labels, data.chart.data);
+                }
+            }
+
+            function processRawOrders(rawOrders) {
+                let totalRevenue = 0;
+                let orderCount = 0;
+                const dailyTotals = {};
+
+                const validOrders = rawOrders.filter(order => order.order_status !== 'CANCELLED');
+
+                for (const order of validOrders) {
+                    totalRevenue += order.total;
+                    orderCount++;
+                    const orderDate = order.order_date.split('T')[0];
+                    if (!dailyTotals[orderDate]) {
+                        dailyTotals[orderDate] = 0;
+                    }
+                    dailyTotals[orderDate] += order.total;
+                }
+                const sortedDates = Object.keys(dailyTotals).sort();
+                const chartLabels = sortedDates.map(date => {
+                    const [year, month, day] = date.split('-');
+                    return `${day}/${month}`;
+                });
+                const chartData = sortedDates.map(date => dailyTotals[date]);
+
+                return {
+                    overview: { total_revenue: totalRevenue, order_count: orderCount },
+                    chart: { labels: chartLabels, data: chartData }
+                };
+            }
+
+            async function fetchAndProcessReport() {
+                const timeInfo = getTimeInfo();
+                if (new Date(timeInfo.startDate) > new Date()) {
+                    renderReport(null, "Chưa có dữ liệu trong tương lai.");
+                    return;
+                }
+
+                totalRevenueEl.textContent = 'Đang tải...';
+                totalOrdersEl.textContent = '...';
+                chartTitle.textContent = timeInfo.title;
+
+                try {
+                    const response = await fetch(`/api/orders/raw/${RESTAURANT_ID}?start_date=${timeInfo.startDate}&end_date=${timeInfo.endDate}`);
+                    if (!response.ok) throw new Error('Lỗi từ server');
+                    const rawOrders = await response.json();
+                    const processedData = processRawOrders(rawOrders);
+                    renderReport(processedData);
+                } catch (error) {
+                    console.error('Lỗi:', error);
+                    renderReport(null, 'Có lỗi xảy ra, vui lòng thử lại.');
+                }
+            }
+
+            function updateDatePickerUI(filterType) {
+                if (!dateSelectorContainer) return;
+                let inputHTML = '';
+                const today = new Date();
+                switch (filterType) {
+                    case 'day': inputHTML = `<input type="date" class="form-control" value="${today.toISOString().split('T')[0]}">`; break;
+                    case 'week': inputHTML = `<input type="week" class="form-control" value="${today.getFullYear()}-W${getWeekNumber(today)}">`; break;
+                    case 'year': inputHTML = `<input type="number" class="form-control" min="2020" max="2099" value="${today.getFullYear()}">`; break;
+                    default: inputHTML = `<input type="month" class="form-control" value="${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}">`;
+                }
+                dateSelectorContainer.innerHTML = inputHTML;
+                dateSelectorContainer.querySelector('input').addEventListener('change', fetchAndProcessReport);
+            }
+
+            function handlePillClick(e) {
+                pills.forEach(p => p.classList.remove('active'));
+                e.target.classList.add('active');
+                updateDatePickerUI(e.target.dataset.filter);
+                fetchAndProcessReport();
+            }
+
+            function getTimeInfo() {
+                const activeFilter = document.querySelector('.pill.active').dataset.filter;
+                const picker = dateSelectorContainer.querySelector('input');
+                let startDate, endDate, title;
+                switch (activeFilter) {
+                    case 'day':
+                        startDate = endDate = picker.value;
+                        title = `Doanh thu Ngày ${new Date(picker.value + 'T00:00:00').toLocaleDateString('vi-VN')}`;
+                        break;
+                    case 'week':
+                        const [yearW, weekNo] = picker.value.split('-W');
+                        const weekDates = getWeekDates(parseInt(yearW), parseInt(weekNo));
+                        startDate = weekDates.start.toISOString().split('T')[0];
+                        endDate = weekDates.end.toISOString().split('T')[0];
+                        title = `Doanh thu Tuần ${weekNo}, Năm ${yearW}`;
+                        break;
+                    case 'year':
+                        const year = picker.value;
+                        startDate = `${year}-01-01`;
+                        endDate = `${year}-12-31`;
+                        title = `Doanh thu Năm ${year}`;
+                        break;
+                    default:
+                        const [yearM, month] = picker.value.split('-');
+                        startDate = `${yearM}-${month}-01`;
+                        endDate = `${yearM}-${month}-${new Date(yearM, month, 0).getDate()}`;
+                        title = `Doanh thu Tháng ${month}, Năm ${yearM}`;
+                        break;
+                }
+                return { startDate, endDate, title };
+            }
+
+            function getWeekNumber(d) {
+                d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+                d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+                var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+                var weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+                return String(weekNo).padStart(2, '0');
+            }
+
+            function getWeekDates(year, week) {
+                const d = new Date(year, 0, 1 + (week - 1) * 7);
+                const day = d.getDay() || 7;
+                d.setDate(d.getDate() + 1 - day);
+                const startDate = new Date(d);
+                d.setDate(d.getDate() + 6);
+                const endDate = new Date(d);
+                return { start: startDate, end: endDate };
+            }
+
+            // === GẮN SỰ KIỆN VÀ CHẠY LẦN ĐẦU ===
+            pills.forEach(pill => pill.addEventListener('click', handlePillClick));
+            updateDatePickerUI('month');
+            fetchAndProcessReport();
+
+        });
+</script>
+{% endblock %}
+

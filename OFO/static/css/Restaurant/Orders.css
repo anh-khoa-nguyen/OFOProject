@@ -1,0 +1,599 @@
+.breadcrumb {
+    --bs-breadcrumb-divider: '>';
+}
+
+.breadcrumb-item a {
+    text-decoration: none;
+    color: #E91E63;
+    font-weight: 500;
+}
+
+.breadcrumb-item.active {
+    color: #E91E63;
+}
+
+.restaurant-title {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.restaurant-meta-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.5rem;
+    color: #5a5a5a;
+    font-size: 0.95rem;
+}
+
+.restaurant-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.promo-section {
+    color: #E91E63;
+    font-weight: 500;
+}
+
+.promo-section a {
+    color: #E91E63;
+    font-weight: 700;
+    text-decoration: none;
+}
+.category-navbar-wrapper {
+    position: sticky;
+    top: 0;
+    background-color: white;
+    z-index: 1020;
+    border-bottom: 1px solid ;
+}
+
+.category-navbar {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.category-nav-list {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 1.5rem;
+    overflow-x: auto;
+    padding: 0.5rem 0;
+    scroll-behavior: smooth;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+.category-nav-list::-webkit-scrollbar {
+    display: none;
+}
+
+
+.category-nav-item {
+    padding: 0.5rem 0;
+    color: #333;
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+    border-bottom: 3px solid transparent;
+    transition: color 0.2s;
+}
+
+
+.category-nav-item:hover {
+    color: #E91E63;
+}
+
+
+.category-nav-item.active {
+    color: #E91E63;
+    font-weight: 700;
+    border-bottom-color: #E91E63;
+}
+
+
+.restaurant-info-block .restaurant-management-nav {
+    width: 100%;
+    padding-bottom: 1rem;
+    margin-top: 1.5rem;
+    margin-bottom: 2rem;
+    text-align: left;
+}
+.restaurant-info-block .restaurant-management-nav ul {
+    display: inline-flex !important; /* Dùng !important để đảm bảo chiến thắng */
+    align-items: center;
+    list-style: none !important; /* Quan trọng: Xóa dấu chấm tròn */
+    padding: 0;
+    margin: 0;
+    gap: 1.5rem;
+}
+
+.restaurant-info-block .restaurant-management-nav li {
+    display: block !important; /* Bỏ qua 'display: list-item' mặc định */
+    padding-left: 1.5rem;
+    border-left: 1px solid #ced4da; /* Tạo dấu gạch đứng */
+}
+
+.restaurant-info-block .restaurant-management-nav li:first-child {
+    border-left: none;
+    padding-left: 0;
+}
+
+.restaurant-info-block .restaurant-management-nav a {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: #495057;
+    font-weight: 500;
+    font-size: 1.1rem;
+    transition: color 0.2s ease-in-out;
+}
+
+.restaurant-info-block .restaurant-management-nav a:hover,
+.restaurant-info-block .restaurant-management-nav a.active {
+    color: #E91E63; /* Màu xanh nổi bật */
+    font-weight: 700;
+}
+
+.restaurant-info-block .restaurant-management-nav a i {
+    margin-right: 8px;
+    font-size
+}
+//Voucher
+.restaurant-management-nav a.active {
+    color: var(--primary-color);
+    font-weight: 700;
+}
+*/
+/* ========================================================= */
+/* === CSS CHO TRANG QUẢN LÝ ĐƠN HÀNG VỚI CÁC CỘT TRẠNG THÁI === */
+/* ========================================================= */
+
+:root {
+    --order-pending-color: #ffc107; /* yellow */
+    --order-confirmed-color: #0dcaf0; /* cyan */
+    --order-delivering-color: #6f42c1; /* purple */
+    --order-completed-color: #198754; /* green */
+    --order-cancelled-color: #dc3545; /* red */
+
+    --bg-light-gray: #f8f9fa;
+    --border-color: #dee2e6;
+    --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+body {
+    background-color: var(--bg-light-gray);
+}
+
+/* --- Layout chính của các cột trạng thái --- */
+.order-board {
+    display: grid;
+    /* Mặc định: 1 cột cho màn hình nhỏ */
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    padding: 1rem 0; /* Khoảng cách trên dưới */
+}
+
+/* Màn hình trung bình: 2 cột */
+@media (min-width: 768px) {
+    .order-board {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Màn hình lớn: 3 cột */
+@media (min-width: 992px) {
+    .order-board {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* Màn hình cực lớn: 4 hoặc 5 cột (tùy số trạng thái) */
+@media (min-width: 1400px) {
+    .order-board {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    }
+}
+
+/* --- Thẻ trạng thái đơn hàng (Mỗi cột) --- */
+.order-status-column {
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: var(--card-shadow);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    min-height: 400px; /* Chiều cao tối thiểu cho cột trống */
+}
+
+.order-status-column-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--border-color); /* Đường kẻ dưới tiêu đề */
+}
+
+.order-status-column-header h5 {
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 0;
+    text-transform: uppercase;
+}
+/* Màu tiêu đề theo trạng thái */
+.order-status-column[data-status-id="PENDING"] .order-status-column-header h5 { color: var(--order-pending-color); }
+.order-status-column[data-status-id="CONFIRMED"] .order-status-column-header h5 { color: var(--order-confirmed-color); }
+.order-status-column[data-status-id="DELIVERING"] .order-status-column-header h5 { color: var(--order-delivering-color); }
+.order-status-column[data-status-id="COMPLETED"] .order-status-column-header h5 { color: var(--order-completed-color); }
+.order-status-column[data-status-id="CANCELLED"] .order-status-column-header h5 { color: var(--order-cancelled-color); }
+
+
+.order-status-column-header .badge {
+    font-size: 0.8em;
+    padding: 0.4em 0.8em;
+    border-radius: 0.5rem;
+}
+
+/* --- Danh sách các đơn hàng trong cột --- */
+.order-list {
+    flex-grow: 1; /* Cho phép danh sách chiếm hết không gian còn lại */
+    overflow-y: auto; /* Tạo thanh cuộn nếu nội dung quá dài */
+    padding-right: 5px; /* Để thanh cuộn không bị dính sát */
+}
+
+/* Tùy chỉnh thanh cuộn */
+.order-list::-webkit-scrollbar { width: 8px; }
+.order-list::-webkit-scrollbar-track { background: var(--bg-light-gray); border-radius: 10px; }
+.order-list::-webkit-scrollbar-thumb { background: #ced4da; border-radius: 10px; }
+.order-list::-webkit-scrollbar-thumb:hover { background: #adb5bd; }
+
+
+/* --- Thẻ đơn hàng (Mỗi đơn hàng) --- */
+.order-card {
+    background-color: var(--bg-light-gray);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    cursor: grab; /* Con trỏ khi kéo */
+    transition: all 0.2s ease;
+    user-select: none; /* Không cho chọn text khi kéo */
+}
+.order-card:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.order-card.dragging { /* Class khi đơn hàng đang được kéo */
+    opacity: 0.5;
+    border: 2px dashed var(--primary-color);
+    background-color: #e0f7fa;
+}
+
+.order-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+.order-card-header .order-id {
+    font-weight: 700;
+    color: var(--primary-color);
+}
+.order-card-header .order-time {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.order-card-body p {
+    margin-bottom: 0.25rem;
+    font-size: 0.9rem;
+}
+.order-card-body strong {
+    color: var(--text-dark);
+}
+.order-card-footer {
+    margin-top: 0.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+}
+.order-card-footer .btn {
+    font-size: 0.85rem;
+    padding: 0.3rem 0.6rem;
+}
+
+/* Style cho khu vực kéo thả (Drop zone) */
+.order-list.dragover {
+    background-color: rgba(233, 30, 99, 0.05); /* Nền hồng nhạt khi kéo qua */
+    border: 2px dashed var(--primary-color);
+    border-radius: 8px;
+}
+
+
+
+
+
+
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f8f9fa; /* Một màu nền xám rất nhạt */
+    color: #333;
+}
+
+/* 1. Thanh điều hướng chính (Menu, Đơn hàng,...) */
+.restaurant-management-nav ul {
+    display: flex;
+    gap: 1.5rem;
+    border-bottom: 1px solid #e8e8e8;
+    padding-bottom: 0.5rem;
+}
+
+.restaurant-management-nav a {
+    text-decoration: none;
+    color: #333;
+    font-weight: 500;
+    padding: 0.5rem 0;
+    border-bottom: 3px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+}
+
+.restaurant-management-nav a:hover {
+    color: #E91E63;
+}
+
+.restaurant-management-nav a.active {
+    color: #E91E63;
+    font-weight: 700;
+    border-bottom-color: #E91E63;
+}
+
+.restaurant-management-nav i {
+    margin-right: 0.5rem;
+}
+
+/* 2. Tiêu đề chính */
+.restaurant-title {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+/* 3. Bảng Kanban và các cột */
+.order-board {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.order-status-column-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background-color: #f1f1f1;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    border-bottom: 2px solid #ddd;
+}
+
+.order-status-column-header h5 {
+    margin: 0;
+    font-weight: 600;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.order-status-column .badge {
+    font-size: 0.85rem;
+}
+
+.order-list {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    min-height: 400px; /* Đảm bảo các cột có chiều cao tối thiểu */
+}
+
+/* 4. Thẻ Đơn hàng (Order Card) - QUAN TRỌNG NHẤT */
+.order-card {
+    background-color: #ffffff;
+    border: 1px solid #e8e8e8;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.order-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+
+.order-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.order-card .order-id {
+    font-weight: 700;
+    color: #E91E63;
+}
+
+.order-card .order-time {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+.order-card-body p {
+    font-size: 0.9rem;
+    color: #555;
+    margin-bottom: 0.5rem; /* Giảm khoảng cách giữa các dòng */
+}
+
+.order-card-body strong {
+    font-weight: 600;
+    color: #333;
+    margin-right: 0.25rem;
+}
+
+.order-card-footer {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: flex-end; /* Đẩy các nút về bên phải */
+    gap: 0.5rem;
+}
+
+/* 5. Tùy chỉnh các nút bấm */
+.order-card-footer .btn {
+    font-weight: 500;
+    border-radius: 20px; /* Bo tròn các nút */
+    padding: 0.25rem 0.75rem;
+    font-size: 0.8rem;
+}
+
+/* Nút Chi tiết - giữ màu mặc định */
+.btn-outline-primary {
+    color: #0d6efd;
+    border-color: #0d6efd;
+}
+.btn-outline-primary:hover {
+    background-color: #0d6efd;
+    color: white;
+}
+
+/* Nút Xác nhận - màu xanh lá */
+.btn-outline-success {
+    color: #198754;
+    border-color: #198754;
+}
+.btn-outline-success:hover {
+    background-color: #198754;
+    color: white;
+}
+
+/* Nút Giao hàng - màu vàng/cam */
+.btn-outline-warning {
+    color: #ffc107;
+    border-color: #ffc107;
+}
+.btn-outline-warning:hover {
+    background-color: #ffc107;
+    color: white;
+}
+
+/* Nút Hoàn thành - màu xanh dương */
+.btn-outline-info {
+    color: #0dcaf0;
+    border-color: #0dcaf0;
+}
+.btn-outline-info:hover {
+    background-color: #0dcaf0;
+    color: white;
+}
+
+#orderDetailOffcanvas {
+        --bs-offcanvas-width: 450px;
+        border-left: 1px solid #dee2e6;
+        font-family: 'Poppins', sans-serif;
+    }
+
+    /* 2. Header */
+    #orderDetailOffcanvas .offcanvas-header {
+        background-color: #f8f9fa;
+        padding: 1rem 1.5rem;
+    }
+    #orderDetailOffcanvas .offcanvas-title {
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: #333;
+    }
+    #orderDetailOffcanvas #offcanvas-order-id {
+        color: #E91E63;
+        font-weight: 700;
+    }
+
+    /* 3. Body và các khu vực */
+    #orderDetailOffcanvas .offcanvas-body {
+        padding: 0; /* Xóa padding mặc định để kiểm soát tốt hơn */
+    }
+    .detail-section {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 5px solid #f8f9fa; /* Đường phân cách dày giữa các khối */
+    }
+    .detail-section:last-child {
+        border-bottom: none;
+    }
+    .detail-section h6 {
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #6c757d;
+        margin-bottom: 1rem;
+    }
+
+    /* 4. Danh sách thông tin (Info List) - QUAN TRỌNG */
+    .info-list .info-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        font-size: 0.9rem;
+        margin-bottom: 0.75rem;
+    }
+    .info-list .info-item strong {
+        font-weight: 500;
+        color: #343a40;
+    }
+    .info-list .info-item.full-width {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .info-list .info-item.full-width p {
+        margin-top: 0.25rem;
+        margin-bottom: 0;
+    }
+
+    /* 5. Bảng chi tiết món ăn */
+    #details-table {
+        font-size: 0.9rem;
+    }
+    #details-table thead th {
+        font-weight: 600;
+        color: #495057;
+        border-bottom-width: 1px;
+    }
+    #details-table tbody tr {
+        border-bottom: 1px solid #f1f1f1;
+    }
+     #details-table tbody tr:last-child {
+        border-bottom: none;
+    }
+    #details-table td .fw-bold {
+        font-weight: 600 !important;
+    }
+
+    /* 6. Phần thanh toán */
+    .payment-summary .info-item {
+        font-weight: 500;
+    }
+    .payment-summary .info-item.total {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #333;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #dee2e6;
+    }
+    .payment-summary #offcanvas-total {
+        color: #E91E63;
+    }

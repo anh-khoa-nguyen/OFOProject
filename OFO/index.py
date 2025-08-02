@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 from geopy.distance import geodesic
 from flask_socketio import join_room
 from __init__ import socketio
+from datetime import datetime, timezone, timedelta
 
 @app.route("/", methods=['GET','POST'])
 def index():
@@ -1274,6 +1275,250 @@ def handle_chat():
 
     # 6. Trả về chỉ câu trả lời mới nhất cho frontend
     return jsonify({'reply': ai_response})
+
+@app.route('/restaurant/<int:restaurant_id>/orders')
+def restaurant_orders(restaurant_id):
+    restaurant = dao.get_restaurant_by_id(restaurant_id)
+    orders = dao.get_orders_by_restaurant(restaurant_id)
+    return render_template(
+        'Restaurant/Order.html',  # Tên file template tùy bạn đặt
+        restaurant=restaurant,
+        orders=orders,OrderState=OrderState
+    )
+
+
+@app.route('/api/orders/<int:order_id>/status', methods=['POST', 'PUT'])
+def update_order_status(order_id):
+    try:
+        data = request.get_json()
+        new_status_str = data.get('status')
+        order = dao.get_order_by_id(order_id)
+        if not order:
+            return jsonify({"success": False, "message": "Không tìm thấy đơn hàng."}), 404
+
+        new_status_enum = OrderState[new_status_str]
+        order.order_status = new_status_enum
+
+        if new_status_enum == OrderState.DELIVERING:
+            delivery_seconds = data.get('delivery_seconds')
+            if delivery_seconds:
+                # 1. LẤY GIỜ HIỆN TẠI CỦA SERVER (GIỜ HỆ THỐNG)
+                now_server = datetime.now()
+
+                time_delta = timedelta(seconds=int(delivery_seconds))
+                delivery_timestamp = now_server + time_delta
+
+                order.estimated_delivery_time = delivery_timestamp
+
+        db.session.commit()
+        return jsonify({"success": True, "message": "Cập nhật thành công."}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": f"Lỗi hệ thống: {str(e)}"}), 500
+
+
+@app.route('/api/orders/<int:order_id>')
+def get_order_details_api(order_id):
+
+    order = dao.get_order_by_id(order_id)
+    if not order:
+        return jsonify({'error': 'Không tìm thấy đơn hàng'}), 404
+
+    order_data = {
+        'id': order.id,
+        'user': order.user.name,
+        'order_date': order.order_date.strftime('%H:%M %d/%m/%Y'),
+        'shipping_fee': order.shipping_fee,
+        'subtotal': order.subtotal,
+        'discount': order.discount,
+        'total': order.total,
+        'delivery_address': order.delivery_address,
+        'note': order.note,
+        'status': order.order_status.value,  # Lấy giá trị chuỗi của Enum (ví dụ: "Đang chờ")
+        'details': [
+            {
+                'dish_name': detail.dish_name,
+                'quantity': detail.quantity,
+                'price': detail.price,
+                'total_item_price': detail.quantity * detail.price,
+                'options': detail.selected_options_luc_dat
+            } for detail in order.details
+        ]
+    }
+
+    return jsonify(order_data)
+
+
+@app.route('/api/orders/<int:order_id>/estimate-delivery-time')
+def get_delivery_time_api(order_id):
+    order = dao.get_order_by_id(order_id)
+    if not order:
+        return jsonify({'error': 'Không tìm thấy đơn hàng'}), 404
+
+    try:
+        origin_coords = (float(order.restaurant.lat), float(order.restaurant.lng))
+
+        destination_coords = (order.delivery_latitude, order.delivery_longitude)
+
+        if not all(origin_coords) or not all(destination_coords):
+            raise ValueError("Thiếu thông tin tọa độ của nhà hàng hoặc của đơn hàng.")
+
+    except (AttributeError, ValueError, TypeError) as e:
+        return jsonify({'error': f'Không thể lấy tọa độ: {str(e)}'}), 500
+
+    try:
+        distance_km = geodesic(origin_coords, destination_coords).kilometers
+        distance_km = geodesic(origin_coords, destination_coords).kilometers
+
+        pickup_time_minutes = 10
+        time_per_km_minutes = 5
+        estimated_total_minutes = pickup_time_minutes + (distance_km * time_per_km_minutes)
+
+        duration_minutes_rounded = round(estimated_total_minutes)
+        duration_seconds = duration_minutes_rounded * 60
+        duration_text = f"khoảng {duration_minutes_rounded} phút"
+
+        return jsonify({
+            'estimated_time_text': duration_text,
+            'estimated_time_seconds': duration_seconds
+        })
+    except Exception as e:
+        return jsonify({'error': f'Lỗi khi tính toán: {str(e)}'}), 500
+
+def _parse_voucher_form(form_data):
+    """
+    Hàm này phân tích và chuyển đổi dữ liệu từ form thành một dictionary
+    sạch, sẵn sàng để lưu vào CSDL.
+    """
+    data = {}
+    data['name'] = form_data.get('name')
+    data['code'] = form_data.get('code', '').upper()
+    data['description'] = form_data.get('description')
+    data['percent'] = float(form_data.get('percent')) if form_data.get('percent') else None
+    data['limit'] = float(form_data.get('limit')) if form_data.get('limit') else None
+    data['min'] = float(form_data.get('min')) if form_data.get('min') else 0
+    data['max'] = float(form_data.get('max')) if form_data.get('max') else None
+    data['restaurant_id'] = form_data.get('restaurant_id')
+    data['active'] = True if form_data.get('active') == 'on' else False
+
+    start_date_str = form_data.get('start_date')
+    end_date_str = form_data.get('end_date')
+
+    if start_date_str:
+        data['start_date'] = datetime.strptime(start_date_str, '%d/%m/%Y')
+    if end_date_str:
+        data['end_date'] = datetime.strptime(end_date_str, '%d/%m/%Y')
+
+    return data
+
+@app.route('/voucher/<int:restaurant_id>')
+def voucher(restaurant_id):
+    restaurant = dao.get_restaurant_by_id(restaurant_id)
+    vouchers = dao.get_vouchers_by_restaurant(restaurant_id)
+
+    return render_template(
+        'Restaurant/Voucher.html',
+        restaurant=restaurant,
+        vouchers=vouchers
+    )
+@app.route('/api/vouchers/<int:voucher_id>', methods=['GET'])
+def get_voucher_api(voucher_id):
+    voucher = dao.get_voucher_by_id(voucher_id)
+    if voucher:
+        return jsonify({
+            'id': voucher.id, 'name': voucher.name, 'code': voucher.code,
+            'description': voucher.description, 'percent': voucher.percent,
+            'limit': voucher.limit, 'min': voucher.min, 'max': voucher.max,
+            'start_date': voucher.start_date.strftime('%d-%m-%Y'),
+            'end_date': voucher.end_date.strftime('%d-%m-%Y'),
+            'active': voucher.active
+        })
+    return jsonify({'error': 'Voucher not found'}), 404
+
+
+@app.route('/api/vouchers', methods=['POST'])
+def create_voucher_api():
+    print("Dữ liệu form nhận được:", request.form)
+    try:
+        data = _parse_voucher_form(request.form)
+        new_voucher = dao.add_voucher(data)
+        if new_voucher:
+            return jsonify({'message': 'Tạo voucher thành công!', 'id': new_voucher.id}), 201
+        return jsonify({'error': 'Không thể tạo voucher'}), 500
+    except Exception as e:
+        return jsonify({'error': f'Dữ liệu không hợp lệ: {e}'}), 400
+
+@app.route('/api/vouchers/<int:voucher_id>', methods=['POST', 'PUT'])
+def update_voucher_api(voucher_id):
+    voucher = dao.get_voucher_by_id(voucher_id)
+    if not voucher:
+        return jsonify({'error': 'Voucher không tồn tại'}), 404
+    try:
+        data = _parse_voucher_form(request.form)
+        data.pop('id', None)  # Bỏ id ra khỏi dữ liệu cập nhật
+        updated_voucher = dao.update_voucher(voucher_id, data)
+        if updated_voucher:
+            return jsonify({'message': 'Cập nhật voucher thành công!'})
+        return jsonify({'error': 'Cập nhật thất bại'}), 500
+    except Exception as e:
+        return jsonify({'error': f'Dữ liệu không hợp lệ: {e}'}), 400
+
+@app.route('/api/vouchers/<int:voucher_id>', methods=['DELETE'])
+def delete_voucher_api(voucher_id):
+    success = dao.delete_voucher(voucher_id)
+    if success:
+        return jsonify({'message': 'Xóa voucher thành công!'})
+    return jsonify({'error': 'Không tìm thấy voucher hoặc lỗi khi xóa'}), 404
+@app.template_filter('format_currency')
+def format_currency_filter(value):
+    """
+    Một bộ lọc Jinja2 an toàn để định dạng số thành tiền tệ.
+    Nếu giá trị là None hoặc không phải là số, trả về một chuỗi rỗng.
+    """
+    if value is None:
+        return "0đ"
+    try:
+        return f"{int(value):,}đ"
+    except (ValueError, TypeError):
+        return "0đ"
+#REVENUE
+@app.route('/revenue/<int:restaurant_id>', methods=['GET'])
+def revenue(restaurant_id):
+
+    restaurant = Restaurant.query.get(restaurant_id)
+
+    return render_template(
+        'Restaurant/Revenue.html',
+        restaurant=restaurant
+
+    )
+
+
+@app.route('/api/orders/raw/<int:restaurant_id>', methods=['GET'])
+def get_raw_orders_api(restaurant_id):
+    try:
+        start_date_str = request.args.get('start_date')
+        end_date_str = request.args.get('end_date')
+        start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+        end_date = datetime.strptime(end_date_str, '%Y-%m-%d').replace(hour=23, minute=59, second=59)
+    except (ValueError, TypeError):
+        return jsonify({"error": "Định dạng ngày không hợp lệ hoặc thiếu. Vui lòng dùng YYYY-MM-DD."}), 400
+
+    # Gọi DAO để lấy danh sách đơn hàng thô
+    raw_orders = dao.get_raw_orders_in_range(restaurant_id, start_date, end_date)
+
+    # Chuyển đổi danh sách đối tượng SQLAlchemy thành danh sách dictionary để jsonify
+    orders_list = []
+    for order in raw_orders:
+        orders_list.append({
+            'id': order.id,
+            'total': order.total,
+            'order_date': order.order_date.isoformat(),  # Chuyển datetime thành chuỗi ISO
+            'order_status': order.order_status.value  # Lấy giá trị của Enum
+        })
+
+    return jsonify(orders_list)
 from __init__ import socketio
 if __name__ == '__main__':
     with app.app_context():

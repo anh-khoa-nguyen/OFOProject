@@ -20,17 +20,16 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#"> <!-- Thay bằng url_for('...') của bạn -->
+                    <a href="{{ url_for('restaurant_orders',restaurant_id=restaurant.id) }}">
                         <i class="fas fa-receipt"></i>
                         <span>Đơn Hàng</span>
                     </a>
                 </li>
                 <li>
-                    <a href="#"> <!-- Thay bằng url_for('...') của bạn -->
-                        <i class="fas fa-chart-line"></i>
-                        <span>Doanh Thu</span>
+                    <a href="{{ url_for('revenue', restaurant_id=restaurant.id) }}" ><i class="fas fa-chart-line"></i><span>Doanh Thu</span>
                     </a>
                 </li>
+
                 <li>
                     <a href="{{ url_for('voucher',restaurant_id=restaurant.id) }}"> <!-- Thay bằng url_for('...') của bạn -->
                         <i class="fas fa-tags"></i>
@@ -423,25 +422,6 @@
         </button>
 
     </div>
-</div>
-<!--Thông báo cho nhà hàng-->
-
-<!-- 1. Âm thanh thông báo (sẽ không hiển thị) -->
-<audio id="notification-sound" src="{{ url_for('static', filename='sounds/notification.mp3') }}" preload="auto"></audio>
-
-<!-- 2. Toast (popup thông báo) của Bootstrap -->
-<div class="toast-container position-fixed bottom-0 end-0 p-3">
-  <div id="newOrderToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-    <div class="toast-header">
-      <i class="bi bi-bell-fill me-2 text-danger"></i>
-      <strong class="me-auto">Có đơn hàng mới!</strong>
-      <small>vài giây trước</small>
-      <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-    </div>
-    <div class="toast-body" id="toast-body">
-      <!-- Nội dung thông báo sẽ được chèn vào đây bằng JavaScript -->
-    </div>
-  </div>
 </div>
 
 
@@ -1272,6 +1252,7 @@ if (editDishForm) {
         toggleHeaderVisibility();
     });
     function showToastt(message, type = 'success') {
+
     const existingToast = document.querySelector('.toast-notificationt');
     if (existingToast) {
         existingToast.remove();
@@ -1332,11 +1313,5 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log("Không thể tự động phát âm thanh, cần người dùng tương tác với trang trước.");
         });
 
-        // (Tùy chọn) Tự động tải lại trang để cập nhật danh sách đơn hàng
-        // setTimeout(() => {
-        //     location.reload();
-        // }, 5000); // Tải lại sau 5 giây
-    });
-});
 </script>
 {% endblock %}
