@@ -827,7 +827,7 @@ def apply_voucher(code, restaurant_id, subtotal):
     }
 
 
-def create_order_from_cart(user_id, restaurant_id, cart_data, delivery_address, delivery_lat, delivery_lng, note, subtotal, shipping_fee, discount,
+def create_order_from_cart(user_id, restaurant_id, cart_data, delivery_address, note, subtotal, shipping_fee, discount, delivery_time,
                            voucher_ids=None,initial_status=OrderState.PENDING):
     """
     Tạo một bản ghi Order và các OrderDetail tương ứng từ dữ liệu giỏ hàng trong session.
@@ -845,8 +845,7 @@ def create_order_from_cart(user_id, restaurant_id, cart_data, delivery_address, 
                 delivery_address=delivery_address,
                 note=note,
                 order_status=initial_status,
-                delivery_latitude = delivery_lat,
-                delivery_longitude = delivery_lng,
+                delivery_time = delivery_time
             )
 
             if voucher_ids:
