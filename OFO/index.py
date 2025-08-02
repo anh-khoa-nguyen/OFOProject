@@ -882,55 +882,6 @@ def voucher(restaurant_id):
         restaurant=restaurant,
         vouchers=vouchers
     )
-@app.route('/api/vouchers/<int:voucher_id>', methods=['GET'])
-def get_voucher_api(voucher_id):
-    voucher = dao.get_voucher_by_id(voucher_id)
-    if voucher:
-        return jsonify({
-            'id': voucher.id, 'name': voucher.name, 'code': voucher.code,
-            'description': voucher.description, 'percent': voucher.percent,
-            'limit': voucher.limit, 'min': voucher.min, 'max': voucher.max,
-            'start_date': voucher.start_date.strftime('%d-%m-%Y'),
-            'end_date': voucher.end_date.strftime('%d-%m-%Y'),
-            'active': voucher.active
-        })
-    return jsonify({'error': 'Voucher not found'}), 404
-
-
-# --- API ĐỂ TẠO MỚI MỘT VOUCHER ---
-@app.route('/api/vouchers', methods=['POST'])
-def create_voucher_api():
-    print("Dữ liệu form nhận được:", request.form)
-    try:
-        data = _parse_voucher_form(request.form)
-        new_voucher = dao.add_voucher(data)
-        if new_voucher:
-            return jsonify({'message': 'Tạo voucher thành công!', 'id': new_voucher.id}), 201
-        return jsonify({'error': 'Không thể tạo voucher'}), 500
-    except Exception as e:
-        return jsonify({'error': f'Dữ liệu không hợp lệ: {e}'}), 400
-
-@app.route('/api/vouchers/<int:voucher_id>', methods=['POST', 'PUT'])
-def update_voucher_api(voucher_id):
-    voucher = dao.get_voucher_by_id(voucher_id)
-    if not voucher:
-        return jsonify({'error': 'Voucher không tồn tại'}), 404
-    try:
-        data = _parse_voucher_form(request.form)
-        data.pop('id', None)  # Bỏ id ra khỏi dữ liệu cập nhật
-        updated_voucher = dao.update_voucher(voucher_id, data)
-        if updated_voucher:
-            return jsonify({'message': 'Cập nhật voucher thành công!'})
-        return jsonify({'error': 'Cập nhật thất bại'}), 500
-    except Exception as e:
-        return jsonify({'error': f'Dữ liệu không hợp lệ: {e}'}), 400
-
-@app.route('/api/vouchers/<int:voucher_id>', methods=['DELETE'])
-def delete_voucher_api(voucher_id):
-    success = dao.delete_voucher(voucher_id)
-    if success:
-        return jsonify({'message': 'Xóa voucher thành công!'})
-    return jsonify({'error': 'Không tìm thấy voucher hoặc lỗi khi xóa'}), 404
 
 @app.template_filter('format_currency')
 def format_currency_filter(value):
@@ -1109,12 +1060,11 @@ def checkout(restaurant_id):
                 discount=discount_amount,
                 voucher_ids=voucher_ids,
                 initial_status=OrderState.UNPAID,
-                delivery_lat=user_lat,
-                delivery_lng=user_lng,
+                delivery_time=delivery_time
             )
 
         except Exception as e:
-            flash(f'Đã có lỗi xảy ra khi tạo đơn hàng: {e}', 'danger')
+            print(f'Đã có lỗi xảy ra khi tạo đơn hàng: {e}', 'danger')
             return redirect(url_for('checkout', restaurant_id=restaurant_id))
 
         # 3. Xử lý theo phương thức thanh toán
@@ -1246,8 +1196,6 @@ def handle_connect():
             room_name = f'restaurant_{restaurant_id}'
             join_room(room_name)
             print(f"Restaurant {restaurant_id} has connected and joined room '{room_name}'")
-
-
 
 @app.route('/api/chat', methods=['POST'])
 def handle_chat():
@@ -1412,16 +1360,6 @@ def _parse_voucher_form(form_data):
 
     return data
 
-@app.route('/voucher/<int:restaurant_id>')
-def voucher(restaurant_id):
-    restaurant = dao.get_restaurant_by_id(restaurant_id)
-    vouchers = dao.get_vouchers_by_restaurant(restaurant_id)
-
-    return render_template(
-        'Restaurant/Voucher.html',
-        restaurant=restaurant,
-        vouchers=vouchers
-    )
 @app.route('/api/vouchers/<int:voucher_id>', methods=['GET'])
 def get_voucher_api(voucher_id):
     voucher = dao.get_voucher_by_id(voucher_id)
@@ -1525,4 +1463,4 @@ if __name__ == '__main__':
 
         import admin
         # app.run(debug=True)
-        socketio.run(app, debug=True,port=5001)
+        socketio.run(app, debug=True,port=5000)

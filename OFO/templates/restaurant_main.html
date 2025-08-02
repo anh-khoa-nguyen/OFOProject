@@ -1,7 +1,7 @@
 <head>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/restaurant.css') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 </head>
 {% extends 'layout/base.html' %}
@@ -26,12 +26,14 @@
                     </a>
                 </li>
                 <li>
-                    <a href="{{ url_for('revenue', restaurant_id=restaurant.id) }}" ><i class="fas fa-chart-line"></i><span>Doanh Thu</span>
+                    <a href="{{ url_for('revenue', restaurant_id=restaurant.id) }}"><i
+                            class="fas fa-chart-line"></i><span>Doanh Thu</span>
                     </a>
                 </li>
 
                 <li>
-                    <a href="{{ url_for('voucher',restaurant_id=restaurant.id) }}"> <!-- Thay bằng url_for('...') của bạn -->
+                    <a href="{{ url_for('voucher',restaurant_id=restaurant.id) }}">
+                        <!-- Thay bằng url_for('...') của bạn -->
                         <i class="fas fa-tags"></i>
                         <span>Khuyến Mãi</span>
                     </a>
@@ -155,7 +157,8 @@
                     </button>
 
                     <div class="product-card-img-wrapper">
-                        <img src="{{ dish.image if dish.image else 'https://example.com/default.jpg' }}" alt="{{ dish.name }}">
+                        <img src="{{ dish.image if dish.image else 'https://example.com/default.jpg' }}"
+                             alt="{{ dish.name }}">
                     </div>
                     <div class="product-card-body">
                         <h5 class="product-card-title">{{ dish.name }}</h5>
@@ -192,8 +195,8 @@
         <div class="modal-overlay"></div>
 
         <!-- Nội dung của Modal (class này có thể dùng chung) -->
-        <div class="modal-content" >
-            <button class="close-modal"  title="Đóng">×</button>
+        <div class="modal-content">
+            <button class="close-modal" title="Đóng">×</button>
             <h2>Thêm Nhóm Món Ăn Mới</h2>
 
             <!-- Form để gửi dữ liệu, với ID cụ thể -->
@@ -314,7 +317,7 @@
                 </div>
                 <div class="form-group">
                     <label>Hình ảnh mới (tùy chọn)</label>
-                    <input type="file"  name="image" accept="image/*">
+                    <input type="file" name="image" accept="image/*">
                 </div>
 
                 <button type="submit" class="btn-submit">Lưu thay đổi</button>
@@ -326,7 +329,7 @@
          aria-labelledby="offcanvasLabel">
         <div class="offcanvas-header border-bottom">
             <h5 class="offcanvas-title" id="offcanvasLabel">Tạo Nhóm Tùy Chọn Mới</h5>
-            <button type="button"  class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
         <div class="offcanvas-body">
             <form id="dynamicForm">
@@ -374,7 +377,8 @@
 
     <div class="offcanvas-header border-bottom">
         <h5 class="offcanvas-title" id="editOffcanvasLabel">Chỉnh Sửa Nhóm Tùy Chọn</h5>
-        <button type="button" class="btn-close" id="close-modal-updatedishgroup" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        <button type="button" class="btn-close" id="close-modal-updatedishgroup" data-bs-dismiss="offcanvas"
+                aria-label="Close"></button>
     </div>
 
     <div class="offcanvas-body">
@@ -421,6 +425,23 @@
             Xóa
         </button>
 
+    </div>
+</div>
+<!--Thông báo cho nhà hàng-->
+<!-- 1. Âm thanh thông báo (sẽ không hiển thị) -->
+<audio id="notification-sound" src="{{ url_for('static', filename='sounds/notification.mp3') }}" preload="auto"></audio>
+<!-- 2. Toast (popup thông báo) của Bootstrap -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="newOrderToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <i class="bi bi-bell-fill me-2 text-danger"></i>
+            <strong class="me-auto">Có đơn hàng mới!</strong>
+            <small>vài giây trước</small>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body" id="toast-body">
+            <!-- Nội dung thông báo sẽ được chèn vào đây bằng JavaScript -->
+        </div>
     </div>
 </div>
 
@@ -844,68 +865,68 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 <script>
-   const deleteBtnInsideForm = document.getElementById('deleteGroupInsideFormBtn');
+    const deleteBtnInsideForm = document.getElementById('deleteGroupInsideFormBtn');
 
-deleteBtnInsideForm.addEventListener('click', function() {
-    // Lấy ID và tên của nhóm đang được sửa
-    const groupId = document.getElementById('editGroupId').value; // Giả sử ID của input là editGroupId
-    const groupName = document.getElementById('editGroupName').value.trim(); // Giả sử ID của input là editGroupName
+ deleteBtnInsideForm.addEventListener('click', function() {
+     // Lấy ID và tên của nhóm đang được sửa
+     const groupId = document.getElementById('editGroupId').value; // Giả sử ID của input là editGroupId
+     const groupName = document.getElementById('editGroupName').value.trim(); // Giả sử ID của input là editGroupName
 
-    // Kiểm tra xem có ID không
-    if (!groupId) {
-        // Sử dụng toast để thông báo lỗi thay vì alert
-        showToast("Không thể xác định nhóm cần xóa. Vui lòng thử lại.", 'error');
-        return;
-    }
+     // Kiểm tra xem có ID không
+     if (!groupId) {
+         // Sử dụng toast để thông báo lỗi thay vì alert
+         showToast("Không thể xác định nhóm cần xóa. Vui lòng thử lại.", 'error');
+         return;
+     }
 
-    // BƯỚC 1: Gọi SweetAlert2 để hiển thị hộp thoại xác nhận.
-    Swal.fire({
-        title: `Xóa nhóm "${groupName}"?`,
-        text: "Tất cả các tùy chọn trong nhóm này cũng sẽ bị xóa vĩnh viễn!",
-        icon: 'warning',
-        showCancelButton: true,
+     // BƯỚC 1: Gọi SweetAlert2 để hiển thị hộp thoại xác nhận.
+     Swal.fire({
+         title: `Xóa nhóm "${groupName}"?`,
+         text: "Tất cả các tùy chọn trong nhóm này cũng sẽ bị xóa vĩnh viễn!",
+         icon: 'warning',
+         showCancelButton: true,
 
-        confirmButtonColor: '#E91E63', // Màu hồng đặc trưng
-        cancelButtonColor: '#6c757d',
+         confirmButtonColor: '#E91E63', // Màu hồng đặc trưng
+         cancelButtonColor: '#6c757d',
 
-        confirmButtonText: 'Vâng, xóa nhóm này!',
-        cancelButtonText: 'Hủy bỏ'
-    }).then((result) => {
+         confirmButtonText: 'Vâng, xóa nhóm này!',
+         cancelButtonText: 'Hủy bỏ'
+     }).then((result) => {
 
-        // BƯỚC 2: Chỉ thực hiện nếu người dùng nhấn nút xác nhận.
-        if (result.isConfirmed) {
+         // BƯỚC 2: Chỉ thực hiện nếu người dùng nhấn nút xác nhận.
+         if (result.isConfirmed) {
 
-            // BƯỚC 3: Gửi yêu cầu DELETE đến server.
-            fetch(`/api/option-group/delete/${groupId}`, {
-                method: 'DELETE'
-            })
-            .then(res => {
-                // Áp dụng logic xử lý phản hồi chuyên nghiệp
-                if (!res.ok) {
-                    return res.json().then(errData => {
-                        throw new Error(errData.message || 'Xóa thất bại!');
-                    });
-                }
-                return res.json();
-            })
-            .then(data => {
-                // BƯỚC 4a: THÀNH CÔNG -> Hiển thị toast THÀNH CÔNG
-                const modalElementc = document.getElementById('editOptionGroupOffcanvas');
-                modalElementc.classList.remove('show');
-                showToastt(data.message || 'Đã xóa nhóm tùy chọn thành công!', 'success');
-                // Tải lại trang sau 1.5 giây để cập nhật
-                setTimeout(() => {
-                    location.reload();
-                }, 1500);
-            })
-            .catch(err => {
-                // BƯỚC 4b: THẤT BẠI -> Hiển thị toast LỖI
-                showToastt('Lỗi: ' + err.message, 'error');
-                console.error("Lỗi khi xóa nhóm tùy chọn:", err);
-            });
-        }
-    });
-});
+             // BƯỚC 3: Gửi yêu cầu DELETE đến server.
+             fetch(`/api/option-group/delete/${groupId}`, {
+                 method: 'DELETE'
+             })
+             .then(res => {
+                 // Áp dụng logic xử lý phản hồi chuyên nghiệp
+                 if (!res.ok) {
+                     return res.json().then(errData => {
+                         throw new Error(errData.message || 'Xóa thất bại!');
+                     });
+                 }
+                 return res.json();
+             })
+             .then(data => {
+                 // BƯỚC 4a: THÀNH CÔNG -> Hiển thị toast THÀNH CÔNG
+                 const modalElementc = document.getElementById('editOptionGroupOffcanvas');
+                 modalElementc.classList.remove('show');
+                 showToastt(data.message || 'Đã xóa nhóm tùy chọn thành công!', 'success');
+                 // Tải lại trang sau 1.5 giây để cập nhật
+                 setTimeout(() => {
+                     location.reload();
+                 }, 1500);
+             })
+             .catch(err => {
+                 // BƯỚC 4b: THẤT BẠI -> Hiển thị toast LỖI
+                 showToastt('Lỗi: ' + err.message, 'error');
+                 console.error("Lỗi khi xóa nhóm tùy chọn:", err);
+             });
+         }
+     });
+ });
 
 </script>
 
@@ -1313,5 +1334,11 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log("Không thể tự động phát âm thanh, cần người dùng tương tác với trang trước.");
         });
 
+        // (Tùy chọn) Tự động tải lại trang để cập nhật danh sách đơn hàng
+        // setTimeout(() => {
+        //     location.reload();
+        // }, 5000); // Tải lại sau 5 giây
+    });
+});
 </script>
 {% endblock %}

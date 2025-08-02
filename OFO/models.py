@@ -156,11 +156,11 @@ class DishOption(db.Model):
 
 
 class OrderState(PyEnum):
+    UNPAID = 'Chưa thanh toán'
     PENDING = "Pending"
     CONFIRMED = "Confirmed"
     DELIVERING = "Delivering"
     COMPLETED = "Completed"
-
 
 class Order(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -171,12 +171,11 @@ class Order(db.Model):
     subtotal = Column(Float, nullable=False)  # tổng tiền
     discount = Column(Float, default=0)
     total = Column(Float, nullable=False)  # thành tiền
-    delivery_address = Column(String(50), nullable=False)
+    delivery_address = Column(String(255), nullable=False)
     note = Column(String(100))
     order_status = Column(Enum(OrderState), default=OrderState.PENDING, nullable=False)
     estimated_delivery_time = Column(DateTime, nullable=True)
-    delivery_latitude = Column(Numeric(10, 7), nullable=True)  # Vĩ độ của địa chỉ giao hàng
-    delivery_longitude = Column(Numeric(10, 7), nullable=True)  # Kinh độ của địa chỉ giao hàng
+    delivery_time = Column(DateTime, nullable=True)
 
     details = relationship('OrderDetail', backref='order', lazy=True)
     review = relationship('Review', backref='order', uselist=False, cascade="all, delete-orphan")
@@ -587,7 +586,8 @@ if __name__ == '__main__':
         # 10. Tạo DishGroup cho nhà hàng đó
         group_com_chinh = DishGroup(name='Món Cơm Chính', restaurant_id=restaurant1.id)
         group_canh = DishGroup(name='Các Món Canh', restaurant_id=restaurant1.id)
-        db.session.add_all([group_com_chinh, group_canh])
+        group_bun = DishGroup(name='Bún Các Loại', restaurant_id=restaurant2.id)
+        db.session.add_all([group_com_chinh, group_canh, group_bun])
         db.session.commit()
 
         #=====================================================================================================================
@@ -613,8 +613,8 @@ if __name__ == '__main__':
         dish1_1.group= group_com_chinh
         dish1_2.group= group_com_chinh
         dish1_3.group = group_canh
-        dish2_1.group = group_com_chinh
-        dish2_2.group = group_com_chinh
+        dish2_1.group = group_bun
+        dish2_2.group = group_bun
         db.session.commit()
 
         #=====================================================================================================================
@@ -666,7 +666,7 @@ if __name__ == '__main__':
 
         order1 = Order(user_id=customer1.id, restaurant_id=restaurant1.id, subtotal=order1_subtotal,
                        discount=order1_discount, total=order1_total, delivery_address='Nhà A, Chung cư Z, TP.HCM',
-                       order_status=OrderState.PENDING,delivery_latitude='10.900018',delivery_longitude='106.689797')
+                       order_status=OrderState.PENDING)
         order1.vouchers.append(voucher1)  # Áp dụng voucher
         db.session.add(order1)
         db.session.commit()
@@ -684,7 +684,7 @@ if __name__ == '__main__':
 
         order4 = Order(user_id=customer1.id, restaurant_id=restaurant1.id, subtotal=order4_subtotal,
                        discount=order4_discount, total=order4_total, delivery_address='Nhà A, Chung cư Z, TP.HCM',
-                       order_status=OrderState.DELIVERING,delivery_latitude='10.900018',delivery_longitude='106.689797')
+                       order_status=OrderState.DELIVERING)
         order4.vouchers.append(voucher1)  # Áp dụng voucher
         db.session.add(order4)
         db.session.commit()
@@ -701,7 +701,7 @@ if __name__ == '__main__':
         order2_total = order2_subtotal  # Không có giảm giá
         order2 = Order(user_id=customer2.id, restaurant_id=restaurant2.id, subtotal=order2_subtotal,
                        total=order2_total, delivery_address='100 Nguyễn Trãi, Quận 5, TP.HCM',
-                       order_status=OrderState.PENDING,delivery_latitude='10.900018',delivery_longitude='106.689797')
+                       order_status=OrderState.PENDING)
         db.session.add(order2)
         db.session.commit()
 
@@ -715,7 +715,7 @@ if __name__ == '__main__':
         order3_total = order3_subtotal  # Không có giảm giá
         order3 = Order(user_id=customer2.id, restaurant_id=restaurant2.id, subtotal=order3_subtotal,
                        total=order3_total, delivery_address='100 Nguyễn Trãi, Quận 5, TP.HCM',
-                       order_status=OrderState.DELIVERING,delivery_latitude='10.900018',delivery_longitude='106.689797')
+                       order_status=OrderState.DELIVERING)
         db.session.add(order3)
         db.session.commit()
 
@@ -988,8 +988,7 @@ if __name__ == '__main__':
 
         order5 = Order(user_id=customer2.id, restaurant_id=restaurant3.id, subtotal=order5_subtotal,
                        discount=order5_discount, total=order5_total, delivery_address='333 Tô Hiến Thành, Quận 10',
-                       order_status=OrderState.COMPLETED, delivery_latitude='10.777353',
-                       delivery_longitude='106.664943',
+                       order_status=OrderState.COMPLETED,
                        order_date=datetime.datetime.now() - datetime.timedelta(days=5))  # Lùi ngày để báo cáo
         order5.vouchers.append(voucher2)
         db.session.add(order5)
@@ -1012,8 +1011,7 @@ if __name__ == '__main__':
 
         order6 = Order(user_id=customer3.id, restaurant_id=restaurant4.id, subtotal=order6_subtotal,
                        discount=order6_discount, total=order6_total, delivery_address='444 Lê Văn Lương, Quận 7',
-                       order_status=OrderState.DELIVERING, delivery_latitude='10.736429',
-                       delivery_longitude='106.702922',
+                       order_status=OrderState.DELIVERING,
                        order_date=datetime.datetime.now() - datetime.timedelta(days=4))
         # Không áp dụng voucher
         db.session.add(order6)
@@ -1034,7 +1032,7 @@ if __name__ == '__main__':
 
         order7 = Order(user_id=customer4.id, restaurant_id=restaurant7.id, subtotal=order7_subtotal,
                        discount=order7_discount, total=order7_total, delivery_address='413 Nguyễn Trãi, Quận 5',
-                       order_status=OrderState.PENDING, delivery_latitude='10.753580', delivery_longitude='106.670050',
+                       order_status=OrderState.PENDING,
                        order_date=datetime.datetime.now() - datetime.timedelta(days=3))
         db.session.add(order7)
         db.session.commit()
@@ -1056,8 +1054,7 @@ if __name__ == '__main__':
 
         order8 = Order(user_id=customer5.id, restaurant_id=restaurant8.id, subtotal=order8_subtotal,
                        discount=order8_discount, total=order8_total, delivery_address='1 Quang Trung, Gò Vấp',
-                       order_status=OrderState.COMPLETED, delivery_latitude='10.832850',
-                       delivery_longitude='106.665780',
+                       order_status=OrderState.COMPLETED,
                        order_date=datetime.datetime.now() - datetime.timedelta(days=2))
         db.session.add(order8)
         db.session.commit()
@@ -1079,8 +1076,7 @@ if __name__ == '__main__':
 
         order9 = Order(user_id=customer6.id, restaurant_id=restaurant12.id, subtotal=order9_subtotal,
                        discount=order9_discount, total=order9_total, delivery_address='510 Phan Văn Trị, Gò Vấp',
-                       order_status=OrderState.CONFIRMED, delivery_latitude='10.828540',
-                       delivery_longitude='106.688920',
+                       order_status=OrderState.CONFIRMED,
                        order_date=datetime.datetime.now() - datetime.timedelta(days=1))
         order9.vouchers.append(voucher1)
         db.session.add(order9)
@@ -1104,8 +1100,7 @@ if __name__ == '__main__':
         order10 = Order(user_id=customer1.id, restaurant_id=restaurant1.id, subtotal=order10_subtotal,
                         discount=order10_discount, total=order10_total,
                         delivery_address='111 Cách Mạng Tháng Tám, Quận 3',
-                        order_status=OrderState.COMPLETED, delivery_latitude='10.773291',
-                        delivery_longitude='106.689797',
+                        order_status=OrderState.COMPLETED,
                         order_date=datetime.datetime.now())  # Đơn hàng mới nhất
         db.session.add(order10)
         db.session.commit()
