@@ -47,15 +47,10 @@
                 <div class="checkout-section">
                     <h3>Phương thức thanh toán</h3>
                     <div class="payment-options">
-                        <label class="info-box payment-box">
-                            <img src="https://cdn.haitrieu.com/wp-content/uploads/2022/10/Logo-VNPAY-QR-1.png" alt="VNPay Logo" class="payment-logo">
-                            <p class="payment-text">Ví VNPay</p>
-                            <input type="radio" name="payment_method" value="vnpay">
-                        </label>
                         <label class="info-box payment-box selected">
-                            <i class="bi bi-cash-coin fs-2 text-success"></i>
-                            <p class="payment-text">Tiền mặt (COD)</p>
-                            <input type="radio" name="payment_method" value="cod" checked>
+                            <img src="https://res.cloudinary.com/dbb1oslnw/image/upload/v1753960673/MoMo_Logo_att5zs.png" alt="VNPay Logo" class="payment-logo">
+                            <p class="payment-text">Ví MOMO</p>
+                            <input type="radio" name="payment_method" value="vnpay" checked>
                         </label>
                     </div>
                 </div>
@@ -179,6 +174,7 @@
 {{ super() }}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    // --- Lấy các phần tử DOM ---
     const promoModal = document.getElementById('promo-modal');
     const openPromoButton = document.getElementById('open-promo-btn');
     const closeModalButton = document.getElementById('close-modal-btn');
@@ -190,14 +186,18 @@ document.addEventListener('DOMContentLoaded', function () {
     const checkoutForm = document.getElementById('checkoutForm');
     const promoTextDisplay = document.getElementById('promo-text-display');
 
+    // --- Biến để lưu trữ trạng thái ---
     let selectedShopVoucher = null;
     let selectedShippingVoucher = null;
+    // === SỬA LỖI 1: Tạo một biến toàn cục để lưu trữ tổng số tiền giảm giá ===
+    let totalDiscountAmount = 0;
 
-    function calculateDiscount(voucher, subtotal) {
+    // --- Các hàm tính toán và cập nhật UI ---
+    function calculateDiscount(voucher, baseAmount) {
         if (!voucher) return 0;
         let discount = 0;
         if (voucher.percent > 0) {
-            discount = subtotal * (voucher.percent / 100);
+            discount = baseAmount * (voucher.percent / 100);
             if (voucher.max && discount > voucher.max) discount = voucher.max;
         } else if (voucher.limit) {
             discount = voucher.limit;
@@ -213,27 +213,26 @@ document.addEventListener('DOMContentLoaded', function () {
         let shippingDiscount = 0;
         let appliedVoucherNames = [];
 
-        // Tính giảm giá từ voucher nhà hàng
         if (selectedShopVoucher) {
             const voucherData = JSON.parse(selectedShopVoucher.dataset.voucher);
             shopDiscount = calculateDiscount(voucherData, subtotal);
             appliedVoucherNames.push(voucherData.name);
         }
 
-        // Tính giảm giá từ voucher freeship
         if (selectedShippingVoucher) {
             const voucherData = JSON.parse(selectedShippingVoucher.dataset.voucher);
-            shippingDiscount = calculateDiscount(voucherData, subtotal); // Freeship cũng có thể là giảm %
-            // Giới hạn giảm giá phí ship không vượt quá phí ship
-            if (shippingDiscount > shipping) shippingDiscount = shipping;
+            // Giảm giá phí ship được tính trên phí ship, không phải subtotal
+            let calculatedShippingDiscount = calculateDiscount(voucherData, shipping);
+            shippingDiscount = Math.min(calculatedShippingDiscount, shipping); // Đảm bảo không giảm quá phí ship
             appliedVoucherNames.push(voucherData.name);
         }
 
-        const totalDiscount = shopDiscount + shippingDiscount;
-        const total = subtotal + shipping - totalDiscount;
+        // Cập nhật biến toàn cục
+        totalDiscountAmount = shopDiscount + shippingDiscount;
+        const total = subtotal + shipping - totalDiscountAmount;
 
-        if (totalDiscount > 0) {
-            discountValueEl.textContent = `- ${totalDiscount.toLocaleString('vi-VN')}đ`;
+        if (totalDiscountAmount > 0) {
+            discountValueEl.textContent = `- ${totalDiscountAmount.toLocaleString('vi-VN')}đ`;
             discountRow.style.display = 'flex';
             promoTextDisplay.textContent = appliedVoucherNames.join(' & ');
         } else {
@@ -243,10 +242,10 @@ document.addEventListener('DOMContentLoaded', function () {
         totalValueEl.textContent = `${total.toLocaleString('vi-VN')}đ`;
     }
 
-    // --- Xử lý Modal ---
+    // --- Xử lý sự kiện cho Modal ---
     if (openPromoButton) {
-        openPromoButton.addEventListener('click', function(event) {
-            event.preventDefault();
+        openPromoButton.addEventListener('click', (e) => {
+            e.preventDefault();
             promoModal.classList.add('active');
         });
     }
@@ -254,35 +253,26 @@ document.addEventListener('DOMContentLoaded', function () {
         closeModalButton.addEventListener('click', () => promoModal.classList.remove('active'));
     }
 
-    // --- Xử lý sự kiện trong Modal ---
     if (promoModal) {
-        const confirmBtn = document.getElementById('confirmPromoBtn');
-        const shopVoucherRadios = document.querySelectorAll('input[name="shop_voucher"]');
-        const shippingVoucherRadios = document.querySelectorAll('input[name="shipping_voucher"]');
-
         // Gán dữ liệu voucher vào từng radio button
+        const allVouchers = [...{{ shop_vouchers | tojson }}, ...{{ shipping_vouchers | tojson }}];
         document.querySelectorAll('.voucher-radio').forEach(radio => {
-            const voucherId = radio.value;
-            // Tìm voucher tương ứng trong list truyền từ backend
-            const voucherData = [...{{ shop_vouchers | tojson }}, ...{{ shipping_vouchers | tojson }}].find(v => v.id == voucherId);
+            const voucherData = allVouchers.find(v => v.id == radio.value);
             if (voucherData) {
                 radio.dataset.voucher = JSON.stringify(voucherData);
             }
         });
 
-        shopVoucherRadios.forEach(radio => {
-            radio.addEventListener('change', () => {
-                selectedShopVoucher = radio;
-            });
+        // Lắng nghe sự kiện thay đổi lựa chọn voucher
+        document.querySelectorAll('input[name="shop_voucher"]').forEach(radio => {
+            radio.addEventListener('change', () => selectedShopVoucher = radio);
+        });
+        document.querySelectorAll('input[name="shipping_voucher"]').forEach(radio => {
+            radio.addEventListener('change', () => selectedShippingVoucher = radio);
         });
 
-        shippingVoucherRadios.forEach(radio => {
-            radio.addEventListener('change', () => {
-                selectedShippingVoucher = radio;
-            });
-        });
-
-        confirmBtn.addEventListener('click', () => {
+        // Nút xác nhận trong modal
+        document.getElementById('confirmPromoBtn').addEventListener('click', () => {
             updateTotal();
             promoModal.classList.remove('active');
         });
@@ -291,6 +281,9 @@ document.addEventListener('DOMContentLoaded', function () {
     // --- Xử lý Submit Form ---
     if (checkoutForm) {
         checkoutForm.addEventListener('submit', function(event) {
+            // event.preventDefault(); // Bỏ comment dòng này để test mà không gửi form đi
+
+            // 1. Tạo input ẩn cho danh sách voucher ID
             let voucherIds = [];
             if (selectedShopVoucher) voucherIds.push(selectedShopVoucher.value);
             if (selectedShippingVoucher) voucherIds.push(selectedShippingVoucher.value);
@@ -298,22 +291,18 @@ document.addEventListener('DOMContentLoaded', function () {
             if (voucherIds.length > 0) {
                 const voucherInput = document.createElement('input');
                 voucherInput.type = 'hidden';
-                voucherInput.name = 'voucher_ids'; // Gửi đi một danh sách ID
+                voucherInput.name = 'voucher_ids';
                 voucherInput.value = voucherIds.join(',');
                 this.appendChild(voucherInput);
             }
 
+            // 2. Tạo input ẩn cho tổng số tiền giảm giá
             const discountInput = document.createElement('input');
             discountInput.type = 'hidden';
             discountInput.name = 'discount_amount';
-            discountInput.value = currentDiscount;
+            // === SỬA LỖI 2: Sử dụng biến toàn cục đã được cập nhật ===
+            discountInput.value = totalDiscountAmount;
             this.appendChild(discountInput);
-
-            const shippingInput = document.createElement('input');
-            shippingInput.type = 'hidden';
-            shippingInput.name = 'shipping_fee';
-            shippingInput.value = parseFloat(shippingFeeEl.dataset.value);
-            this.appendChild(shippingInput);
         });
     }
 });
