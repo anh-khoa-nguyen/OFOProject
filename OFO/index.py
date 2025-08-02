@@ -930,7 +930,7 @@ def delete_voucher_api(voucher_id):
     if success:
         return jsonify({'message': 'Xóa voucher thành công!'})
     return jsonify({'error': 'Không tìm thấy voucher hoặc lỗi khi xóa'}), 404
-=======
+
 @app.template_filter('format_currency')
 def format_currency_filter(value):
     """
