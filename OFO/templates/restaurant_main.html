@@ -1252,7 +1252,7 @@ if (editDishForm) {
         toggleHeaderVisibility();
     });
     function showToastt(message, type = 'success') {
-    console.log('dô ròi ')
+
     const existingToast = document.querySelector('.toast-notificationt');
     if (existingToast) {
         existingToast.remove();
@@ -1278,6 +1278,40 @@ if (editDishForm) {
         }, 400); // Phải khớp với thời gian transition trong CSS
     }, 1500); // Toast sẽ hiển thị trong 3 giây
 }
+
+</script>
+<!--Xử lý thông báo-->
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. Kết nối đến server Socket.IO
+    const socket = io();
+
+    // 2. Lấy các phần tử HTML
+    const audio = document.getElementById('notification-sound');
+    const toastEl = document.getElementById('newOrderToast');
+    const toastBody = document.getElementById('toast-body');
+    const toast = new bootstrap.Toast(toastEl);
+
+    // 3. Lắng nghe sự kiện 'new_order' từ server
+    socket.on('new_order', function(data) {
+        console.log('Nhận được đơn hàng mới:', data);
+
+        // Cập nhật nội dung thông báo
+        toastBody.innerHTML = `
+            <p class="mb-1">Đơn hàng mới <strong>#${data.daily_order_number} trong ngày</strong> từ khách hàng <strong>${data.customer_name}</strong>.</p>
+            <p class="mb-0">Tổng giá trị: <strong>${data.total}</strong></p>
+            <a href="#" class="btn btn-primary btn-sm mt-2">Xem chi tiết</a>
+        `;
+
+        // Hiển thị thông báo
+        toast.show();
+
+        // Phát âm thanh
+        // Cần .catch() để tránh lỗi trên trình duyệt nếu người dùng chưa tương tác với trang
+        audio.play().catch(error => {
+            console.log("Không thể tự động phát âm thanh, cần người dùng tương tác với trang trước.");
+        });
 
 </script>
 {% endblock %}
