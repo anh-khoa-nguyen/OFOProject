@@ -1236,7 +1236,7 @@ def active_orders_page():
     active_orders = dao.get_active_orders_for_user(current_user.id)
     return render_template('active_orders.html', orders=active_orders)
 
-#xử lý thông báo nhà hàng, khi đặt đơn từ user
+#xử lý thông báo nhà hàng
 @socketio.on('connect')
 def handle_connect():
     # Chỉ xử lý nếu người dùng đã đăng nhập và là nhà hàng
