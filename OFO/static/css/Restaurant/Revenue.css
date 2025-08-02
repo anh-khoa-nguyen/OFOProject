@@ -1,0 +1,332 @@
+
+
+
+
+.breadcrumb {
+    --bs-breadcrumb-divider: '>';
+}
+
+.breadcrumb-item a {
+    text-decoration: none;
+    color: #E91E63;
+    font-weight: 500;
+}
+
+.breadcrumb-item.active {
+    color: #E91E63;
+}
+
+.restaurant-title {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.restaurant-meta-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.5rem;
+    color: #5a5a5a;
+    font-size: 0.95rem;
+}
+
+.restaurant-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.promo-section {
+    color: #E91E63;
+    font-weight: 500;
+}
+
+.promo-section a {
+    color: #E91E63;
+    font-weight: 700;
+    text-decoration: none;
+}
+.category-navbar-wrapper {
+    position: sticky;
+    top: 0;
+    background-color: white;
+    z-index: 1020;
+    border-bottom: 1px solid ;
+}
+
+.category-navbar {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.category-nav-list {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 1.5rem;
+    overflow-x: auto;
+    padding: 0.5rem 0;
+    scroll-behavior: smooth;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+.category-nav-list::-webkit-scrollbar {
+    display: none;
+}
+
+
+.category-nav-item {
+    padding: 0.5rem 0;
+    color: #333;
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+    border-bottom: 3px solid transparent;
+    transition: color 0.2s;
+}
+
+
+.category-nav-item:hover {
+    color: #E91E63;
+}
+
+
+.category-nav-item.active {
+    color: #E91E63;
+    font-weight: 700;
+    border-bottom-color: #E91E63;
+}
+
+
+.restaurant-info-block .restaurant-management-nav {
+    width: 100%;
+    padding-bottom: 1rem;
+    margin-top: 1.5rem;
+    margin-bottom: 2rem;
+    text-align: left;
+}
+.restaurant-info-block .restaurant-management-nav ul {
+    display: inline-flex !important; /* Dùng !important để đảm bảo chiến thắng */
+    align-items: center;
+    list-style: none !important; /* Quan trọng: Xóa dấu chấm tròn */
+    padding: 0;
+    margin: 0;
+    gap: 1.5rem;
+}
+
+.restaurant-info-block .restaurant-management-nav li {
+    display: block !important; /* Bỏ qua 'display: list-item' mặc định */
+    padding-left: 1.5rem;
+    border-left: 1px solid #ced4da; /* Tạo dấu gạch đứng */
+}
+
+.restaurant-info-block .restaurant-management-nav li:first-child {
+    border-left: none;
+    padding-left: 0;
+}
+
+.restaurant-info-block .restaurant-management-nav a {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: #495057;
+    font-weight: 500;
+    font-size: 1.1rem;
+    transition: color 0.2s ease-in-out;
+}
+
+.restaurant-info-block .restaurant-management-nav a:hover,
+.restaurant-info-block .restaurant-management-nav a.active {
+    color: #E91E63; /* Màu xanh nổi bật */
+    font-weight: 700;
+}
+
+.restaurant-info-block .restaurant-management-nav a i {
+    margin-right: 8px;
+    font-size
+}
+//Voucher
+.restaurant-management-nav a.active {
+    color: var(--primary-color);
+    font-weight: 700;
+}
+/* =================================================================== */
+/* ===         STYLES FOR REVENUE REPORT PAGE                      === */
+/* =================================================================== */
+
+/* --- BIẾN MÀU VÀ CÀI ĐẶT CHUNG --- */
+:root {
+    --bg-light-gray: #f8f9fa;      /* Màu nền chính của trang */
+    --card-white: #ffffff;        /* Màu nền của các thẻ và bộ lọc */
+    --primary-blue: #007bff;       /* Màu nhấn chính (cho nút active) */
+    --primary-text: #212529;      /* Màu chữ chính */
+    --secondary-text: #6c757d;    /* Màu chữ phụ, nhãn */
+    --border-color: #dee2e6;      /* Màu viền */
+}
+
+/* --- BỐ CỤC CHÍNH --- */
+.report-container {
+    max-width: 1200px;
+    margin: 1rem auto; /* Giảm margin trên để gần nav hơn */
+    padding: 1rem;
+}
+
+.report-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    color: var(--primary-text);
+}
+
+/* --- BỘ LỌC THỜI GIAN --- */
+.filter-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--card-white);
+    padding: 0.75rem;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    margin-bottom: 2rem;
+}
+
+.time-pills {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.pill {
+    background-color: transparent;
+    border: none;
+    padding: 0.7rem 1.3rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--secondary-text);
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.pill:hover {
+    background-color: #e9ecef;
+    color: var(--primary-text);
+}
+
+.pill.active {
+    background-color: var(--primary-blue);
+    color: white;
+}
+
+.date-selector .form-control {
+    min-width: 180px; /* Đảm bảo ô input đủ rộng */
+}
+
+
+/* --- CÁC THẺ THỐNG KÊ (KPI CARDS) --- */
+.stats-overview {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background-color: var(--card-white);
+    padding: 1.75rem;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+}
+
+.stat-card h3 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--secondary-text);
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+}
+
+.stat-card p.value {
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: var(--primary-text);
+    line-height: 1.2;
+}
+
+
+/* --- KHU VỰC BIỂU ĐỒ --- */
+.chart-container {
+    background-color: var(--card-white);
+    padding: 2rem;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+    min-height: 400px;
+}
+
+.chart-container h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 2rem;
+}
+
+#revenueChart {
+    width: 100% !important;
+    height: 350px !important;
+}
+
+
+/* --- KHU VỰC THÔNG BÁO (KHI KHÔNG CÓ DỮ LIỆU) --- */
+.no-data-placeholder {
+    border: 2px dashed var(--border-color);
+    border-radius: 12px;
+    padding: 4rem 2rem;
+    text-align: center;
+    background-color: #fdfdff;
+    margin-top: 1.5rem;
+}
+
+.no-data-placeholder i {
+    font-size: 3rem;
+    color: #ced4da;
+    margin-bottom: 1.5rem;
+}
+
+.no-data-placeholder p {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--primary-text);
+    margin-bottom: 0.5rem;
+}
+
+.no-data-placeholder span {
+    font-size: 0.9rem;
+    color: var(--secondary-text);
+}
+
+
+/* --- LỚP TIỆN ÍCH --- */
+.hidden {
+    display: none !important;
+}
+
+
+/* --- RESPONSIVE CHO THIẾT BỊ DI ĐỘNG --- */
+@media (max-width: 992px) {
+    .stats-overview {
+        grid-template-columns: 1fr; /* Chuyển thành 1 cột trên tablet */
+    }
+}
+
+@media (max-width: 768px) {
+    .filter-controls {
+        flex-direction: column; /* Chuyển bộ lọc thành dạng cột */
+        gap: 1rem;
+        align-items: stretch; /* Kéo dài các phần tử con */
+    }
+
+    .time-pills {
+        flex-wrap: wrap; /* Cho phép các nút xuống dòng nếu không đủ chỗ */
+        justify-content: center;
+    }
+}

@@ -1,7 +1,7 @@
 <head>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/restaurant.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 </head>
 {% extends 'layout/base.html' %}
@@ -20,19 +20,18 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#"> <!-- Thay bằng url_for('...') của bạn -->
+                    <a href="{{ url_for('restaurant_orders',restaurant_id=restaurant.id) }}">
                         <i class="fas fa-receipt"></i>
                         <span>Đơn Hàng</span>
                     </a>
                 </li>
                 <li>
-                    <a href="#"> <!-- Thay bằng url_for('...') của bạn -->
-                        <i class="fas fa-chart-line"></i>
-                        <span>Doanh Thu</span>
+                    <a href="{{ url_for('revenue', restaurant_id=restaurant.id) }}" ><i class="fas fa-chart-line"></i><span>Doanh Thu</span>
                     </a>
                 </li>
+
                 <li>
-                    <a href="#"> <!-- Thay bằng url_for('...') của bạn -->
+                    <a href="{{ url_for('voucher',restaurant_id=restaurant.id) }}"> <!-- Thay bằng url_for('...') của bạn -->
                         <i class="fas fa-tags"></i>
                         <span>Khuyến Mãi</span>
                     </a>
@@ -193,8 +192,8 @@
         <div class="modal-overlay"></div>
 
         <!-- Nội dung của Modal (class này có thể dùng chung) -->
-        <div class="modal-content">
-            <button class="close-modal" title="Đóng">×</button>
+        <div class="modal-content" >
+            <button class="close-modal"  title="Đóng">×</button>
             <h2>Thêm Nhóm Món Ăn Mới</h2>
 
             <!-- Form để gửi dữ liệu, với ID cụ thể -->
@@ -275,7 +274,7 @@
     <div id="modal_edit_dish" class="modal">
         <div class="modal-overlay"></div>
         <div class="modal-content">
-            <button class="close-modal">×</button>
+            <button class="close-modal" id="close-update_modal">×</button>
             <h2>Sửa Món Ăn</h2>
             <form id="form_edit_dish" enctype="multipart/form-data">
                 <input type="hidden" name="dish_id" id="edit_dish_id">
@@ -315,7 +314,7 @@
                 </div>
                 <div class="form-group">
                     <label>Hình ảnh mới (tùy chọn)</label>
-                    <input type="file" name="image" accept="image/*">
+                    <input type="file"  name="image" accept="image/*">
                 </div>
 
                 <button type="submit" class="btn-submit">Lưu thay đổi</button>
@@ -327,7 +326,7 @@
          aria-labelledby="offcanvasLabel">
         <div class="offcanvas-header border-bottom">
             <h5 class="offcanvas-title" id="offcanvasLabel">Tạo Nhóm Tùy Chọn Mới</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            <button type="button"  class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
         <div class="offcanvas-body">
             <form id="dynamicForm">
@@ -375,7 +374,7 @@
 
     <div class="offcanvas-header border-bottom">
         <h5 class="offcanvas-title" id="editOffcanvasLabel">Chỉnh Sửa Nhóm Tùy Chọn</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        <button type="button" class="btn-close" id="close-modal-updatedishgroup" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
 
     <div class="offcanvas-body">
@@ -423,25 +422,6 @@
         </button>
 
     </div>
-</div>
-<!--Thông báo cho nhà hàng-->
-
-<!-- 1. Âm thanh thông báo (sẽ không hiển thị) -->
-<audio id="notification-sound" src="{{ url_for('static', filename='sounds/notification.mp3') }}" preload="auto"></audio>
-
-<!-- 2. Toast (popup thông báo) của Bootstrap -->
-<div class="toast-container position-fixed bottom-0 end-0 p-3">
-  <div id="newOrderToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-    <div class="toast-header">
-      <i class="bi bi-bell-fill me-2 text-danger"></i>
-      <strong class="me-auto">Có đơn hàng mới!</strong>
-      <small>vài giây trước</small>
-      <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-    </div>
-    <div class="toast-body" id="toast-body">
-      <!-- Nội dung thông báo sẽ được chèn vào đây bằng JavaScript -->
-    </div>
-  </div>
 </div>
 
 
@@ -664,7 +644,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         if (!data.name || data.options.length === 0) {
-            alert("Vui lòng điền đầy đủ tên nhóm và ít nhất một lựa chọn.");
+            showToastt('Vui lòng điền đầy đủ tên nhóm và ít nhất một lựa chọn', 'error');
             return;
         }
 
@@ -697,7 +677,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             if (!data.name || data.options.length === 0) {
-                alert("Vui lòng điền đầy đủ tên nhóm và ít nhất một lựa chọn.");
+                showToastt('Vui lòng điền đầy đủ tên nhóm và ít nhất một lựa chọn.','error');
                 return;
             }
 
@@ -713,17 +693,20 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(result => {
                 // 3. Xử lý kết quả trả về từ server
                 if (result.success) {
-                    alert('✅ ' + result.message);
-
-                    // Tải lại trang để cập nhật danh sách
+                const modalElementt = document.getElementById('dynamicFormOffcanvas');
+                modalElementt.classList.remove('show');
+                showToastt(result.message || 'Thêm nhóm tùy chọn thành công!', 'success');
+                // Tải lại trang sau 1.5 giây để cập nhật
+                setTimeout(() => {
                     location.reload();
+                }, 1500);
                 } else {
-                    alert('❌ Lỗi: ' + result.message);
+                    showToastt(result.message|| 'Thêm nhóm tùy chọn thất bại!', 'error');
                 }
             })
             .catch(error => {
-                console.error('Lỗi khi gửi dữ liệu:', error);
-                alert('❌ Đã xảy ra lỗi mạng. Vui lòng thử lại.');
+                console.error('Lỗi khi gửi dữ liệu:', 'error');
+               showToastt('Đã xảy ra lỗi mạng, Vui lòng thử lại sau!');
             });
   });
 
@@ -732,15 +715,10 @@ document.addEventListener('DOMContentLoaded', function () {
 <script>
     //SỬA NHÓM MÓN
 document.addEventListener('DOMContentLoaded', function () {
-
     const editOffcanvasEl = document.getElementById('editOptionGroupOffcanvas');
-
-    // Nếu không có offcanvas "Sửa" trên trang thì dừng lại
     if (!editOffcanvasEl) {
         return;
     }
-
-    // --- 1. Lấy các phần tử DOM của form "Sửa" ---
     const editForm = document.getElementById('editOptionGroupForm');
     const editGroupIdInput = document.getElementById('editGroupId');
     const editGroupNameInput = document.getElementById('editGroupName');
@@ -748,8 +726,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const editGroupMandatoryInput = document.getElementById('editGroupMandatory');
     const editOptionsContainer = document.getElementById('editOptionsContainer');
     const addAnotherOptionBtn = document.getElementById('addAnotherOptionBtn');
-
-    // --- 2. Hàm tái sử dụng để tạo một dòng tùy chọn ---
     const createEditOptionRow = (option = { name: '', price: 0 }) => {
         const card = document.createElement('div');
         card.className = 'option-card';
@@ -769,7 +745,6 @@ document.addEventListener('DOMContentLoaded', function () {
         return card;
     };
 
-    // --- 3. Lắng nghe sự kiện khi offcanvas CHUẨN BỊ MỞ (Fetch Data) ---
     editOffcanvasEl.addEventListener('show.bs.offcanvas', async function (event) {
         // Dọn dẹp form và hiển thị trạng thái tải
         editForm.reset();
@@ -784,7 +759,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 throw new Error(`Lỗi máy chủ: ${response.statusText}`);
             }
             const data = await response.json();
-
             // Đổ dữ liệu vào form
             editGroupIdInput.value = data.id;
             editGroupNameInput.value = data.name;
@@ -798,7 +772,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 editOptionsContainer.appendChild(createEditOptionRow());
             }
         } catch (error) {
-            console.error("Lỗi khi tải dữ liệu nhóm tùy chọn:", error);
+            console.error("Lỗi khi tải dữ liệu nhóm tùy chọn:", 'error');
             editOptionsContainer.innerHTML = `<div class="alert alert-danger">Không thể tải dữ liệu. Vui lòng thử lại.</div>`;
         }
     });
@@ -807,14 +781,11 @@ document.addEventListener('DOMContentLoaded', function () {
     addAnotherOptionBtn.addEventListener('click', () => {
         editOptionsContainer.appendChild(createEditOptionRow());
     });
-
     // --- 5. Lắng nghe sự kiện khi SUBMIT FORM (Gửi dữ liệu đi) ---
     editForm.addEventListener('submit', function(event) {
     // Ngăn trình duyệt tải lại trang, chúng ta sẽ xử lý bằng JavaScript
     event.preventDefault();
-
     // ----- A. THU THẬP DỮ LIỆU -----
-
     // Thu thập tất cả các lựa chọn (options) từ các thẻ đã tạo
     let optionsPayload = [];
     editOptionsContainer.querySelectorAll('.option-card').forEach(card => {
@@ -826,7 +797,6 @@ document.addEventListener('DOMContentLoaded', function () {
             optionsPayload.push({ name: name, price: price });
         }
     });
-
     // Đóng gói toàn bộ dữ liệu (payload) để gửi đến server
     const payload = {
         id: parseInt(editGroupIdInput.value),
@@ -835,7 +805,6 @@ document.addEventListener('DOMContentLoaded', function () {
         mandatory: editGroupMandatoryInput.checked,
         options: optionsPayload
     };
-
     // ----- B. KIỂM TRA DỮ LIỆU -----
     if (!payload.name || !payload.id) {
         alert("Có lỗi xảy ra: Tên nhóm hoặc ID không hợp lệ.");
@@ -854,64 +823,90 @@ document.addEventListener('DOMContentLoaded', function () {
     .then(result => {
         // ----- D. XỬ LÝ KẾT QUẢ -----
         if (result.success) {
-            alert('✅ ' + (result.message || 'Cập nhật thành công!'));
-            // Tải lại trang là cách đơn giản nhất để thấy thay đổi
-            location.reload();
+         const modalElementb = document.getElementById('editOptionGroupOffcanvas');
+            modalElementb.classList.remove('show');
+             showToastt(result.message || 'Cập nhật nhóm tùy chọn thành công!', 'success');
+                // Tải lại trang sau 1.5 giây để cập nhật
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
         } else {
-            alert('❌ Lỗi: ' + (result.message || 'Không thể cập nhật.'));
+            showToastt(result.message || 'Không thể cập nhật.');
         }
     })
     .catch(error => {
         // Bắt lỗi nếu có vấn đề về mạng
-        console.error("Lỗi khi gửi form sửa:", error);
-        alert('❌ Đã xảy ra lỗi mạng. Vui lòng thử lại.');
+        console.error("Lỗi khi gửi form sửa:", 'error');
+        showToastt(error.message||'❌ Đã xảy ra lỗi mạng. Vui lòng thử lại.');
     });
 });
 
 });
 </script>
 <script>
-    const deleteBtnInsideForm = document.getElementById('deleteGroupInsideFormBtn');
+   const deleteBtnInsideForm = document.getElementById('deleteGroupInsideFormBtn');
 
-
-// === SỰ KIỆN KHI CLICK VÀO NÚT "XÓA" BÊN TRONG FORM ===
 deleteBtnInsideForm.addEventListener('click', function() {
+    // Lấy ID và tên của nhóm đang được sửa
+    const groupId = document.getElementById('editGroupId').value; // Giả sử ID của input là editGroupId
+    const groupName = document.getElementById('editGroupName').value.trim(); // Giả sử ID của input là editGroupName
 
-    // Lấy ID và tên của nhóm đang được sửa từ các ô input
-    const groupId = editGroupId.value;
-    const groupName = editGroupName.value.trim();
-
-    // Nếu không có ID, không làm gì cả (để phòng lỗi)
+    // Kiểm tra xem có ID không
     if (!groupId) {
-        alert("Không thể xác định nhóm cần xóa.");
+        // Sử dụng toast để thông báo lỗi thay vì alert
+        showToast("Không thể xác định nhóm cần xóa. Vui lòng thử lại.", 'error');
         return;
     }
 
-    // Hiển thị hộp thoại xác nhận
-    if (confirm(`Bạn có chắc chắn muốn xóa vĩnh viễn nhóm "${groupName}" không?`)) {
+    // BƯỚC 1: Gọi SweetAlert2 để hiển thị hộp thoại xác nhận.
+    Swal.fire({
+        title: `Xóa nhóm "${groupName}"?`,
+        text: "Tất cả các tùy chọn trong nhóm này cũng sẽ bị xóa vĩnh viễn!",
+        icon: 'warning',
+        showCancelButton: true,
 
-        // Gọi API xóa (API này bạn đã tạo ở bước trước)
-        fetch(`/api/option-group/delete/${groupId}`, {
-            method: 'DELETE'
-        })
-        .then(res => res.json())
-        .then(result => {
-            if (result.success) {
-                alert('✅ ' + result.message);
+        confirmButtonColor: '#E91E63', // Màu hồng đặc trưng
+        cancelButtonColor: '#6c757d',
 
+        confirmButtonText: 'Vâng, xóa nhóm này!',
+        cancelButtonText: 'Hủy bỏ'
+    }).then((result) => {
 
-                // Tải lại trang để cập nhật danh sách
-                location.reload();
-            } else {
-                alert('❌ Lỗi: ' + result.message);
-            }
-        })
-        .catch(error => {
-            console.error("Lỗi khi gửi yêu cầu xóa từ trong form:", error);
-            alert('❌ Đã xảy ra lỗi mạng.');
-        });
-    }
+        // BƯỚC 2: Chỉ thực hiện nếu người dùng nhấn nút xác nhận.
+        if (result.isConfirmed) {
+
+            // BƯỚC 3: Gửi yêu cầu DELETE đến server.
+            fetch(`/api/option-group/delete/${groupId}`, {
+                method: 'DELETE'
+            })
+            .then(res => {
+                // Áp dụng logic xử lý phản hồi chuyên nghiệp
+                if (!res.ok) {
+                    return res.json().then(errData => {
+                        throw new Error(errData.message || 'Xóa thất bại!');
+                    });
+                }
+                return res.json();
+            })
+            .then(data => {
+                // BƯỚC 4a: THÀNH CÔNG -> Hiển thị toast THÀNH CÔNG
+                const modalElementc = document.getElementById('editOptionGroupOffcanvas');
+                modalElementc.classList.remove('show');
+                showToastt(data.message || 'Đã xóa nhóm tùy chọn thành công!', 'success');
+                // Tải lại trang sau 1.5 giây để cập nhật
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            })
+            .catch(err => {
+                // BƯỚC 4b: THẤT BẠI -> Hiển thị toast LỖI
+                showToastt('Lỗi: ' + err.message, 'error');
+                console.error("Lỗi khi xóa nhóm tùy chọn:", err);
+            });
+        }
+    });
 });
+
 </script>
 
 <script>
@@ -956,15 +951,22 @@ console.log('Dữ liệu gửi lên server:', data);
         .then(res => res.json())
         .then(result => {
             if (result.success) {
-                alert('✅ Thêm nhóm món thành công!');
-                location.reload();
+            const modalElement = document.getElementById('modal_dishgroup');
+            modalElement.classList.remove('show');
+                showToastt(result.message || 'Thêm nhóm tùy chọn thành công!', 'success');
+                // Tải lại trang sau 1.5 giây để cập nhật
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
             } else {
-                alert('❌ Thêm thất bại: ' + result.message);
+             const modalElement = document.getElementById('modal_dishgroup');
+            modalElement.classList.remove('show');
+                showToastt(result.message || 'Nhóm món đã tồn tại !', 'error');
             }
         })
         .catch(err => {
             console.error(err);
-            alert('❌ Có lỗi xảy ra!');
+            showToastt(err.message||'❌ Có lỗi xảy ra!');
         });
     });
 });
@@ -972,31 +974,49 @@ console.log('Dữ liệu gửi lên server:', data);
 </script>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        document.querySelectorAll('.btn-delete-group').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const groupId = btn.dataset.id;
+    document.querySelectorAll('.btn-delete-group').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const groupId = btn.dataset.id;
+            Swal.fire({
+                title: 'Bạn chắc chắn muốn xóa?',
+                text: "Tất cả món ăn trong nhóm này cũng sẽ bị xóa vĩnh viễn!",
+                icon: 'warning',
+                showCancelButton: true,
 
-                if (confirm('Bạn có chắc chắn muốn xoá nhóm món này?')) {
+                confirmButtonColor: '#E91E63',
+                cancelButtonColor: '#6c757d',
+
+                confirmButtonText: 'Vâng, xóa nhóm!',
+                cancelButtonText: 'Hủy bỏ'
+            }).then((result) => {
+                if (result.isConfirmed) {
                     fetch(`/delete_dishgroup/${groupId}`, {
                         method: 'DELETE'
                     })
-                    .then(res => res.json())
-                    .then(result => {
-                        if (result.success) {
-                            alert('✅ Đã xoá nhóm món!');
-                            location.reload();
-                        } else {
-                            alert('❌ Xoá thất bại: ' + result.message);
+                    .then(res => {
+                        if (!res.ok) {
+                            return res.json().then(errData => {
+                                throw new Error(errData.message || 'Xóa thất bại!');
+                            });
                         }
+                        return res.json();
+                    })
+                    .then(data => {
+                        showToastt(data.message || 'Đã xóa nhóm món thành công!', 'success');
+                        setTimeout(() => {
+                            location.reload();
+                        }, 3000);
                     })
                     .catch(err => {
-                        console.error(err);
-                        alert('❌ Lỗi khi xoá nhóm món!');
+                        showToastt(err.message, 'error');
+                        console.error("Lỗi khi xóa nhóm món:", err);
                     });
                 }
             });
         });
     });
+});
 </script>
 <script>
     //THÊM MÓN ĂN
@@ -1031,17 +1051,16 @@ console.log('Dữ liệu gửi lên server:', data);
   .then(res => res.json())
   .then(data => {
     if (data.success) {
-      alert("✅ Thêm món ăn thành công!");
       modal.classList.remove('show');
-      form.reset();
-      location.reload();
+      showToastt(data.message || 'Lưu Món Ăn thành công!', 'success');
+      setTimeout(() => { location.reload();}, 3000);
     } else {
-      alert("❌ Thất bại: " + data.message);
+      showToastt( data.message||'Lưu món ăn thất bại');
     }
   })
   .catch(err => {
     console.error("Lỗi:", err);
-    alert("❌ Lỗi gửi dữ liệu");
+    showToastt(err.message||'Lưu món ăn thất bại','error');
   });
 });
 
@@ -1101,12 +1120,11 @@ document.querySelectorAll('.btn-add-to-cart').forEach(btn => {
 
         } catch (error) {
             console.error(error);
-            alert(error.message);
+           showToastt(error.message,'error')
             modal.classList.remove('show');
         }
     });
 });
-
 // 2. Xử lý đóng modal
 const editDishModal = document.getElementById('modal_edit_dish');
 if (editDishModal) {
@@ -1132,51 +1150,78 @@ if (editDishForm) {
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                alert("✅ " + (data.message || "Đã cập nhật!"));
-                location.reload();
+
+            const modalElementa = document.getElementById('modal_edit_dish');
+            modalElementa.classList.remove('show');
+                showToastt(data.message || 'Sửa Món Ăn thành công!', 'success');
+                setTimeout(() => { location.reload();}, 1500);
             } else {
-                alert("❌ Sửa thất bại: " + (data.message || "Lỗi không xác định."));
+                    showToastt(data.message||'Lỗi khi sửa món ăn.' , 'error');
             }
         })
         .catch(err => {
-            alert("❌ Lỗi hệ thống");
+            showToastt(err.message||'Lỗi khi sửa món ăn.' , 'error');
             console.error(err);
         });
     });
 }
 //XÓA MÓN ĂN
-    document.querySelectorAll('.btn-delete-dish').forEach(btn => {
+   document.querySelectorAll('.btn-delete-dish').forEach(btn => {
     btn.addEventListener('click', (e) => {
-        e.preventDefault(); // Ngăn form hoặc nút gây reload không cần thiết
+        e.preventDefault(); // Ngăn chặn các hành vi mặc định
 
         const dishId = btn.getAttribute('data-dish-id');
-        const confirmDelete = confirm("🗑️ Bạn có chắc chắn muốn xóa món ăn này không?");
 
-        if (confirmDelete) {
-            fetch('/delete_dish', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ dish_id: dishId })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    alert("✅ Món ăn đã được xóa thành công!");
-                    location.reload(); // hoặc bạn có thể remove phần tử khỏi DOM
-                } else {
-                    alert("❌ Không thể xóa: " + data.message);
-                }
-            })
-            .catch(error => {
-                console.error(error);
-                alert("❌ Đã xảy ra lỗi khi xóa!");
-            });
-        }
+        // BƯỚC 1: Gọi SweetAlert2 để hiển thị hộp thoại xác nhận đẹp mắt.
+        // Tùy chỉnh lại nội dung cho phù hợp với "món ăn".
+        Swal.fire({
+            title: 'Bạn chắc chắn muốn xóa?',
+            text: "Món ăn này sẽ bị xóa vĩnh viễn!",
+            icon: 'warning',
+            showCancelButton: true,
+
+            confirmButtonColor: '#E91E63', // Màu hồng đặc trưng
+            cancelButtonColor: '#6c757d',
+
+            confirmButtonText: 'Vâng, xóa món ăn!',
+            cancelButtonText: 'Hủy bỏ'
+        }).then((result) => {
+
+            // BƯỚC 2: Chỉ thực hiện nếu người dùng nhấn nút xác nhận.
+            if (result.isConfirmed) {
+
+                // BƯỚC 3: Gửi yêu cầu đến server.
+                // Giữ nguyên cấu trúc `fetch` cũ của bạn (POST, JSON body).
+                fetch('/delete_dish', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ dish_id: dishId })
+                })
+                .then(res => {
+                    if (!res.ok) {
+                        return res.json().then(errData => {
+                            showToastt(errData.message || 'Xóa thất bại!');
+                        });
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    showToastt(data.message || 'Đã xóa món ăn thành công!', 'success');
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                })
+                .catch(err => {
+                    // BƯỚC 4b: THẤT BẠI -> Hiển thị toast LỖI
+                    showToastt(err.message||'Lỗi khi xóa món ăn.' , 'error');
+                    console.error("Lỗi khi xóa món ăn:", err);
+                });
+            }
+        });
     });
 });
-
 </script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -1206,45 +1251,33 @@ if (editDishForm) {
 
         toggleHeaderVisibility();
     });
-</script>
-<!--Xử lý thông báo-->
-<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // 1. Kết nối đến server Socket.IO
-    const socket = io();
+    function showToastt(message, type = 'success') {
+    console.log('dô ròi ')
+    const existingToast = document.querySelector('.toast-notificationt');
+    if (existingToast) {
+        existingToast.remove();
+    }
+    const toastContainer = document.createElement('div');
+    toastContainer.className = `toast-notificationt ${type}`;
+    toastContainer.textContent = message;
+    document.body.appendChild(toastContainer);
+    setTimeout(() => {
+        toastContainer.classList.add('show');
+    }, 10); // 10ms là đủ
 
-    // 2. Lấy các phần tử HTML
-    const audio = document.getElementById('notification-sound');
-    const toastEl = document.getElementById('newOrderToast');
-    const toastBody = document.getElementById('toast-body');
-    const toast = new bootstrap.Toast(toastEl);
+    // 6. Tự động xóa toast sau một khoảng thời gian
+    setTimeout(() => {
+        // Xóa class 'show' để toast trượt xuống
+        toastContainer.classList.remove('show');
 
-    // 3. Lắng nghe sự kiện 'new_order' từ server
-    socket.on('new_order', function(data) {
-        console.log('Nhận được đơn hàng mới:', data);
+        // Sau khi animation kết thúc (0.4s), xóa hẳn phần tử khỏi DOM
+        setTimeout(() => {
+            if (toastContainer.parentNode) {
+                toastContainer.parentNode.removeChild(toastContainer);
+            }
+        }, 400); // Phải khớp với thời gian transition trong CSS
+    }, 1500); // Toast sẽ hiển thị trong 3 giây
+}
 
-        // Cập nhật nội dung thông báo
-        toastBody.innerHTML = `
-            <p class="mb-1">Đơn hàng mới <strong>#${data.daily_order_number} trong ngày</strong> từ khách hàng <strong>${data.customer_name}</strong>.</p>
-            <p class="mb-0">Tổng giá trị: <strong>${data.total}</strong></p>
-            <a href="#" class="btn btn-primary btn-sm mt-2">Xem chi tiết</a>
-        `;
-
-        // Hiển thị thông báo
-        toast.show();
-
-        // Phát âm thanh
-        // Cần .catch() để tránh lỗi trên trình duyệt nếu người dùng chưa tương tác với trang
-        audio.play().catch(error => {
-            console.log("Không thể tự động phát âm thanh, cần người dùng tương tác với trang trước.");
-        });
-
-        // (Tùy chọn) Tự động tải lại trang để cập nhật danh sách đơn hàng
-        // setTimeout(() => {
-        //     location.reload();
-        // }, 5000); // Tải lại sau 5 giây
-    });
-});
 </script>
 {% endblock %}

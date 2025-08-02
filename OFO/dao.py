@@ -1,5 +1,6 @@
 import json
 import os
+from sqlalchemy import func, event, text, desc
 
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -1035,6 +1036,72 @@ def call_gemini_api(user_message):
     except Exception as e:
         print(f"Lỗi khi gọi Gemini API: {e}")
         return "Xin lỗi, trợ lý ảo đang gặp sự cố. Vui lòng thử lại sau."
+#Khuyến mãi
+def get_vouchers_by_restaurant(restaurant_id):
+    return Voucher.query.filter_by(restaurant_id=restaurant_id).order_by(desc(Voucher.end_date)).all()
 
+def get_voucher_by_id(voucher_id):
+    return db.session.get(Voucher, voucher_id)
+
+def add_voucher(data):
+    try:
+        new_voucher = Voucher(**data)
+        db.session.add(new_voucher)
+        db.session.commit()
+        return new_voucher
+    except Exception as e:
+        print(f"Lỗi khi thêm voucher: {e}")
+        db.session.rollback()
+        return None
+
+def update_voucher(voucher_id, data):
+    voucher = get_voucher_by_id(voucher_id)
+    if voucher:
+        try:
+            for key, value in data.items():
+                setattr(voucher, key, value)
+            db.session.commit()
+            return voucher
+        except Exception as e:
+            print(f"Lỗi khi cập nhật voucher: {e}")
+            db.session.rollback()
+            return None
+    return None
+
+def delete_voucher(voucher_id):
+    """Xóa một voucher khỏi cơ sở dữ liệu."""
+    voucher = get_voucher_by_id(voucher_id)
+    if voucher:
+        try:
+            db.session.delete(voucher)
+            db.session.commit()
+            return True
+        except Exception as e:
+            print(f"Lỗi khi xóa voucher: {e}")
+            db.session.rollback()
+            return False
+    return False
+#Order_Restaurant
+def get_orders_by_restaurant(restaurant_id):
+    try:
+        query = Order.query \
+            .filter_by(restaurant_id=restaurant_id) \
+            .order_by(desc(Order.order_date)) \
+            .all()
+
+        return query
+    except Exception as e:
+        print(f"Lỗi khi lấy đơn hàng theo nhà hàng: {e}")
+        return []
+def get_order_by_id(order_id):
+    return Order.query.get(order_id)
+
+def get_raw_orders_in_range(self, restaurant_id, start_date, end_date):
+        orders = db.session.query(Order).filter(
+            Order.restaurant_id == restaurant_id,
+            Order.order_date >= start_date,
+            Order.order_date <= end_date
+        ).all()
+        return orders
 if __name__ == "__main__":
     print(auth_user("user", 123))

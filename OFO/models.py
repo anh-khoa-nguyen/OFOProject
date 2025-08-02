@@ -156,7 +156,6 @@ class DishOption(db.Model):
 
 
 class OrderState(PyEnum):
-    UNPAID = 'Chưa thanh toán'
     PENDING = "Pending"
     CONFIRMED = "Confirmed"
     DELIVERING = "Delivering"
@@ -172,9 +171,12 @@ class Order(db.Model):
     subtotal = Column(Float, nullable=False)  # tổng tiền
     discount = Column(Float, default=0)
     total = Column(Float, nullable=False)  # thành tiền
-    delivery_address = Column(String(255), nullable=False)
+    delivery_address = Column(String(50), nullable=False)
     note = Column(String(100))
     order_status = Column(Enum(OrderState), default=OrderState.PENDING, nullable=False)
+    estimated_delivery_time = Column(DateTime, nullable=True)
+    delivery_latitude = Column(Numeric(10, 7), nullable=True)  # Vĩ độ của địa chỉ giao hàng
+    delivery_longitude = Column(Numeric(10, 7), nullable=True)  # Kinh độ của địa chỉ giao hàng
 
     details = relationship('OrderDetail', backref='order', lazy=True)
     review = relationship('Review', backref='order', uselist=False, cascade="all, delete-orphan")
@@ -585,8 +587,7 @@ if __name__ == '__main__':
         # 10. Tạo DishGroup cho nhà hàng đó
         group_com_chinh = DishGroup(name='Món Cơm Chính', restaurant_id=restaurant1.id)
         group_canh = DishGroup(name='Các Món Canh', restaurant_id=restaurant1.id)
-        group_bun = DishGroup(name='Bún Các Loại', restaurant_id=restaurant2.id)
-        db.session.add_all([group_com_chinh, group_canh, group_bun])
+        db.session.add_all([group_com_chinh, group_canh])
         db.session.commit()
 
         #=====================================================================================================================
@@ -612,8 +613,8 @@ if __name__ == '__main__':
         dish1_1.group= group_com_chinh
         dish1_2.group= group_com_chinh
         dish1_3.group = group_canh
-        dish2_1.group = group_bun
-        dish2_2.group = group_bun
+        dish2_1.group = group_com_chinh
+        dish2_2.group = group_com_chinh
         db.session.commit()
 
         #=====================================================================================================================
@@ -665,7 +666,7 @@ if __name__ == '__main__':
 
         order1 = Order(user_id=customer1.id, restaurant_id=restaurant1.id, subtotal=order1_subtotal,
                        discount=order1_discount, total=order1_total, delivery_address='Nhà A, Chung cư Z, TP.HCM',
-                       order_status=OrderState.COMPLETED)
+                       order_status=OrderState.PENDING,delivery_latitude='10.900018',delivery_longitude='106.689797')
         order1.vouchers.append(voucher1)  # Áp dụng voucher
         db.session.add(order1)
         db.session.commit()
@@ -677,12 +678,30 @@ if __name__ == '__main__':
         db.session.add_all([detail1_1, detail1_2])
         db.session.commit()
 
+        order4_subtotal = dish1_1.price + dish1_3.price  # Cơm tấm sườn + Canh khổ qua
+        order4_discount = voucher1.limit
+        order4_total = order4_subtotal - order4_discount
+
+        order4 = Order(user_id=customer1.id, restaurant_id=restaurant1.id, subtotal=order4_subtotal,
+                       discount=order4_discount, total=order4_total, delivery_address='Nhà A, Chung cư Z, TP.HCM',
+                       order_status=OrderState.DELIVERING,delivery_latitude='10.900018',delivery_longitude='106.689797')
+        order4.vouchers.append(voucher1)  # Áp dụng voucher
+        db.session.add(order4)
+        db.session.commit()
+
+        detail4_1 = OrderDetail(order_id=order4.id, dish_id=dish1_1.id, quantity=1, price=dish1_1.price,
+                                dish_name=dish1_1.name, selected_options_luc_dat={})
+        detail4_2 = OrderDetail(order_id=order4.id, dish_id=dish1_3.id, quantity=1, price=dish1_3.price,
+                                dish_name=dish1_3.name, selected_options_luc_dat={})
+        db.session.add_all([detail4_1, detail4_2])
+        db.session.commit()
+
         # Đơn hàng 2 của customer2 tại restaurant2
         order2_subtotal = dish2_1.price * 2  # 2 tô bún bò đặc biệt
         order2_total = order2_subtotal  # Không có giảm giá
         order2 = Order(user_id=customer2.id, restaurant_id=restaurant2.id, subtotal=order2_subtotal,
                        total=order2_total, delivery_address='100 Nguyễn Trãi, Quận 5, TP.HCM',
-                       order_status=OrderState.DELIVERING)
+                       order_status=OrderState.PENDING,delivery_latitude='10.900018',delivery_longitude='106.689797')
         db.session.add(order2)
         db.session.commit()
 
@@ -696,7 +715,7 @@ if __name__ == '__main__':
         order3_total = order3_subtotal  # Không có giảm giá
         order3 = Order(user_id=customer2.id, restaurant_id=restaurant2.id, subtotal=order3_subtotal,
                        total=order3_total, delivery_address='100 Nguyễn Trãi, Quận 5, TP.HCM',
-                       order_status=OrderState.DELIVERING)
+                       order_status=OrderState.DELIVERING,delivery_latitude='10.900018',delivery_longitude='106.689797')
         db.session.add(order3)
         db.session.commit()
 
@@ -704,6 +723,8 @@ if __name__ == '__main__':
                                 dish_name=dish2_1.name, selected_options_luc_dat={})
         db.session.add(detail3_1)
         db.session.commit()
+
+
 
         # 6. TẠO ĐÁNH GIÁ (REVIEW)
         # Chỉ những đơn hàng đã COMPLETED mới có thể có review.css
@@ -958,6 +979,144 @@ if __name__ == '__main__':
         ])
 
         db.session.commit()
+
+        # Yêu cầu: customer2, restaurant3, voucher2, dish_j_1, dish_j_3 phải tồn tại
+        print("Tạo đơn hàng 5...")
+        order5_subtotal = dish_j_1.price + dish_j_3.price  # Gà rán + Mì Ý
+        order5_discount = voucher2.limit
+        order5_total = order5_subtotal - order5_discount
+
+        order5 = Order(user_id=customer2.id, restaurant_id=restaurant3.id, subtotal=order5_subtotal,
+                       discount=order5_discount, total=order5_total, delivery_address='333 Tô Hiến Thành, Quận 10',
+                       order_status=OrderState.COMPLETED, delivery_latitude='10.777353',
+                       delivery_longitude='106.664943',
+                       order_date=datetime.datetime.now() - datetime.timedelta(days=5))  # Lùi ngày để báo cáo
+        order5.vouchers.append(voucher2)
+        db.session.add(order5)
+        db.session.commit()
+
+        detail5_1 = OrderDetail(order_id=order5.id, dish_id=dish_j_1.id, quantity=1, price=dish_j_1.price,
+                                dish_name=dish_j_1.name, selected_options_luc_dat={})
+        detail5_2 = OrderDetail(order_id=order5.id, dish_id=dish_j_3.id, quantity=1, price=dish_j_3.price,
+                                dish_name=dish_j_3.name, selected_options_luc_dat={})
+        db.session.add_all([detail5_1, detail5_2])
+        db.session.commit()
+        print(f"-> Đã tạo Order ID: {order5.id}")
+
+        # --- ĐƠN HÀNG 6 (Customer 3 đặt ở Restaurant 4 (Bánh mì), không dùng voucher) ---
+        # Yêu cầu: customer3, restaurant4, dish_bm_1 phải tồn tại
+        print("Tạo đơn hàng 6...")
+        order6_subtotal = dish_bm_1.price * 2  # 2 ổ bánh mì heo quay
+        order6_discount = 0
+        order6_total = order6_subtotal
+
+        order6 = Order(user_id=customer3.id, restaurant_id=restaurant4.id, subtotal=order6_subtotal,
+                       discount=order6_discount, total=order6_total, delivery_address='444 Lê Văn Lương, Quận 7',
+                       order_status=OrderState.DELIVERING, delivery_latitude='10.736429',
+                       delivery_longitude='106.702922',
+                       order_date=datetime.datetime.now() - datetime.timedelta(days=4))
+        # Không áp dụng voucher
+        db.session.add(order6)
+        db.session.commit()
+
+        detail6_1 = OrderDetail(order_id=order6.id, dish_id=dish_bm_1.id, quantity=2, price=dish_bm_1.price,
+                                dish_name=dish_bm_1.name, selected_options_luc_dat={})
+        db.session.add(detail6_1)
+        db.session.commit()
+        print(f"-> Đã tạo Order ID: {order6.id}")
+
+        # --- ĐƠN HÀNG 7 (Customer 4 đặt ở Restaurant 7 (Phở Lệ)) ---
+        # Yêu cầu: customer4, restaurant7, dish_pho_1, dish_pho_3 phải tồn tại
+        print("Tạo đơn hàng 7...")
+        order7_subtotal = dish_pho_1.price + dish_pho_3.price  # Phở tái + trứng trần
+        order7_discount = 0
+        order7_total = order7_subtotal
+
+        order7 = Order(user_id=customer4.id, restaurant_id=restaurant7.id, subtotal=order7_subtotal,
+                       discount=order7_discount, total=order7_total, delivery_address='413 Nguyễn Trãi, Quận 5',
+                       order_status=OrderState.PENDING, delivery_latitude='10.753580', delivery_longitude='106.670050',
+                       order_date=datetime.datetime.now() - datetime.timedelta(days=3))
+        db.session.add(order7)
+        db.session.commit()
+
+        detail7_1 = OrderDetail(order_id=order7.id, dish_id=dish_pho_1.id, quantity=1, price=dish_pho_1.price,
+                                dish_name=dish_pho_1.name, selected_options_luc_dat={})
+        detail7_2 = OrderDetail(order_id=order7.id, dish_id=dish_pho_3.id, quantity=1, price=dish_pho_3.price,
+                                dish_name=dish_pho_3.name, selected_options_luc_dat={})
+        db.session.add_all([detail7_1, detail7_2])
+        db.session.commit()
+        print(f"-> Đã tạo Order ID: {order7.id}")
+
+        # --- ĐƠN HÀNG 8 (Customer 5 đặt ở Restaurant 8 (Gogi), đơn lớn) ---
+        # Yêu cầu: customer5, restaurant8, dish_gogi_1, dish_gogi_2 phải tồn tại
+        print("Tạo đơn hàng 8...")
+        order8_subtotal = dish_gogi_1.price + dish_gogi_2.price  # Combo nướng + lẩu
+        order8_discount = 0  # Đơn lớn thường không có voucher
+        order8_total = order8_subtotal
+
+        order8 = Order(user_id=customer5.id, restaurant_id=restaurant8.id, subtotal=order8_subtotal,
+                       discount=order8_discount, total=order8_total, delivery_address='1 Quang Trung, Gò Vấp',
+                       order_status=OrderState.COMPLETED, delivery_latitude='10.832850',
+                       delivery_longitude='106.665780',
+                       order_date=datetime.datetime.now() - datetime.timedelta(days=2))
+        db.session.add(order8)
+        db.session.commit()
+
+        detail8_1 = OrderDetail(order_id=order8.id, dish_id=dish_gogi_1.id, quantity=1, price=dish_gogi_1.price,
+                                dish_name=dish_gogi_1.name, selected_options_luc_dat={})
+        detail8_2 = OrderDetail(order_id=order8.id, dish_id=dish_gogi_2.id, quantity=1, price=dish_gogi_2.price,
+                                dish_name=dish_gogi_2.name, selected_options_luc_dat={})
+        db.session.add_all([detail8_1, detail8_2])
+        db.session.commit()
+        print(f"-> Đã tạo Order ID: {order8.id}")
+
+        # --- ĐƠN HÀNG 9 (Customer 6 đặt ở Restaurant 12 (The Coffee House)) ---
+        # Yêu cầu: customer6, restaurant12, dish_tch_1, dish_tch_2, voucher1 phải tồn tại
+        print("Tạo đơn hàng 9...")
+        order9_subtotal = dish_tch_1.price + dish_tch_2.price  # Cafe sữa + Trà đào
+        order9_discount = voucher1.limit  # Dùng voucher của quán khác (giả lập)
+        order9_total = order9_subtotal - order9_discount
+
+        order9 = Order(user_id=customer6.id, restaurant_id=restaurant12.id, subtotal=order9_subtotal,
+                       discount=order9_discount, total=order9_total, delivery_address='510 Phan Văn Trị, Gò Vấp',
+                       order_status=OrderState.CONFIRMED, delivery_latitude='10.828540',
+                       delivery_longitude='106.688920',
+                       order_date=datetime.datetime.now() - datetime.timedelta(days=1))
+        order9.vouchers.append(voucher1)
+        db.session.add(order9)
+        db.session.commit()
+
+        detail9_1 = OrderDetail(order_id=order9.id, dish_id=dish_tch_1.id, quantity=1, price=dish_tch_1.price,
+                                dish_name=dish_tch_1.name, selected_options_luc_dat={})
+        detail9_2 = OrderDetail(order_id=order9.id, dish_id=dish_tch_2.id, quantity=1, price=dish_tch_2.price,
+                                dish_name=dish_tch_2.name, selected_options_luc_dat={})
+        db.session.add_all([detail9_1, detail9_2])
+        db.session.commit()
+        print(f"-> Đã tạo Order ID: {order9.id}")
+
+        # --- ĐƠN HÀNG 10 (Customer 1 đặt ở Restaurant 1, lại là Cơm Tấm) ---
+        # Yêu cầu: customer1, restaurant1, dish1_1, dish1_2 phải tồn tại
+        print("Tạo đơn hàng 10...")
+        order10_subtotal = dish1_1.price + dish1_2.price  # Cơm sườn + cơm bì chả
+        order10_discount = 0
+        order10_total = order10_subtotal
+
+        order10 = Order(user_id=customer1.id, restaurant_id=restaurant1.id, subtotal=order10_subtotal,
+                        discount=order10_discount, total=order10_total,
+                        delivery_address='111 Cách Mạng Tháng Tám, Quận 3',
+                        order_status=OrderState.COMPLETED, delivery_latitude='10.773291',
+                        delivery_longitude='106.689797',
+                        order_date=datetime.datetime.now())  # Đơn hàng mới nhất
+        db.session.add(order10)
+        db.session.commit()
+
+        detail10_1 = OrderDetail(order_id=order10.id, dish_id=dish1_1.id, quantity=1, price=dish1_1.price,
+                                 dish_name=dish1_1.name, selected_options_luc_dat={})
+        detail10_2 = OrderDetail(order_id=order10.id, dish_id=dish1_2.id, quantity=1, price=dish1_2.price,
+                                 dish_name=dish1_2.name, selected_options_luc_dat={})
+        db.session.add_all([detail10_1, detail10_2])
+        db.session.commit()
+        print(f"-> Đã tạo Order ID: {order10.id}")
 
 
         print("--- TẠO DỮ LIỆU THỬ NGHIỆM THÀNH CÔNG ---")
