@@ -874,7 +874,7 @@ def create_order_from_cart(user_id, restaurant_id, cart_data, delivery_address, 
         print(f"Lỗi khi tạo đơn hàng từ giỏ hàng: {e}")
         raise e
 
-# 3.3.10 Module VNPay, chatbot (Google AI)
+# 3.3.10 Module Momo, chatbot (Google AI)
 def create_payment_record(order: Order, payment_method: str):
     """Tạo một bản ghi thanh toán mới cho một đơn hàng."""
     payment = Payment(
