@@ -51,7 +51,7 @@ def get_random_slogan():
     # Trả về một câu mặc định nếu có lỗi xảy ra
     return "Bạn ơi, bạn đang ở đâu zậy?"
 
-# Đăng nhập
+# Đăng nhập.
 def auth_user(phone, password):
     password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
 
