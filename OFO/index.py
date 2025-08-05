@@ -1080,7 +1080,6 @@ def checkout(restaurant_id):
                 return redirect(pay_url)
             else:
                 flash('Không thể tạo thanh toán MoMo. Vui lòng thử lại hoặc chọn phương thức khác.', 'danger')
-                # (Tùy chọn) Có thể xóa đơn hàng vừa tạo hoặc để đó cho người dùng thử lại
                 return redirect(url_for('checkout', restaurant_id=restaurant_id))
 
     # --- XỬ LÝ GET REQUEST  ---
