@@ -1,5 +1,6 @@
 <head>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/Restaurant/Revenue.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 </head>
 {% extends 'layout/base.html' %}
@@ -72,6 +73,7 @@
 {% block scripts %}
 <script>
        document.addEventListener('DOMContentLoaded', function() {
+            // === CẤU HÌNH VÀ LẤY ĐỐI TƯỢNG DOM ===
 
             // === CẤU HÌNH VÀ LẤY ĐỐI TƯỢNG DOM ===
             const reportContainer = document.querySelector('.report-container');
@@ -175,6 +177,7 @@
                     const response = await fetch(`/api/orders/raw/${RESTAURANT_ID}?start_date=${timeInfo.startDate}&end_date=${timeInfo.endDate}`);
                     if (!response.ok) throw new Error('Lỗi từ server');
                     const rawOrders = await response.json();
+                    console.log(rawOrders)
                     const processedData = processRawOrders(rawOrders);
                     renderReport(processedData);
                 } catch (error) {
