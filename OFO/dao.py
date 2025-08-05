@@ -487,12 +487,13 @@ def delete_dishgroup_by_id(group_id):
             return False
 
     return False
-def add_dish(name, description, price, image_url, dish_group_id, restaurant_id,option_group_ids=None):
+def add_dish(name, description, price,active, image_url, dish_group_id, restaurant_id,option_group_ids=None):
     try:
         dish = Dish(
             name=name,
             description=description,
             price=price,
+            active=active,
             image=image_url,
             dish_group_id=dish_group_id,
             restaurant_id=restaurant_id
@@ -533,6 +534,7 @@ def get_dish_details_for_edit(dish_id):
             "name": dish.name,
             "description": dish.description,
             "price": dish.price,
+            "active": dish.active,
             "dish_group_id": dish.dish_group_id,
             # Dùng list comprehension để lấy danh sách ID của các nhóm đã liên kết
             "linked_option_group_ids": [group.id for group in dish.option_groups]
@@ -569,14 +571,14 @@ def update_dish_with_options(form_data, image_file=None):
         dish_to_update.name = form_data.get('name', '').strip()
         dish_to_update.description = form_data.get('description', '').strip()
         dish_to_update.price = float(form_data.get('price'))
-        dish_to_update.dish_group_id = int(form_data.get('dish_group_id'))
-        # restaurant_id thường không đổi, nhưng vẫn có thể cập nhật nếu cần
-        # dish_to_update.restaurant_id = int(form_data.get('restaurant_id'))
+        is_active_str = form_data.get('active')
+        is_active_bool = is_active_str.lower() == 'true'
+        dish_to_update.active = is_active_bool
 
-        # 3. XỬ LÝ UPLOAD ẢNH MỚI (LOGIC TỪ HÀM CŨ CỦA BẠN)
-        # Nếu người dùng có tải lên file ảnh mới
+        dish_to_update.dish_group_id = int(form_data.get('dish_group_id'))
+
         if image_file and image_file.filename != '':
-            # Lấy đường dẫn tuyệt đối đến thư mục static để đảm bảo an toàn
+
             upload_dir = os.path.join(app.root_path, 'static/image')
             os.makedirs(upload_dir, exist_ok=True)
 
@@ -1097,12 +1099,21 @@ def get_orders_by_restaurant(restaurant_id):
 def get_order_by_id(order_id):
     return Order.query.get(order_id)
 
-def get_raw_orders_in_range(self, restaurant_id, start_date, end_date):
-        orders = db.session.query(Order).filter(
-            Order.restaurant_id == restaurant_id,
-            Order.order_date >= start_date,
-            Order.order_date <= end_date
-        ).all()
-        return orders
+
+def get_raw_orders_in_range(restaurant_id, start_date, end_date):
+    """
+    Lấy tất cả các đơn hàng CÓ TRẠNG THÁI LÀ 'COMPLETED'
+    của một nhà hàng trong một khoảng thời gian nhất định.
+    """
+    orders = Order.query.filter(
+        Order.restaurant_id == restaurant_id,
+
+
+
+        Order.order_date >= start_date,
+        Order.order_date <= end_date
+    ).order_by(Order.order_date).all()
+
+    return orders
 if __name__ == "__main__":
     print(auth_user("user", 123))
