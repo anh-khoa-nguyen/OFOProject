@@ -438,16 +438,17 @@ def add_dish_route():
         name = request.form.get('name')
         description = request.form.get('description')
         price = float(request.form.get('price'))
+        is_active_str = request.form.get('active')
+        active = is_active_str is not None
         dish_group_id = int(request.form.get('dish_group_id'))
         restaurant_id = int(request.form.get('restaurant_id'))
-        image = request.files.get('image')
         option_group_ids = request.form.getlist('option_group_ids')
         image = request.files.get('image')
         image_url = None
         if image:
             upload_result = cloudinary.uploader.upload(image)
             image_url = upload_result.get('secure_url')
-        success = dao.add_dish(name, description, price, image_url, dish_group_id, restaurant_id,option_group_ids=option_group_ids)
+        success = dao.add_dish(name, description, price,active, image_url, dish_group_id, restaurant_id,option_group_ids=option_group_ids)
         return jsonify({'success': success})
 
     except Exception as e:
@@ -1247,16 +1248,25 @@ def update_order_status(order_id):
         new_status_enum = OrderState[new_status_str]
         order.order_status = new_status_enum
 
+        # === LOGIC MỚI, ĐƠN GIẢN HƠN KHI GIAO HÀNG ===
         if new_status_enum == OrderState.DELIVERING:
-            delivery_seconds = data.get('delivery_seconds')
-            if delivery_seconds:
-                # 1. LẤY GIỜ HIỆN TẠI CỦA SERVER (GIỜ HỆ THỐNG)
+            # 1. Lấy số phút giao hàng TỪ DATABASE (cột order.delivery_time)
+            # Giả sử cột này lưu số phút, ví dụ: 80
+            delivery_minutes = order.delivery_time
+
+            if delivery_minutes:
+                # 2. Lấy giờ hiện tại của server
                 now_server = datetime.now()
 
-                time_delta = timedelta(seconds=int(delivery_seconds))
+                # 3. Cộng thêm số phút đã có sẵn
+                time_delta = timedelta(minutes=int(delivery_minutes))
                 delivery_timestamp = now_server + time_delta
 
+                # 4. Lưu mốc thời gian kết thúc vào cột đếm ngược
                 order.estimated_delivery_time = delivery_timestamp
+            else:
+                # In ra cảnh báo nếu đơn hàng không có thời gian giao hàng được thiết lập
+                print(f"CẢNH BÁO: Đơn hàng #{order_id} không có 'delivery_time' trong database.")
 
         db.session.commit()
         return jsonify({"success": True, "message": "Cập nhật thành công."}), 200
@@ -1264,8 +1274,6 @@ def update_order_status(order_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "message": f"Lỗi hệ thống: {str(e)}"}), 500
-
-
 @app.route('/api/orders/<int:order_id>')
 def get_order_details_api(order_id):
 

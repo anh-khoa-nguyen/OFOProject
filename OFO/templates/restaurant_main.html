@@ -11,33 +11,11 @@
 
     <div class="restaurant-info-block">
         <div class="restaurant-management-nav">
-            <ul>
-                <li>
-                    <!-- Trang 'Thực đơn' đang active -->
-                    <a href="{{ url_for('home', restaurant_id=restaurant.id) }}" class="active">
-                        <i class="fas fa-utensils"></i>
-                        <span>Thực Đơn</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ url_for('restaurant_orders',restaurant_id=restaurant.id) }}">
-                        <i class="fas fa-receipt"></i>
-                        <span>Đơn Hàng</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ url_for('revenue', restaurant_id=restaurant.id) }}"><i
-                            class="fas fa-chart-line"></i><span>Doanh Thu</span>
-                    </a>
-                </li>
-
-                <li>
-                    <a href="{{ url_for('voucher',restaurant_id=restaurant.id) }}">
-                        <!-- Thay bằng url_for('...') của bạn -->
-                        <i class="fas fa-tags"></i>
-                        <span>Khuyến Mãi</span>
-                    </a>
-                </li>
+             <ul>
+                <li><a href="{{ url_for('home', restaurant_id=restaurant.id) }}" class="active"><i class="fas fa-utensils"></i><span>Thực Đơn</span></a></li>
+                <li><a href="{{ url_for('restaurant_orders', restaurant_id=restaurant.id) }}" ><i class="fas fa-receipt"></i><span>Đơn Hàng</span></a></li>
+                <li><a href="{{ url_for('revenue', restaurant_id=restaurant.id) }}" ><i class="fas fa-chart-line"></i><span>Doanh Thu</span></a></li>
+                <li><a href="{{ url_for('voucher', restaurant_id=restaurant.id) }}"><i class="fas fa-tags"></i><span>Khuyến Mãi</span></a></li>
             </ul>
         </div>
 
@@ -247,6 +225,10 @@
                     <label for="input_dish_price">Giá</label>
                     <input type="number" id="input_dish_price" name="price" required placeholder="Ví dụ: 35000">
                 </div>
+                 <div class="form-check form-switch p-0">
+                <label class="form-check-label"for="add_active" >Active</label>
+                <input class="form-check-input" id="add_active" name="active"  style="margin: auto" type="checkbox" role="switch" >
+                </div>
                 <div class="form-group">
                     <label class="form-label fw-bold">Thêm vào các nhóm tùy chọn</label>
                     <div id="add-dish-options-container" class="mt-2">
@@ -298,6 +280,11 @@
                     <label>Giá</label>
                     <input type="number" name="price" id="edit_price" required>
                 </div>
+                <div class="form-check form-switch p-0">
+                <label class="form-check-label"for="edit_active" >Active</label>
+                <input class="form-check-input" id="edit_active" name="active"  style="margin: auto" type="checkbox" role="switch" >
+            </div>
+
                 <div class="form-group">
                     <label class="form-label fw-bold">Các nhóm tùy chọn liên kết</label>
                     <div id="edit-dish-options-container" class="mt-2">
@@ -938,6 +925,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const closeBtn = modal.querySelector('.close-modal');
     const overlay = modal.querySelector('.modal-overlay');
     const form = document.getElementById('form_add_dishgroup');
+    const editGroupMandatoryInput = document.getElementById('editGroupMandatory');
 
     if (!modal || !openBtn || !closeBtn || !overlay || !form) {
         console.warn('Không tìm thấy phần tử cần thiết cho modal.');
@@ -1074,7 +1062,7 @@ console.log('Dữ liệu gửi lên server:', data);
     if (data.success) {
       modal.classList.remove('show');
       showToastt(data.message || 'Lưu Món Ăn thành công!', 'success');
-      setTimeout(() => { location.reload();}, 3000);
+      setTimeout(() => { location.reload();}, 1500);
     } else {
       showToastt( data.message||'Lưu món ăn thất bại');
     }
@@ -1114,6 +1102,13 @@ document.querySelectorAll('.btn-add-to-cart').forEach(btn => {
             form.querySelector('#edit_price').value = data.price;
             form.querySelector('#edit_group_id').value = data.dish_group_id;
 
+            const checkboxActive = form.querySelector('#edit_active');
+
+            // 2. Cập nhật trạng thái checked của nó dựa trên dữ liệu từ API
+            //    Chúng ta giả định API trả về data.active là true hoặc false
+            if (checkboxActive) { // Luôn kiểm tra xem phần tử có tồn tại không
+                checkboxActive.checked = data.active;
+            }
             // Khôi phục lại HTML gốc của các checkbox
             optionsContainer.innerHTML = `
                 {% for group in dish_option_group %}
@@ -1163,7 +1158,22 @@ if (editDishForm) {
     editDishForm.addEventListener('submit', function (e) {
         e.preventDefault();
         const formData = new FormData(this);
+          if (!formData.has('active')) {
+            // Nếu không có, chúng ta phải tự thêm vào với giá trị 'false'.
+            formData.append('active', 'false');
+        } else {
+            // Nếu có, giá trị mặc định của nó là 'on'.
+            // Chúng ta nên ghi đè nó thành 'true' cho nhất quán với backend.
+            formData.set('active', 'true');
+        }
 
+        // Bây giờ, formData chắc chắn chứa trường 'active' với giá trị là 'true' hoặc 'false'.
+
+        // Dùng vòng lặp để debug và xem tất cả dữ liệu sẽ được gửi đi
+        console.log("Dữ liệu sẽ được gửi lên server:");
+        for (let [key, value] of formData.entries()) {
+            console.log(`${key}: ${value}`);
+        }
         fetch('/update_dish', {
             method: 'POST',
             body: formData
@@ -1171,7 +1181,7 @@ if (editDishForm) {
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-
+            console.log(formData)
             const modalElementa = document.getElementById('modal_edit_dish');
             modalElementa.classList.remove('show');
                 showToastt(data.message || 'Sửa Món Ăn thành công!', 'success');
@@ -1322,7 +1332,7 @@ document.addEventListener('DOMContentLoaded', function() {
         toastBody.innerHTML = `
             <p class="mb-1">Đơn hàng mới <strong>#${data.daily_order_number} trong ngày</strong> từ khách hàng <strong>${data.customer_name}</strong>.</p>
             <p class="mb-0">Tổng giá trị: <strong>${data.total}</strong></p>
-            <a href="#" class="btn btn-primary btn-sm mt-2">Xem chi tiết</a>
+            <a href="{{ url_for('restaurant_orders', restaurant_id=restaurant.id) }}" class="btn btn-primary btn-sm mt-2">Xem chi tiết</a>
         `;
 
         // Hiển thị thông báo

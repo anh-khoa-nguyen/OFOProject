@@ -13,14 +13,10 @@
     <div class="restaurant-info-block mb-4">
         <div class="restaurant-management-nav">
             <ul>
-                <li><a href="{{ url_for('home', restaurant_id=restaurant.id) }}"><i class="fas fa-utensils"></i><span>Thực Đơn</span></a>
-                </li>
-                <!-- Đánh dấu 'active' cho tab Đơn Hàng -->
-                <li><a href="{{ url_for('restaurant_orders', restaurant_id=restaurant.id) }}" class="active"><i
-                        class="fas fa-receipt"></i><span>Đơn Hàng</span></a></li>
-                <li><a href="#"><i class="fas fa-chart-line"></i><span>Doanh Thu</span></a></li>
-                <li><a href="{{ url_for('voucher', restaurant_id=restaurant.id) }}"><i class="fas fa-tags"></i><span>Khuyến Mãi</span></a>
-                </li>
+                <li><a href="{{ url_for('home', restaurant_id=restaurant.id) }}"><i class="fas fa-utensils"></i><span>Thực Đơn</span></a></li>
+                <li><a href="{{ url_for('restaurant_orders', restaurant_id=restaurant.id) }}" class="active"><i class="fas fa-receipt"></i><span>Đơn Hàng</span></a></li>
+                <li><a href="{{ url_for('revenue', restaurant_id=restaurant.id) }}" ><i class="fas fa-chart-line"></i><span>Doanh Thu</span></a></li>
+                <li><a href="{{ url_for('voucher', restaurant_id=restaurant.id) }}"><i class="fas fa-tags"></i><span>Khuyến Mãi</span></a></li>
             </ul>
         </div>
         <h1 class="restaurant-title mt-3">{{ restaurant.restaurant_name }}</h1>
@@ -29,6 +25,7 @@
     <div class="order-board">
         {# Lặp qua tất cả các trạng thái đơn hàng để tạo cột #}
         {% for status_enum in OrderState %}
+        {% if status_enum.name != 'UNPAID' %}
         {% set status_id = status_enum.name %} {# PENDING, CONFIRMED, ... #}
         {% set status_display = status_enum.value %} {# Đang chờ, Đã xác nhận, ... #}
 
@@ -75,8 +72,7 @@
                         </button>
 
                         {% elif status_id == 'COMPLETED' %}
-                        <button class="btn btn-sm btn-outline-info btn-complete-order" data-order-id="{{ order.id }}">
-                            Hoàn tất
+                        <button class="btn btn-sm btn-outline-info btn-complete-order" data-order-id="{{ order.id }}">Đã Hoàn Tất
                         </button>
 
                         {% endif %}
@@ -90,6 +86,7 @@
                 {% endif %}
             </div>
         </div>
+        {% endif %}
         {% endfor %}
     </div>
 </div>
@@ -224,39 +221,23 @@
 
          // Gán sự kiện cho nút "Giao hàng"
          document.querySelectorAll('.btn-deliver-order').forEach(button => {
-             button.addEventListener('click', function() {
-                 const orderId = this.dataset.orderId;
-                 Swal.fire({ title: 'Đang tính thời gian...', didOpen: () => Swal.showLoading() });
+    button.addEventListener('click', function() {
+        const orderId = this.dataset.orderId;
 
-                 fetch(`/api/orders/${orderId}/estimate-delivery-time`)
-                     .then(res => res.json())
-                     .then(data => {
-                         if (data.error) throw new Error(data.error);
-
-                         const timeText = data.estimated_time_text;
-                         const timeSeconds = data.estimated_time_seconds;
-
-                         // DEBUG: Kiểm tra giá trị nhận được
-                         console.log(`Nhận được từ server: ${timeText}, ${timeSeconds} giây.`);
-
-                         Swal.fire({
-                             title: 'Bắt đầu giao hàng?',
-                             html: `Thời gian giao dự kiến là <b>${timeText}</b>.`,
-                             icon: 'info',
-                             showCancelButton: true
-                         }).then(result => {
-                             if (result.isConfirmed) {
-                                 // Gửi cả trạng thái mới và SỐ GIÂY ĐÃ TÍNH ĐƯỢC lên backend
-                                 // Backend sẽ lưu lại thời điểm kết thúc
-                                 executeStatusUpdate(orderId, 'DELIVERING', { delivery_seconds: timeSeconds });
-                             }
-                         });
-                     }).catch(err => {
-                         Swal.fire('Lỗi!', err.message, 'error');
-                     });
-             });
-         });
-
+        // Chỉ cần hỏi xác nhận, không cần fetch thời gian
+        Swal.fire({
+            title: 'Bắt đầu giao hàng?',
+            text: 'Hệ thống sẽ tự động bắt đầu đếm ngược thời gian.',
+            icon: 'info',
+            showCancelButton: true
+        }).then(result => {
+            if (result.isConfirmed) {
+                // Chỉ cần gửi trạng thái mới. Backend sẽ tự lo phần còn lại.
+                executeStatusUpdate(orderId, 'DELIVERING');
+            }
+        });
+    });
+});
         document.querySelectorAll('.delivery-countdown').forEach(countdownElement => {
     const deliveryTimeStr = countdownElement.dataset.deliveryTime;
     if (!deliveryTimeStr) return;
