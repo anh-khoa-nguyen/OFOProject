@@ -121,7 +121,7 @@ def load_random_restaurants(limit=10, user_lat=None, user_lng=None):
     # Lấy danh sách nhà hàng ngẫu nhiên từ CSDL
     restaurants = Restaurant.query.order_by(func.random()).limit(limit).all()
 
-    # Chỉ tính khoảng cách nếu có tọa độ của người dùng
+    # Chỉ tính khoảng cách nếu có tọa độ của người dùng.
     if user_lat is not None and user_lng is not None:
         user_location = (user_lat, user_lng)
 
