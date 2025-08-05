@@ -1,0 +1,84 @@
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/order_list.css') }}"/>
+</head>
+
+{% extends 'layout/base.html' %}
+{% block content %}
+<div class="container p-5">
+    <!-- TIÊU ĐỀ -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">
+            <i class="bi bi-receipt-cutoff text-danger me-2"></i>Lịch sử đơn hàng
+        </h1>
+    </div>
+
+    <!-- DANH SÁCH ĐƠN HÀNG -->
+    <div class="order-list">
+        {% if orders %}
+            {% for order in orders %}
+                {% if order.order_status.name == 'COMPLETED' %}
+                    <div class="card order-card mb-3">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span class="fw-bold"></span>
+                            <span class="text-muted small">{{ order.order_date.strftime('%d/%m/%Y') }}</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="row align-items-center g-3">
+                                <!-- Cột hình ảnh -->
+                                <div class="col-auto">
+                                    {% if order.details %}
+                                    <img src="{{ order.details[0].dish.image }}" alt="{{ order.details[0].dish_name }}" class="order-image">
+                                    {% endif %}
+                                </div>
+                                <!-- Cột thông tin quán và món -->
+                                <div class="col">
+                                    <div>
+                                        <a href="{{ url_for('restaurant_detail', restaurant_id=order.restaurant.id) }}" class="restaurant-name">{{ order.restaurant.restaurant_name }}</a>
+                                    </div>
+                                    <p class="text-muted mt-1 mb-0">
+                                        {% if order.details %}
+                                        {{ order.details[0].dish_name }}
+                                        {% if order.details|length > 1 %}
+                                        , và {{ order.details|length - 1 }} món khác...
+                                        {% endif %}
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                <!-- Cột giá và số lượng -->
+                                <div class="col-12 col-md-auto text-md-end">
+                                    <h5 class="order-price mb-1">{{ order.total|format_currency }}</h5>
+                                    <div class="order-item-count">
+                                        <a href="{{ url_for('order_detail_page', order_id=order.id) }}">
+                                            {{ order.details|length }} món <i class="bi bi-chevron-right"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer d-flex justify-content-between align-items-center ">
+                            <a href="{{ url_for('order_detail_page', order_id=order.id) }}" class="btn btn-outline-secondary btn-sm">Xem chi tiết</a>
+
+
+                            <div class="buttons">
+                                {# Logic cho nút Đánh giá (chỉ hiển thị khi đơn đã hoàn thành) #}
+                                {% if order.review %}
+                                    <button class="btn btn-outline-secondary btn-sm disabled">Đã đánh giá</button>
+                                {% else %}
+                                    <a href="{{ url_for('rating_page', order_id=order.id) }}" class="btn btn-outline-success btn-sm">Đánh giá</a>
+                                {% endif %}
+
+                                <a href="{{ url_for('restaurant_detail', restaurant_id=order.restaurant.id) }}" class="btn btn-danger btn-sm">Đặt lại</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% else %}
+            <div class="text-center p-5 bg-light rounded">
+                <p class="lead">Bạn chưa có đơn hàng nào.</p>
+                <a href="{{ url_for('index') }}" class="btn btn-danger">Bắt đầu đặt hàng ngay!</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
