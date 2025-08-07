@@ -160,7 +160,7 @@ def get_top_rated_restaurants(limit=10):
     4. Giới hạn ở top 10.
     """
     # Câu query này sẽ join Restaurant với Review, đếm số review,
-    # sau đó lọc và sắp xếp.
+    # sau đó lọc và sắp xếp..
     top_restaurants_query = db.session.query(
         Restaurant,
         func.count(Review.id).label('review_count')
