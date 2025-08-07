@@ -1189,7 +1189,6 @@ def active_orders_page():
 #xử lý thông báo nhà hàng
 @socketio.on('connect')
 def handle_connect():
-    # Chỉ xử lý nếu người dùng đã đăng nhập và là nhà hàng
     if current_user.is_authenticated and current_user.role == UserRole.RESTAURANT:
         restaurant_id = session.get('restaurant_id')
         if restaurant_id:
