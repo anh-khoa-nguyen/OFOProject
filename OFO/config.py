@@ -11,7 +11,6 @@ MOMO_SECRET_KEY = 'K951B6PE1waDMi640xX08PD3vg6EkVlz'
 # Thay 'https://yourdomain.com' bằng tên miền thực tế của bạn khi triển khai
 # IPN_URL_BASE = 'https://yourdomain.com/momo/ipn-handler'
 MOMO_IPN_URL_BASE = f'{SERVER}/momo/confirm-payment'
-# --- URL MoMo sẽ chuyển hướng người dùng sau khi thanh toán xong ---
 MOMO_REDIRECT_URL = f'{SERVER}'  # Trang thông báo thành công
 
 # --- Endpoint của MoMo (dùng môi trường test) ---
