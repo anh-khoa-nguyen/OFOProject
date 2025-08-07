@@ -1246,7 +1246,6 @@ def update_order_status(order_id):
         new_status_enum = OrderState[new_status_str]
         order.order_status = new_status_enum
 
-        # === LOGIC MỚI, ĐƠN GIẢN HƠN KHI GIAO HÀNG ===
         if new_status_enum == OrderState.DELIVERING:
             # 1. Lấy số phút giao hàng TỪ DATABASE (cột order.delivery_time)
             # Giả sử cột này lưu số phút, ví dụ: 80
