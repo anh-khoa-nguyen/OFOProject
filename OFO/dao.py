@@ -346,7 +346,7 @@ def get_restaurant_review_summary(restaurant_id):
 
 def is_favorite(user_id, restaurant_id):
     """
-    Kiểm tra xem một nhà hàng đã được người dùng yêu thích hay chưa.
+    Kiểm tra xem một nhà hàng đã được người dùng yêu thích hay chưa..
     """
     user = User.query.get(user_id)
     if user:
