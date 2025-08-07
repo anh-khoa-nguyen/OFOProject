@@ -116,7 +116,7 @@ def load_random_restaurants(limit=10, user_lat=None, user_lng=None):
     """
     Lấy danh sách nhà hàng ngẫu nhiên.
     Nếu tọa độ người dùng được cung cấp, tính toán và thêm khoảng cách (distance_km)
-    vào mỗi đối tượng nhà hàng.
+    vào mỗi đối tượng nhà hàng..
     """
     # Lấy danh sách nhà hàng ngẫu nhiên từ CSDL
     restaurants = Restaurant.query.order_by(func.random()).limit(limit).all()
