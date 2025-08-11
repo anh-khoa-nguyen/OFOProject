@@ -92,7 +92,7 @@ def _distance_and_time(restaurants, user_lat, user_lng):
     Hàm phụ trợ: Nhận vào một danh sách nhà hàng và tọa độ người dùng,
     tính toán và thêm thuộc tính .distance_km và .delivery_time_minutes.
     """
-    # Chỉ thực hiện nếu có đầy đủ thông tin
+    # Chỉ thực hiện nếu có đầy đủ thông tin.
     if not all([restaurants, user_lat is not None, user_lng is not None]):
         return restaurants  # Trả về danh sách gốc nếu thiếu thông tin
 
