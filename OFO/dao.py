@@ -159,8 +159,6 @@ def get_top_rated_restaurants(limit=10):
     3. Sắp xếp theo số lượng đánh giá giảm dần.
     4. Giới hạn ở top 10.
     """
-    # Câu query này sẽ join Restaurant với Review, đếm số review,
-    # sau đó lọc và sắp xếp..
     top_restaurants_query = db.session.query(
         Restaurant,
         func.count(Review.id).label('review_count')
@@ -171,8 +169,6 @@ def get_top_rated_restaurants(limit=10):
         .order_by(func.count(Review.id).desc()) \
         .limit(limit)
 
-    # Query trên trả về một danh sách các tuple (Restaurant, review_count).
-    # Chúng ta chỉ cần lấy đối tượng Restaurant.
     restaurants = [restaurant for restaurant, count in top_restaurants_query.all()]
 
     return restaurants
@@ -183,9 +179,7 @@ def get_restaurant_by_id(restaurant_id):
     """
     # .get() là cách nhanh và hiệu quả nhất để truy vấn bằng khóa chính
     restaurant = Restaurant.query.options(
-        # Dùng subqueryload để tải các DishGroup liên quan trong một query riêng
         subqueryload(Restaurant.dish_groups)
-        # Từ các DishGroup đã tải, tiếp tục tải các Dish liên quan trong một query riêng nữa
         .subqueryload(DishGroup.dishes)
     ).get(restaurant_id)
 
