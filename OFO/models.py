@@ -228,7 +228,7 @@ class Review(db.Model):
 
 class Voucher(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)
-    code = Column(String(10), nullable=False, unique=True)
+    code = Column(String(20), nullable=False, unique=True)
     name = Column(String(50))
     description = Column(String(500))
     percent = Column(Float)

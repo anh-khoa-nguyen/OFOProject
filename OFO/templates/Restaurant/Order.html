@@ -287,44 +287,88 @@
                             return response.json();
                         })
                         .then(data => {
-                            document.getElementById('offcanvas-order-id').textContent = `#${data.id}`;
-                            document.getElementById('offcanvas-status').textContent = data.status;
-                            document.getElementById('offcanvas-user').textContent = data.user;
-                            document.getElementById('offcanvas-date').textContent = data.order_date;
-                            document.getElementById('offcanvas-address').textContent = data.delivery_address;
-                            const noteWrapper = document.getElementById('offcanvas-note-wrapper');
-                            if (data.note) {
-                                document.getElementById('offcanvas-note').textContent = `"${data.note}"`;
+                            // Điền các thông tin chung (giữ nguyên)
+                           document.getElementById('offcanvas-order-id').textContent = `#${data.id}`;
+                           document.getElementById('offcanvas-status').textContent = data.status;
+                           document.getElementById('offcanvas-user').textContent = data.user;
+                           document.getElementById('offcanvas-date').textContent = data.order_date;
+                           document.getElementById('offcanvas-address').textContent = data.delivery_address;
+                           const noteWrapper = document.getElementById('offcanvas-note-wrapper');
+                       if (data.note) {
                                 noteWrapper.classList.remove('d-none');
-                            } else {
-                                noteWrapper.classList.add('d-none');
-                            }
-                            const detailsTable = document.getElementById('offcanvas-details-table');
-                            detailsTable.innerHTML = '';
-                            data.details.forEach(item => {
-                                let optionsHtml = '';
-                                if (item.options && Object.keys(item.options).length > 0) {
-                                    optionsHtml = '<ul class="list-unstyled mb-0 small text-muted">';
-                                    for (const key in item.options) { optionsHtml += `<li>+ ${key}: ${item.options[key]}</li>`; }
-                                    optionsHtml += '</ul>';
-                                }
-                                const row = `<tr><td><p class="fw-bold mb-0">${item.dish_name}</p>${optionsHtml}</td><td class="text-center align-middle">${item.quantity}</td><td class="text-end align-middle">${formatCurrency(item.total_item_price)}</td></tr>`;
-                                detailsTable.innerHTML += row;
-                            });
-                            document.getElementById('offcanvas-subtotal').textContent = formatCurrency(data.subtotal);
-                            document.getElementById('offcanvas-shipping').textContent = formatCurrency(data.shipping_fee);
-                            document.getElementById('offcanvas-discount').textContent = `- ${formatCurrency(data.discount)}`;
-                            document.getElementById('offcanvas-total').textContent = formatCurrency(data.total);
+                                document.getElementById('offcanvas-note').textContent = `"${data.note}"`;
+                       } else {
+                           noteWrapper.classList.add('d-none');
+                           }
+                     const detailsTableBody = document.getElementById('offcanvas-details-table');
+                     detailsTableBody.innerHTML = '';
+                    let calculatedSubtotal = 0;//Bieens tạm tính
+                    data.details.forEach(item => {
+                  // Tách dòng món ăn chính và các options
+                        let itemBasePrice = item.price * item.quantity;
+                     const mainRow = `
+                        <tr>
+                            <td><strong>${item.dish_name}</strong></td>
+                            <td class="text-center align-middle">${item.quantity}</td>
+                            <td class="text-end align-middle">${formatCurrency(itemBasePrice)}</td>
+                        </tr>
+                            `;
+                            detailsTableBody.innerHTML += mainRow;
 
-                            offcanvasLoading.classList.add('d-none');
-                            offcanvasContent.classList.remove('d-none');
-                        })
-                        .catch(error => {
-                            offcanvasLoading.innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
-                        });
+               calculatedSubtotal += itemBasePrice; //cộng thêm option
+
+        // Xử lý và hiển thị các options
+                    if (item.options && Object.keys(item.options).length > 0) {
+                        if (item.options.note) {
+                            const noteRow = `<tr><td class="option-row">+ Ghi chú: ${item.options.note}</td><td></td><td></td></tr>`;
+                            detailsTableBody.innerHTML += noteRow;
+                        }
+                        if (Array.isArray(item.options.options) && item.options.options.length > 0) {
+                            item.options.options.forEach(opt => {
+                                if (opt && opt.name) {
+                                    const optionPriceTotal = (opt.price || 0) * item.quantity;
+                                    const optionRow = `
+                                        <tr>
+                                            <td class="option-row">+ ${opt.name}</td>
+                                            <td></td>
+                                            <td class="text-end option-price">
+                                                ${ opt.price > 0 ? `+${formatCurrency(optionPriceTotal)}` : '' }
+                                            </td>
+                                        </tr>
+                                    `;
+                                    detailsTableBody.innerHTML += optionRow;
+
+                                    // Bước 3: Cộng giá của option vào tổng tạm tính
+                                    calculatedSubtotal += optionPriceTotal;
+                                }
+                            });
+                        }
+                    }
                 });
-            });
-        }
+
+                    const calculatedTotal = calculatedSubtotal + data.shipping_fee - data.discount;
+
+                    document.getElementById('offcanvas-subtotal').textContent = formatCurrency(calculatedSubtotal);
+                    document.getElementById('offcanvas-shipping').textContent = formatCurrency(data.shipping_fee);
+                    document.getElementById('offcanvas-discount').textContent = `- ${formatCurrency(data.discount)}`;
+                    document.getElementById('offcanvas-total').textContent = formatCurrency(calculatedTotal);
+
+
+                    offcanvasLoading.classList.add('d-none');
+                            offcanvasContent.classList.remove('d-none');
+                })
+                                        .catch(error => {
+                                            offcanvasLoading.innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
+                                        });
+                                });
+                            });
+                        }
+                         function formatCurrency(value) {
+                        if (typeof value !== 'number' || isNaN(value)) {
+                            return '0 VNĐ';
+                        }
+                        return value.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
+                    }
     });
 </script>
 
