@@ -1,0 +1,449 @@
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/Restaurant/Voucher.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+</head>
+{% extends 'layout/base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="restaurant-info-block mb-4">
+        <div class="restaurant-management-nav">
+            <ul>
+                <li><a href="{{ url_for('main.home', restaurant_id=restaurant.id) }}"><i class="fas fa-utensils"></i><span>Thực Đơn</span></a></li>
+                <li><a href="{{ url_for('main.restaurant_orders', restaurant_id=restaurant.id) }}" ><i class="fas fa-receipt"></i><span>Đơn Hàng</span></a></li>
+                <li><a href="{{ url_for('main.revenue', restaurant_id=restaurant.id) }}" ><i class="fas fa-chart-line"></i><span>Doanh Thu</span></a></li>
+                <li><a href="{{ url_for('main.voucher', restaurant_id=restaurant.id) }}"class="active"><i class="fas fa-tags"></i><span>Khuyến Mãi</span></a></li>
+            </ul>
+        </div>
+        <h1 class="restaurant-title mt-3">{{ restaurant.restaurant_name }}</h1>
+    </div>
+
+    <!-- NỘI DUNG CHÍNH - QUẢN LÝ VOUCHER -->
+    <div class="promo-header">
+        <h2 class="h4 mb-0">Danh sách Voucher & Khuyến mãi</h2>
+        <button class="btn btn-primary" type="button" id="btnCreatePromo">
+            <i class="fas fa-plus me-2"></i> Tạo Voucher
+        </button>
+    </div>
+
+    <div class="row g-4 mt-3">
+        {% for v in vouchers %}
+        <div class="col-xl-4 col-lg-6 col-md-6 d-flex">
+            <div class="voucher-card w-100"
+                 data-start="{{ v.start_date.isoformat() }}"
+                 data-end="{{ v.end_date.isoformat() }}"
+                 data-active="{{v.active | tojson }}">
+
+                <!-- Nút Sửa và Xóa -->
+                <button class="btn-voucher-action btn-voucher-edit" data-id="{{ v.id }}" title="Sửa voucher">
+                    <i class="fas fa-pen"></i>
+                </button>
+                <button class="btn-voucher-action btn-voucher-delete" data-id="{{ v.id }}" title="Xóa voucher">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+
+                <!-- Khối Icon bên trái -->
+                <div class="voucher-card-icon-wrapper">
+                    <i class="fas fa-ticket-alt"></i>
+                </div>
+
+                <!-- Khối nội dung bên phải -->
+                <div class="voucher-card-body">
+                    <h5 class="voucher-card-title">{{ v.name }}</h5>
+                    <code class="voucher-card-code user-select-all">{{ v.code }}</code>
+
+                    <p class="voucher-card-desc">
+                        {% if v.description %}
+                        {{ v.description }}
+                        {% else %}
+                        - Không có mô tả chi tiết -
+                        {% endif %}
+                    </p>
+
+                    <div class="voucher-card-footer">
+                     <span>
+                        <i class="fas fa-calendar-alt"></i>
+                        {{ v.start_date.strftime('%d/%m/%y') }} - {{ v.end_date.strftime('%d/%m/%y') }}
+                    </span>
+                        <!-- JavaScript sẽ chèn badge trạng thái vào đây -->
+                        <span class="voucher-status-placeholder"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <div class="alert alert-secondary text-center">
+                <i class="fas fa-tags me-2"></i>
+                Nhà hàng chưa có chương trình khuyến mãi nào. Hãy tạo một voucher mới!
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+
+</div>
+
+
+</div>
+
+<!-- ==== OFFCANVAS ĐỂ TẠO/SỬA VOUCHER ==== -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="promoOffcanvas" aria-labelledby="promoOffcanvasLabel">
+    <div class="offcanvas-header border-bottom">
+        <h5 class="offcanvas-title" id="promoOffcanvasLabel">Tạo Voucher Mới</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <form id="promoForm">
+            <!-- Hidden input để lưu ID khi sửa -->
+            <input type="hidden" id="promoId" name="id">
+            <input type="hidden" name="restaurant_id" value="{{ restaurant.id }}">
+            <div class="mb-3">
+                <label for="promoName" class="form-label fw-bold">Tên chương trình*</label>
+                <input type="text" class="form-control" id="promoName" name="name" required
+                       placeholder="VD: Giảm giá khai trương">
+            </div>
+            <div class="mb-3">
+                <label for="promoCode" class="form-label fw-bold">Mã Code*</label>
+                <input type="text" class="form-control" id="promoCode" name="code" required
+                       placeholder="VD: CHAOMUNG, SALE50K (viết liền)">
+            </div>
+            <div class="mb-3">
+                <label for="promoDescription" class="form-label">Mô tả</label>
+                <textarea class="form-control" id="promoDescription" name="description" rows="3"
+                          placeholder="Mô tả ngắn gọn về voucher"></textarea>
+            </div>
+
+            <hr>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="promoType" class="form-label fw-bold">Loại giảm giá*</label>
+                    <select class="form-select" id="promoType" required>
+                        <option value="percent">Giảm theo phần trăm (%)</option>
+                        <option value="limit">Giảm số tiền cố định (đ)</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="promoValue" class="form-label fw-bold">Giá trị giảm*</label>
+                    <input type="number" class="form-control" id="promoValue" required
+                           >
+                    <!-- Các input ẩn để gửi đúng dữ liệu về server -->
+                    <input type="hidden" name="percent" id="promoPercentValue">
+                    <input type="hidden" name="limit" id="promoLimitValue">
+                </div>
+            </div>
+
+            <div class="mb-3 mt-3" id="maxDiscountContainer">
+                <label for="maxDiscountValue" class="form-label">Giảm tối đa (đ)</label>
+                <input type="number" class="form-control" id="maxDiscountValue" name="max"
+                       placeholder="VD: 50000 (cho giảm theo %)">
+            </div>
+
+            <div class="mb-3">
+                <label for="minOrderValue" class="form-label">Đơn hàng tối thiểu (đ)</label>
+                <input type="number" class="form-control" id="minOrderValue" name="min"
+                       placeholder="Bỏ trống nếu không yêu cầu">
+            </div>
+
+            <hr>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="startDate" class="form-label">Ngày bắt đầu*</label>
+                    <input type="text" class="form-control" id="startDate" name="start_date" required
+                           placeholder="Chọn ngày...">
+                </div>
+                <div class="col-md-6">
+                    <label for="endDate" class="form-label">Ngày kết thúc*</label>
+                    <input type="text" class="form-control" id="endDate" name="end_date" required
+                           placeholder="Chọn ngày...">
+                </div>
+            </div>
+
+            <div class="form-check form-switch mt-4">
+                <label class="form-check-label" for="promoActive">Kích hoạt voucher</label>
+                <input class="form-check-input" type="checkbox" style="margin:auto, background-color: #E91E63"
+                       role="switch" id="promoActive" name="active" checked>
+
+            </div>
+        </form>
+    </div>
+    <div class="offcanvas-footer">
+        <button type="submit" class="btn btn-primary w-100 fw-bold" form="promoForm">Lưu Voucher</button>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const flatpickrConfig = {
+            // Định dạng hiển thị cho người dùng
+            dateFormat: "d/m/Y",
+        };
+
+        // Kích hoạt Flatpickr cho ô "Ngày bắt đầu"
+        const startDatePicker = flatpickr("#startDate", flatpickrConfig);
+
+        // Kích hoạt Flatpickr cho ô "Ngày kết thúc"
+        const endDatePicker = flatpickr("#endDate", flatpickrConfig);
+
+        const promoOffcanvas = new bootstrap.Offcanvas(document.getElementById('promoOffcanvas'));
+        const promoForm = document.getElementById('promoForm');
+        const offcanvasLabel = document.getElementById('promoOffcanvasLabel');
+
+        const promoTypeSelect = document.getElementById('promoType');
+        const maxDiscountContainer = document.getElementById('maxDiscountContainer');
+
+        // Hàm xử lý ẩn/hiện trường "Giảm tối đa"
+        function toggleMaxDiscountField() {
+            if (promoTypeSelect.value === 'percent') {
+                maxDiscountContainer.style.display = 'block';
+            } else {
+                maxDiscountContainer.style.display = 'none';
+            }
+        }
+
+
+        // Gán sự kiện khi thay đổi loại giảm giá
+        promoTypeSelect.addEventListener('change', toggleMaxDiscountField);
+
+        // Mở form để TẠO MỚI voucher
+        document.getElementById('btnCreatePromo').addEventListener('click', function () {
+            offcanvasLabel.textContent = 'Tạo Voucher Mới';
+            promoForm.reset(); // Xóa sạch các trường
+            document.getElementById('promoId').value = ''; // Đảm bảo ID rỗng
+            toggleMaxDiscountField();
+            promoOffcanvas.show();
+        });
+
+        // Mở form để CHỈNH SỬA voucher
+        document.querySelectorAll('.btn-voucher-edit').forEach(button => {
+            button.addEventListener('click', function () {
+                const voucherId = this.dataset.id;
+                offcanvasLabel.textContent = 'Chỉnh Sửa Voucher';
+
+                fetch(`/api/vouchers/${voucherId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        // Điền dữ liệu vào form
+                        document.getElementById('promoId').value = data.id;
+                        document.getElementById('promoName').value = data.name;
+                        document.getElementById('promoCode').value = data.code;
+                        document.getElementById('promoDescription').value = data.description;
+                        document.getElementById('minOrderValue').value = data.min;
+                        startDatePicker.setDate(data.start_date, true);
+                        endDatePicker.setDate(data.end_date, true);
+                        document.getElementById('promoActive').checked = data.active;
+
+                        // Xử lý loại và giá trị giảm giá
+                        if(data.percent) {
+                            promoTypeSelect.value = 'percent';
+                            document.getElementById('promoValue').value = data.percent;
+                            document.getElementById('maxDiscountValue').value = data.max;
+                        } else {
+                            promoTypeSelect.value = 'limit';
+                            document.getElementById('promoValue').value = data.limit;
+                            document.getElementById('maxDiscountValue').value = '';
+                        }
+
+                        toggleMaxDiscountField();
+                        promoOffcanvas.show();
+                    })
+                    .catch(err => console.error("Lỗi khi lấy dữ liệu voucher:", err));
+            });
+        });
+        // Xử lý khi SUBMIT form
+        // Xử lý khi SUBMIT form
+        promoForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            promoForm.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+
+    // Tìm tất cả các trường có thuộc tính 'required'
+    const requiredFields = promoForm.querySelectorAll('[required]');
+
+    // Dùng vòng lặp để kiểm tra từng trường
+    for (const field of requiredFields) {
+        if (field.type === 'hidden') continue; // Bỏ qua các input ẩn
+
+        // Nếu giá trị của trường là rỗng
+        if (!field.value.trim()) {
+            // Lấy `label` tương ứng để có thông báo lỗi thân thiện
+            const label = promoForm.querySelector(`label[for="${field.id}"]`);
+            const labelText = label ? label.textContent.replace('*', '').trim() : 'Một trường bắt buộc';
+
+            // Hiển thị toast lỗi
+            showToast(`${labelText} không được để trống.`, 'error');
+
+            // Thêm viền đỏ cho ô bị lỗi
+            field.classList.add('is-invalid');
+            field.focus();
+
+            // DỪNG LẠI NGAY LẬP TỨC, không chạy code ở dưới
+            return;
+        }
+    }
+             const promoValueInput = document.getElementById('promoValue');
+    if (promoTypeSelect.value === 'percent') {
+        const percentValue = parseFloat(promoValueInput.value);
+        if (isNaN(percentValue) || percentValue <= 0 || percentValue > 100) {
+            showToast('Giá trị phần trăm phải lớn hơn 0 và nhỏ hơn hoặc bằng 100.', 'error');
+            promoValueInput.classList.add('is-invalid');
+            promoValueInput.focus();
+            return; // Dừng lại
+        }
+    }
+
+     const startDateInput = document.getElementById('startDate');
+        const endDateInput = document.getElementById('endDate');
+        const startDateValue = startDateInput.value; // Ví dụ: "30/07/2025"
+        const endDateValue = endDateInput.value;   // Ví dụ: "29/07/2025"
+
+        if (startDateValue && endDateValue) {
+            // TẠO HÀM CHUYỂN ĐỔI: "dd/mm/yyyy" -> Date object
+            const parseDate = (dateStr) => {
+                const [day, month, year] = dateStr.split('/');
+                // Tháng trong JS bắt đầu từ 0 (Tháng 1 là 0)
+                return new Date(year, month - 1, day);
+            };
+
+            const startDate = parseDate(startDateValue);
+            const endDate = parseDate(endDateValue);
+
+            // So sánh hai đối tượng Date
+            if (endDate < startDate) {
+                showToast('Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu.', 'error');
+                endDateInput.classList.add('is-invalid');
+                startDateInput.classList.add('is-invalid');
+                endDateInput.focus();
+                return; // Dừng lại
+            }
+        }
+            // Phân loại giá trị giảm vào các input ẩn
+            const promoValue = document.getElementById('promoValue').value;
+            const percentInput = document.getElementById('promoPercentValue');
+            const limitInput = document.getElementById('promoLimitValue');
+
+            if (promoTypeSelect.value === 'percent') {
+                percentInput.value = promoValue;
+                limitInput.value = ''; // Xóa giá trị còn lại
+            } else {
+                limitInput.value = promoValue;
+                percentInput.value = ''; // Xóa giá trị còn lại
+            }
+
+            const formData = new FormData(this);
+            console.log(formData)
+            const voucherId = document.getElementById('promoId').value;
+            const url = voucherId ? `/api/vouchers/${voucherId}` : '/api/vouchers';
+            const method = voucherId ? 'PUT' : 'POST';
+
+            // !! QUAN TRỌNG: Bạn cần tạo API endpoint để LƯU dữ liệu
+            fetch(url, {
+                method: method,
+                body: new URLSearchParams(formData)
+            })
+            .then(res => {
+                if (!res.ok){
+                showToast('Có lỗi xảy ra!', 'error');
+                return res.json();}
+            })
+            .then(data => {
+            const modalElementa = document.getElementById('promoOffcanvas');
+            modalElementa.classList.remove('show');
+                showToast('Lưu voucher thành công!', 'success');
+                setTimeout(() => { location.reload();}, 3000);
+            })
+            .catch(err => {
+                showToast(err.message);
+            });
+        });
+
+        // Xử lý khi XÓA voucher
+         document.querySelectorAll('.btn-voucher-delete').forEach(button => {
+         button.addEventListener('click', function () {
+        const voucherId = this.dataset.id;
+
+        // BƯỚC 1: Gọi SweetAlert2 để hiển thị hộp thoại xác nhận đẹp mắt.
+        Swal.fire({
+            title: 'Bạn chắc chắn muốn xóa?',
+            text: "Hành động này không thể hoàn tác!",
+            icon: 'warning', // Hiển thị icon cảnh báo
+            showCancelButton: true, // Hiển thị nút "Hủy"
+
+            confirmButtonColor: '#E91E63', // Mã màu của bạn
+            cancelButtonColor: '#6c757d',  // Mã màu xám cho nút hủy
+
+            confirmButtonText: 'XÓA!',
+            cancelButtonText: 'HỦY'
+        }).then((result) => {
+
+
+            if (result.isConfirmed) {
+
+                // BƯỚC 3: Nếu đã xác nhận, gửi yêu cầu DELETE đến server.
+                fetch(`/api/vouchers/${voucherId}`, { method: 'DELETE' })
+                    .then(res => {
+                        if (!res.ok) {
+                            return res.json().then(errData => {
+                                throw new Error(errData.error || 'Xóa thất bại!');
+                            });
+                        }
+                        return res.json();
+                    })
+                    .then(data => {
+                        // BƯỚC 4a: THÀNH CÔNG -> Hiển thị toast thành công
+                        showToast(data.message || 'Đã xóa voucher thành công!', 'success');
+
+                        // Tải lại trang sau 1.5 giây
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1500);
+                    })
+                    .catch(err => {
+                        // BƯỚC 4b: THẤT BẠI -> Hiển thị toast lỗi
+                        showToast('Lỗi: ' + err.message, 'error');
+                    });
+            }
+        })
+    });
+});
+
+    });
+
+    function showToast(message, type = 'success') {
+    const existingToast = document.querySelector('.toast-notification');
+    if (existingToast) {
+        existingToast.remove();
+    }
+    const toastContainer = document.createElement('div');
+    toastContainer.className = `toast-notification ${type}`;
+    toastContainer.textContent = message;
+    document.body.appendChild(toastContainer);
+    setTimeout(() => {
+        toastContainer.classList.add('show');
+    }, 10); // 10ms là đủ
+
+    // 6. Tự động xóa toast sau một khoảng thời gian
+    setTimeout(() => {
+        // Xóa class 'show' để toast trượt xuống
+        toastContainer.classList.remove('show');
+
+        // Sau khi animation kết thúc (0.4s), xóa hẳn phần tử khỏi DOM
+        setTimeout(() => {
+            if (toastContainer.parentNode) {
+                toastContainer.parentNode.removeChild(toastContainer);
+            }
+        }, 400); // Phải khớp với thời gian transition trong CSS
+    }, 1500); // Toast sẽ hiển thị trong 3 giây
+}
+
+</script>
+{% endblock %}

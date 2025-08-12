@@ -1,0 +1,310 @@
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/Order_Pay.css') }}"/>
+</head>
+
+{% extends 'layout/base.html' %}
+{% block content %}
+<div class="checkout-page">
+    <!-- Form sẽ bao bọc toàn bộ nội dung để có thể submit -->
+    <form id="checkoutForm" class="checkout-container" method="POST">
+        <h1>Thanh Toán</h1>
+
+        <div class="checkout-header">
+            <a href="{{ url_for('main.restaurant_detail', restaurant_id=restaurant.id) }}" class="back-button">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <img src="{{ restaurant.image }}" alt="{{ restaurant.restaurant_name }}" class="restaurant-avatar">
+            <div class="restaurant-details">
+                <span class="header-title">{{ restaurant.restaurant_name }}</span>
+            </div>
+        </div>
+
+        <div class="checkout-layout">
+            <!-- CỘT BÊN TRÁI -->
+            <div class="checkout-main">
+                <div class="checkout-section">
+                    <h3>Giao đến</h3>
+                    <div class="info-box">
+                        <i class="bi bi-geo-alt-fill text-danger"></i>
+                        <p class="address-text">{{ delivery_address or 'Vui lòng chọn địa chỉ' }}</p>
+                    </div>
+                    <p class="text-muted mt-2">Thời gian giao hàng dự kiến: {{ delivery_time or 'N/A' }} phút (cách {{ distance_km or 'N/A' }} km)</p>
+                    <!-- Input ẩn để gửi địa chỉ đi -->
+                    <input type="hidden" name="delivery_address" value="{{ delivery_address or '' }}">
+                </div>
+                <div class="checkout-section">
+                    <h3>Ghi chú</h3>
+                    <input type="text" name="note" class="note-input" placeholder="Ghi chú cho tài xế (tùy chọn)...">
+                </div>
+                <div class="checkout-section">
+                    <h3>Khuyến mãi</h3>
+                    <a id="open-promo-btn" href="#" class="info-box promo-box">
+                        <i class="bi bi-ticket-detailed-fill"></i>
+                        <p id="promo-text-display" class="promo-text">Chọn hoặc nhập mã</p>
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </div>
+                <div class="checkout-section">
+                    <h3>Phương thức thanh toán</h3>
+                    <div class="payment-options">
+                        <label class="info-box payment-box selected">
+                            <img src="https://res.cloudinary.com/dbb1oslnw/image/upload/v1753960673/MoMo_Logo_att5zs.png" alt="VNPay Logo" class="payment-logo">
+                            <p class="payment-text">Ví MOMO</p>
+                            <input type="radio" name="payment_method" value="momo" checked>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CỘT BÊN PHẢI -->
+            <div class="checkout-sidebar">
+                <div class="order-summary">
+                    <h3>Tóm tắt đơn hàng</h3>
+                    <div class="order-items">
+                        {% for item in cart_items.values() %}
+                        <div class="order-item">
+                            <div class="item-main">
+                                <span class="item-qty">{{ item.quantity }}x</span>
+                                <span class="item-name">{{ item.name }}</span>
+                            </div>
+                            <!-- SỬ DỤNG BỘ LỌC MỚI -->
+                            <span class="item-price">{{ (item.price * item.quantity) | format_currency }}</span>
+                        </div>
+                        {% if item.options or item.note %}
+                        <p class="item-options">
+                            {{ item.options | map(attribute='name') | join(', ') }}
+                            {% if item.note %}<br><em>Ghi chú: {{ item.note }}</em>{% endif %}
+                        </p>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                    <div class="price-details">
+                        <div class="price-line">
+                            <span>Tạm tính</span>
+                            <!-- SỬ DỤNG BỘ LỌC MỚI -->
+                            <span id="subtotal" data-value="{{ subtotal }}">{{ subtotal | format_currency }}</span>
+                        </div>
+                        <div class="price-line">
+                            <span>Phí giao hàng</span>
+                            <!-- SỬ DỤNG BỘ LỌC MỚI -->
+                            <span id="shippingFee" data-value="{{ shipping_fee or 0 }}">{{ shipping_fee | format_currency }}</span>
+                        </div>
+                        <div id="discountRow" class="price-line promo-line" style="display: none;">
+                            <span>Giảm giá</span>
+                            <span id="discountValue"></span>
+                        </div>
+                    </div>
+                    <div class="price-total">
+                        <span>Tổng cộng</span>
+                        <!-- SỬ DỤNG BỘ LỌC MỚI -->
+                        <span id="totalValue" class="total-amount">{{ (subtotal + (shipping_fee or 0)) | format_currency }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="checkout-footer">
+            <div class="button-wrapper">
+                <button type="submit" class="place-order-btn">Đặt hàng</button>
+            </div>
+            <p class="terms-notice">Bằng việc nhấn 'Đặt hàng', bạn đồng ý với các Điều khoản Dịch vụ và không thể hủy đơn hàng này.</p>
+        </div>
+    </form>
+</div>
+
+<!-- Modal Khuyến mãi -->
+<div id="promo-modal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Chọn Khuyến Mãi</h2>
+            <button id="close-modal-btn" class="close-button">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="input-group mb-4">
+                <input type="text" id="voucherInput" class="form-control" placeholder="Nhập mã ở đây...">
+                <button class="btn btn-primary" type="button" id="applyVoucherBtn">Áp dụng</button>
+            </div>
+            <div id="voucherMessage" class="mb-3"></div>
+
+            <!-- MỤC VOUCHER NHÀ HÀNG -->
+            {% if shop_vouchers %}
+            <h5 class="fw-bold">Voucher Nhà hàng (Chọn 1)</h5>
+            <div class="promo-list" id="shopVoucherList">
+                {% for v in shop_vouchers %}
+                <div class="promo-item">
+                    <div class="form-check">
+                        <input class="form-check-input voucher-radio" type="radio" name="shop_voucher" value="{{ v.id }}"
+                               data-code="{{ v.code }}" data-name="{{ v.name }}">
+                    </div>
+                    <div class="promo-details">
+                        <p class="promo-title">{{ v.name }}</p>
+                        <p class="promo-condition">{{ v.description }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- MỤC VOUCHER FREESHIP -->
+            {% if shipping_vouchers %}
+            <h5 class="fw-bold mt-4">Miễn phí vận chuyển (Chọn 1)</h5>
+            <div class="promo-list" id="shippingVoucherList">
+                {% for v in shipping_vouchers %}
+                <div class="promo-item">
+                    <div class="form-check">
+                        <input class="form-check-input voucher-radio" type="radio" name="shipping_voucher" value="{{ v.id }}"
+                               data-code="{{ v.code }}" data-name="{{ v.name }}">
+                    </div>
+                    <div class="promo-details">
+                        <p class="promo-title">{{ v.name }}</p>
+                        <p class="promo-condition">{{ v.description }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        <div class="modal-footer border-0">
+            <button class="btn btn-pink w-100" id="confirmPromoBtn">Xác nhận</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // --- Lấy các phần tử DOM ---
+    const promoModal = document.getElementById('promo-modal');
+    const openPromoButton = document.getElementById('open-promo-btn');
+    const closeModalButton = document.getElementById('close-modal-btn');
+    const subtotalEl = document.getElementById('subtotal');
+    const shippingFeeEl = document.getElementById('shippingFee');
+    const discountRow = document.getElementById('discountRow');
+    const discountValueEl = document.getElementById('discountValue');
+    const totalValueEl = document.getElementById('totalValue');
+    const checkoutForm = document.getElementById('checkoutForm');
+    const promoTextDisplay = document.getElementById('promo-text-display');
+
+    // --- Biến để lưu trữ trạng thái ---
+    let selectedShopVoucher = null;
+    let selectedShippingVoucher = null;
+    // === SỬA LỖI 1: Tạo một biến toàn cục để lưu trữ tổng số tiền giảm giá ===
+    let totalDiscountAmount = 0;
+
+    // --- Các hàm tính toán và cập nhật UI ---
+    function calculateDiscount(voucher, baseAmount) {
+        if (!voucher) return 0;
+        let discount = 0;
+        if (voucher.percent > 0) {
+            discount = baseAmount * (voucher.percent / 100);
+            if (voucher.max && discount > voucher.max) discount = voucher.max;
+        } else if (voucher.limit) {
+            discount = voucher.limit;
+        }
+        return discount;
+    }
+
+    function updateTotal() {
+        const subtotal = parseFloat(subtotalEl.dataset.value);
+        const shipping = parseFloat(shippingFeeEl.dataset.value);
+
+        let shopDiscount = 0;
+        let shippingDiscount = 0;
+        let appliedVoucherNames = [];
+
+        if (selectedShopVoucher) {
+            const voucherData = JSON.parse(selectedShopVoucher.dataset.voucher);
+            shopDiscount = calculateDiscount(voucherData, subtotal);
+            appliedVoucherNames.push(voucherData.name);
+        }
+
+        if (selectedShippingVoucher) {
+            const voucherData = JSON.parse(selectedShippingVoucher.dataset.voucher);
+            // Giảm giá phí ship được tính trên phí ship, không phải subtotal
+            let calculatedShippingDiscount = calculateDiscount(voucherData, shipping);
+            shippingDiscount = Math.min(calculatedShippingDiscount, shipping); // Đảm bảo không giảm quá phí ship
+            appliedVoucherNames.push(voucherData.name);
+        }
+
+        // Cập nhật biến toàn cục
+        totalDiscountAmount = shopDiscount + shippingDiscount;
+        const total = subtotal + shipping - totalDiscountAmount;
+
+        if (totalDiscountAmount > 0) {
+            discountValueEl.textContent = `- ${totalDiscountAmount.toLocaleString('vi-VN')}đ`;
+            discountRow.style.display = 'flex';
+            promoTextDisplay.textContent = appliedVoucherNames.join(' & ');
+        } else {
+            discountRow.style.display = 'none';
+            promoTextDisplay.textContent = 'Chọn hoặc nhập mã';
+        }
+        totalValueEl.textContent = `${total.toLocaleString('vi-VN')}đ`;
+    }
+
+    // --- Xử lý sự kiện cho Modal ---
+    if (openPromoButton) {
+        openPromoButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            promoModal.classList.add('active');
+        });
+    }
+    if (closeModalButton) {
+        closeModalButton.addEventListener('click', () => promoModal.classList.remove('active'));
+    }
+
+    if (promoModal) {
+        // Gán dữ liệu voucher vào từng radio button
+        const allVouchers = [...{{ shop_vouchers | tojson }}, ...{{ shipping_vouchers | tojson }}];
+        document.querySelectorAll('.voucher-radio').forEach(radio => {
+            const voucherData = allVouchers.find(v => v.id == radio.value);
+            if (voucherData) {
+                radio.dataset.voucher = JSON.stringify(voucherData);
+            }
+        });
+
+        // Lắng nghe sự kiện thay đổi lựa chọn voucher
+        document.querySelectorAll('input[name="shop_voucher"]').forEach(radio => {
+            radio.addEventListener('change', () => selectedShopVoucher = radio);
+        });
+        document.querySelectorAll('input[name="shipping_voucher"]').forEach(radio => {
+            radio.addEventListener('change', () => selectedShippingVoucher = radio);
+        });
+
+        // Nút xác nhận trong modal
+        document.getElementById('confirmPromoBtn').addEventListener('click', () => {
+            updateTotal();
+            promoModal.classList.remove('active');
+        });
+    }
+
+    // --- Xử lý Submit Form ---
+    if (checkoutForm) {
+        checkoutForm.addEventListener('submit', function(event) {
+            // event.preventDefault(); // Bỏ comment dòng này để test mà không gửi form đi
+
+            // 1. Tạo input ẩn cho danh sách voucher ID
+            let voucherIds = [];
+            if (selectedShopVoucher) voucherIds.push(selectedShopVoucher.value);
+            if (selectedShippingVoucher) voucherIds.push(selectedShippingVoucher.value);
+
+            if (voucherIds.length > 0) {
+                const voucherInput = document.createElement('input');
+                voucherInput.type = 'hidden';
+                voucherInput.name = 'voucher_ids';
+                voucherInput.value = voucherIds.join(',');
+                this.appendChild(voucherInput);
+            }
+
+            // 2. Tạo input ẩn cho tổng số tiền giảm giá
+            const discountInput = document.createElement('input');
+            discountInput.type = 'hidden';
+            discountInput.name = 'discount_amount';
+            // === SỬA LỖI 2: Sử dụng biến toàn cục đã được cập nhật ===
+            discountInput.value = totalDiscountAmount;
+            this.appendChild(discountInput);
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,322 @@
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tim-kiem.css') }}"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<link rel="stylesheet" href="https://unpkg.com/@geoapify/geocoder-autocomplete/styles/minimal.css">
+
+{% extends 'layout/base.html' %}
+
+{% block content %}
+<div class="container my-4">
+    <!-- Search Box -->
+    <div class="mb-3">
+        <div class="d-flex align-items-center search-box">
+            <i class="bi bi-search me-2"></i>
+            <input type="text" id="searchInput" class="form-control border-0 bg-transparent shadow-none" placeholder="Tìm món hoặc quán ăn..." style="flex: 1"/>
+        </div>
+    </div>
+
+    <!-- Star Filter -->
+    <div class="d-flex align-items-center gap-2 mb-4">
+        <span class="fw-bold">Lọc theo sao:</span>
+        <span class="text-muted">Từ</span>
+        <input type="number" id="minStarInput" class="form-control" placeholder="0.0" step="0.1" min="0" max="5" style="width: 80px;">
+        <i class="bi bi-star-fill text-warning"></i>
+        <span class="text-muted">Tới</span>
+        <input type="number" id="maxStarInput" class="form-control" placeholder="5.0" step="0.1" min="0" max="5" style="width: 80px;">
+        <i class="bi bi-star-fill text-warning"></i>
+    </div>
+
+    <!-- Horizontal category scroll -->
+    <div class="category-scroll d-flex align-items-center gap-3 overflow-auto w-100 py-2">
+        <a href="{{ url_for('main.search') }}"
+           class="category-card all-category {% if not searched_category %}active{% endif %}">
+            <span class="overlay-text">Tất cả</span>
+        </a>
+
+        {% for category in categories %}
+        <div class="category-card position-relative flex-fill mx-2">
+        <a href="{{ url_for('main.search', category_name=category.name) }}"
+           class="{% if searched_category and category.name == searched_category.name %}active{% endif %}">
+            <img src="{{ category.image }}" alt="{{ category.name }}"/>
+            <span class="overlay-text">{{ category.name }}</span>
+       </a>
+            </div>
+        {% endfor %}
+
+    </div>
+</div>
+
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb align-items-center">
+        <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Trang chủ</a></li>
+        {% if searched_category %}
+            <li class="breadcrumb-item active" aria-current="page">
+                {{ searched_category.name }}
+                <a href="{{ url_for('main.search') }}" class="btn btn-sm btn-outline-danger ms-2" title="Xóa bộ lọc này">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+            </li>
+        {% else %}
+            <li class="breadcrumb-item active" aria-current="page">Tất cả nhà hàng</li>
+        {% endif %}
+    </ol>
+</nav>
+
+<!-- ================================================== -->
+<!-- Carousel 1: Món ngon gần bạn (Dưới 10km)          -->
+<!-- ================================================== -->
+<h2 class="fw-bold mb-4">Món ngon gần bạn</h2>
+{% if nearby_restaurants %}
+<div class="promo-carousel-wrapper position-relative mb-5">
+    <button class="carousel-arrow left" id="arrowLeftNearby"><i class="bi bi-chevron-left"></i></button>
+    <div class="scrolling-wrapper d-flex overflow-hidden flex-nowrap" id="scrollNearby">
+        {% for restaurant in nearby_restaurants %}
+        {% set dish_names = restaurant.dishes | map(attribute='name') | join('|') %}
+        <!-- THÊM data-star-rating -->
+        <div class="card card-promo"
+             data-search-name="{{ restaurant.restaurant_name | lower }}"
+             data-search-dishes="{{ dish_names | lower }}"
+             data-star-rating="{{ restaurant.star_average or 0 }}">
+            <a href="{{ url_for('main.restaurant_detail', restaurant_id=restaurant.id) }}" class="text-decoration-none text-dark">
+                <!-- Nội dung card đầy đủ -->
+                <div class="position-relative">
+                    <img src="{{ restaurant.image }}" class="img-food" alt="{{ restaurant.restaurant_name }}">
+                    <div class="promo-tag">Promo</div>
+                </div>
+                <div class="card-body px-3">
+                    <p class="restaurant-title">{{ restaurant.restaurant_name }}</p>
+                    <p class="text-secondary-small mb-1">{{ restaurant.category.name if restaurant.category else 'Nhà hàng' }}</p>
+                    <div class="d-flex align-items-center mb-2 rating">
+                        <i class="bi bi-star-fill me-1"></i> {{ restaurant.star_average or 'Mới' }}
+                        {% if restaurant.delivery_time_minutes is not none and restaurant.distance_km is not none %}
+                        <span class="mx-2">·</span>
+                        <i class="bi bi-clock me-1"></i> {{ restaurant.delivery_time_minutes }} phút
+                        <span class="mx-2">·</span>
+                        {{ "%.1f"|format(restaurant.distance_km) }} km
+                        {% endif %}
+                    </div>
+                    <p class="offer"><i class="bi bi-tag"></i> Ưu đãi đặc biệt</p>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="w-100 text-center p-5 d-none" id="notFoundNearby">
+        <p class="text-muted fs-5">Không tìm thấy nhà hàng nào phù hợp với bộ lọc của bạn.</p>
+    </div>
+    <button class="carousel-arrow right" id="arrowRightNearby"><i class="bi bi-chevron-right"></i></button>
+</div>
+{% else %}
+<div class="w-100 text-center p-4 mb-4">
+    <p class="text-muted">Không tìm thấy nhà hàng nào ở gần bạn trong danh mục này.</p>
+</div>
+{% endif %}
+
+<!-- ================================================== -->
+<!-- Carousel 2: Quán ăn bạn có thể yêu thích          -->
+<!-- ĐÃ ĐƯỢC THAY THẾ BẰNG GRID VỚI LAZY LOADING      -->
+<!-- ================================================== -->
+<h2 class="fw-bold mb-4">Quán ăn bạn có thể yêu thích</h2>
+
+<!-- Container cho grid -->
+<div id="otherRestaurantsGrid" class="row g-4">
+    {# Render 8 nhà hàng đầu tiên từ server #}
+    {% for restaurant in other_restaurants[:8] %}
+    {% set dish_names = restaurant.dishes | map(attribute='name') | join('|') %}
+    <div class="col-lg-3 col-md-4 col-sm-6 restaurant-card-item">
+        <div class="card card-promo h-100"
+             data-search-name="{{ restaurant.restaurant_name | lower }}"
+             data-search-dishes="{{ dish_names | lower }}"
+             data-star-rating="{{ restaurant.star_average or 0 }}">
+            <a href="{{ url_for('main.restaurant_detail', restaurant_id=restaurant.id) }}" class="text-decoration-none text-dark d-flex flex-column h-100">
+                <!-- Nội dung card đầy đủ -->
+                <div class="position-relative">
+                    <img src="{{ restaurant.image }}" class="img-food" alt="{{ restaurant.restaurant_name }}">
+                    <div class="promo-tag">Suggested</div>
+                </div>
+                <div class="card-body px-3 d-flex flex-column">
+                    <p class="restaurant-title">{{ restaurant.restaurant_name }}</p>
+                    <p class="text-secondary-small mb-1">{{ restaurant.category.name if restaurant.category else 'Nhà hàng' }}</p>
+                    <div class="d-flex align-items-center mb-2 rating">
+                        <i class="bi bi-star-fill me-1"></i> {{ restaurant.star_average or 'Mới' }}
+                        {% if restaurant.delivery_time_minutes is not none and restaurant.distance_km is not none %}
+                        <span class="mx-2">·</span>
+                        <i class="bi bi-clock me-1"></i> {{ restaurant.delivery_time_minutes }} phút
+                        <span class="mx-2">·</span>
+                        {{ "%.1f"|format(restaurant.distance_km) }} km
+                        {% endif %}
+                    </div>
+                    <p class="offer mt-auto"><i class="bi bi-tag"></i> Ưu đãi đặc biệt</p>
+                </div>
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Thông báo khi không tìm thấy kết quả lọc -->
+<div class="w-100 text-center p-5 d-none" id="notFoundOther">
+    <p class="text-muted fs-5">Không tìm thấy nhà hàng nào phù hợp với bộ lọc của bạn.</p>
+</div>
+
+<!-- THAY ĐỔI QUAN TRỌNG: Container cho spinner -->
+<div id="loadingContainer" class="text-center mt-4" style="display: {% if other_restaurants|length > 8 %}block{% else %}none{% endif %};">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+</div>
+
+<!-- Thông báo khi không có nhà hàng nào trong danh mục này -->
+{% if not other_restaurants %}
+<div class="w-100 text-center p-4 mb-4">
+    <p class="text-muted">Không có gợi ý nào khác cho bạn.</p>
+</div>
+{% endif %}
+
+<script>
+// LỖI 1 ĐƯỢC SỬA Ở ĐÂY: Thêm dòng này để nhận dữ liệu từ backend
+const allOtherRestaurants = {{ other_restaurants_json | safe }};
+
+document.addEventListener('DOMContentLoaded', function() {
+
+    // --- PHẦN 1: KHỞI TẠO CAROUSEL ---
+    function initializeCarousel(containerId, leftArrowId, rightArrowId) {
+        const scrollContainer = document.getElementById(containerId);
+        const leftArrow = document.getElementById(leftArrowId);
+        const rightArrow = document.getElementById(rightArrowId);
+        if (!scrollContainer || !leftArrow || !rightArrow) return;
+
+        const scrollAmount = 320;
+        leftArrow.addEventListener('click', () => scrollContainer.scrollBy({ left: -scrollAmount, behavior: 'smooth' }));
+        rightArrow.addEventListener('click', () => scrollContainer.scrollBy({ left: scrollAmount, behavior: 'smooth' }));
+
+        function updateArrowVisibility() {
+            leftArrow.classList.toggle('d-none', scrollContainer.scrollLeft < 10);
+            const maxScrollLeft = scrollContainer.scrollWidth - scrollContainer.clientWidth;
+            rightArrow.classList.toggle('d-none', scrollContainer.scrollLeft >= maxScrollLeft - 10);
+        }
+        scrollContainer.addEventListener('scroll', updateArrowVisibility);
+        setTimeout(updateArrowVisibility, 150);
+    }
+
+    // Chỉ khởi tạo cho carousel "Gần bạn"
+    initializeCarousel('scrollNearby', 'arrowLeftNearby', 'arrowRightNearby');
+    // LỖI 2 ĐƯỢC SỬA Ở ĐÂY: Xóa dòng initializeCarousel cho 'scrollOther'
+
+
+    // --- PHẦN 2: LOGIC LỌC TỔNG HỢP ---
+    const searchInput = document.getElementById('searchInput');
+    const minStarInput = document.getElementById('minStarInput');
+    const maxStarInput = document.getElementById('maxStarInput');
+
+    function applyAllFilters() {
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        const minStars = parseFloat((minStarInput.value || '0').replace(',', '.')) || 0;
+        const maxStars = parseFloat((maxStarInput.value || '5').replace(',', '.')) || 5;
+
+        // Lọc cho cả hai khu vực
+        filterItems(searchTerm, minStars, maxStars, 'scrollNearby', 'notFoundNearby', '.card.card-promo');
+        filterItems(searchTerm, minStars, maxStars, 'otherRestaurantsGrid', 'notFoundOther', '.restaurant-card-item');
+    }
+
+    // Hợp nhất filterCarousel và filterGrid thành một hàm duy nhất, linh hoạt hơn
+    function filterItems(searchTerm, minStars, maxStars, containerId, notFoundId, itemSelector) {
+        const container = document.getElementById(containerId);
+        const notFoundMessage = document.getElementById(notFoundId);
+        if (!container || !notFoundMessage) return;
+
+        const items = container.querySelectorAll(itemSelector);
+        let visibleCount = 0;
+
+        items.forEach(item => {
+            // Card có thể là chính item (carousel) hoặc là con của item (grid)
+            const card = item.matches('.card') ? item : item.querySelector('.card');
+            if (!card) return;
+
+            const restaurantName = card.dataset.searchName || '';
+            const dishNames = card.dataset.searchDishes || '';
+            const cardRating = parseFloat(card.dataset.starRating) || 0;
+
+            const textMatch = restaurantName.includes(searchTerm) || dishNames.includes(searchTerm);
+            const starMatch = cardRating >= minStars && cardRating <= maxStars;
+
+            if (textMatch && starMatch) {
+                item.style.display = '';
+                visibleCount++;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+        notFoundMessage.classList.toggle('d-none', visibleCount > 0);
+    }
+
+    searchInput.addEventListener('input', applyAllFilters);
+    minStarInput.addEventListener('input', applyAllFilters);
+    maxStarInput.addEventListener('input', applyAllFilters);
+
+
+    // --- PHẦN 3: LOGIC LAZY LOADING CHO GRID ---
+    const gridContainer = document.getElementById('otherRestaurantsGrid');
+    const loadingContainer = document.getElementById('loadingContainer');
+    let currentIndex = 8;
+    const itemsPerLoad = 8;
+    let isLoading = false;
+
+    function loadMoreRestaurants() {
+        if (isLoading || currentIndex >= allOtherRestaurants.length) return;
+        isLoading = true;
+        if (loadingContainer) loadingContainer.style.display = 'block';
+
+        setTimeout(() => {
+            const itemsToLoad = allOtherRestaurants.slice(currentIndex, currentIndex + itemsPerLoad);
+            itemsToLoad.forEach(r => {
+                const cardHTML = `
+                    <div class="col-lg-3 col-md-4 col-sm-6 restaurant-card-item">
+                        <div class="card card-promo h-100"
+                             data-search-name="${r.name.toLowerCase()}"
+                             data-search-dishes="${r.dish_names}"
+                             data-star-rating="${r.stars !== 'Mới' ? r.stars : 0}">
+                            <a href="/restaurant/${r.id}" class="text-decoration-none text-dark d-flex flex-column h-100">
+                                <div class="position-relative">
+                                    <img src="${r.image}" class="img-food" alt="${r.name}">
+                                    <div class="promo-tag">Suggested</div>
+                                </div>
+                                <div class="card-body px-3 d-flex flex-column">
+                                    <p class="restaurant-title">${r.name}</p>
+                                    <p class="text-secondary-small mb-1">${r.category}</p>
+                                    <div class="d-flex align-items-center mb-2 rating">
+                                        <i class="bi bi-star-fill me-1"></i> ${r.stars}
+                                        ${r.time !== null && r.distance !== null ? `
+                                        <span class="mx-2">·</span>
+                                        <i class="bi bi-clock me-1"></i> ${r.time} phút
+                                        <span class="mx-2">·</span>
+                                        ${r.distance.toFixed(1)} km
+                                        ` : ''}
+                                    </div>
+                                    <p class="offer mt-auto"><i class="bi bi-tag"></i> Ưu đãi đặc biệt</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                `;
+                gridContainer.insertAdjacentHTML('beforeend', cardHTML);
+            });
+            currentIndex += itemsPerLoad;
+            if (currentIndex >= allOtherRestaurants.length) {
+                if (loadingContainer) loadingContainer.style.display = 'none';
+            }
+            applyAllFilters();
+            isLoading = false;
+        }, 500);
+    }
+
+    window.addEventListener('scroll', () => {
+        if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 500) {
+            loadMoreRestaurants();
+        }
+    });
+});
+</script>
+{% endblock %}

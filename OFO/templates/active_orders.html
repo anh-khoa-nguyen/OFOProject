@@ -1,0 +1,59 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Đơn hàng đang hoạt động{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h3 class="mb-4 fw-bold">Đơn hàng đang hoạt động</h3>
+
+    {% set status_map = {
+        'PENDING': {'text': 'Chờ xác nhận', 'color_class': 'text-warning'},
+        'CONFIRMED': {'text': 'Đang chuẩn bị', 'color_class': 'text-primary'},
+        'DELIVERING': {'text': 'Đang giao', 'color_class': 'text-success'}
+    } %}
+
+    {% if orders %}
+        <div class="list-group">
+            {% for order in orders %}
+                <a href="{{ url_for('main.track_order_page', order_id=order.id) }}" class="list-group-item list-group-item-action flex-column align-items-start mb-3 border rounded-3 shadow-sm">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1 fw-bold text-pink">Đơn hàng #{{ loop.revindex }}</h5>
+                        <small class="text-muted date">{{ order.order_date }}</small>
+                    </div>
+                    <p class="mb-1">
+                        <strong>Từ nhà hàng:</strong> {{ order.restaurant.restaurant_name }}
+                    </p>
+
+                    <p class="mb-1">
+                        <strong>Trạng thái:</strong>
+                        <!--
+                          ===================================================================
+                          === SỬA LỖI TẠI ĐÂY: Dùng filter `| upper` để chuyển đổi ===
+                          ===================================================================
+                        -->
+                        {% set current_status = order.order_status.value | upper %}
+
+                        {% if current_status in status_map %}
+                            {% set status_info = status_map[current_status] %}
+                            <span class="fw-semibold {{ status_info.color_class }}">{{ status_info.text }}</span>
+                        {% else %}
+                            <span class="fw-semibold text-muted">{{ order.order_status.value }}</span>
+                        {% endif %}
+                    </p>
+
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <small class="text-muted">Tổng cộng: {{ order.total|format_currency }}</small>
+                        <span class="badge rounded-pill" style="background-color: #E91E63; color: white;">Xem chi tiết</span>
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center p-5 border rounded-3 bg-light">
+            <i class="bi bi-box-seam" style="font-size: 4rem; color: #ccc;"></i>
+            <p class="mt-3 text-muted">Bạn không có đơn hàng nào đang hoạt động.</p>
+            <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary mt-2">Quay về trang chủ</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

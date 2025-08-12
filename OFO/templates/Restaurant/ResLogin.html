@@ -1,0 +1,31 @@
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/Restaurant/Login.css') }}"/>
+</head>
+
+{% extends 'layout/base.html' %}
+{% block content %}
+<div class="login-section">
+    <div class="login-container">
+        <h1>Đăng Nhập Quản Lý Nhà Hàng</h1>
+        <form action="#" method="POST">
+            <div class="input-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="input-group">
+                <label for="password">Mật khẩu:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <div class="forgot-password">
+                <a href="#">Quên mật khẩu</a>
+            </div>
+            <div class="button-wrapper">
+                <button type="submit" class="login-button">Đăng nhập</button>
+            </div>
+            <div class="signup-link">
+                <p>Chưa có tài khoản? <a href="{{ url_for('main.register') }}">Đăng kí</a></p>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

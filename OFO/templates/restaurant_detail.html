@@ -1,0 +1,621 @@
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/restaurant.css') }}">
+</head>
+{% extends 'layout/base.html' %}
+
+{% block body_attributes %}
+    data-restaurant-id="{{ restaurant.id }}"
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="restaurant-info-block">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Trang chủ</a></li>
+                <li class="breadcrumb-item"><a href="#">Nhà hàng</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ restaurant.restaurant_name }}</li>
+
+            </ol>
+        </nav>
+
+        <div class="d-flex">
+             <h1 class="restaurant-title mt-2">{{ restaurant.restaurant_name }}</h1>
+        {% if current_user.is_authenticated %}
+        <button id="favorite-btn" class="btn btn-lg" data-restaurant-id="{{ restaurant.id }}">
+            {# Dùng if/else để quyết định icon ban đầu #}
+            {% if is_favorited %}
+                <i class="bi bi-heart-fill text-danger"></i> {# Trái tim đầy #}
+            {% else %}
+                <i class="bi bi-heart"></i> {# Trái tim rỗng #}
+            {% endif %}
+        </button>
+        </div>
+
+        {% if restaurant.category %}
+        <p class="text-muted fs-5">{{ restaurant.category.name }}</p>
+        {% endif %}
+
+        <div class="restaurant-meta-group mt-3">
+            <div class="restaurant-meta-item d-flex align-items-center">
+                <i class="bi bi-star-fill text-warning"></i>
+
+                <span class="ms-1 fw-bold">{{ restaurant.star_average or 0 }}</span>
+
+                <a href="{{ url_for('main.restaurant_reviews', restaurant_id=restaurant.id) }}"
+                   class="btn btn-sm btn-outline-secondary ms-1">
+                    Xem đánh giá
+                </a>
+            </div>
+            <div class="restaurant-meta-item">
+                <i class="bi bi-clock"></i>
+                <span>60 phút</span>
+            </div>
+            <div class="restaurant-meta-item">
+                <i class="bi bi-dot"></i>
+                <span>1.155,7 km</span>
+            </div>
+
+        {% endif %}
+        </div>
+
+
+
+        <div class="restaurant-meta-item mt-3 text-muted">
+            <span>Giờ mở cửa</span>
+            <strong class="text-dark ms-2">
+                Hôm nay
+                {% if restaurant.open_time and restaurant.close_time %}
+                {{ restaurant.open_time.strftime('%H:%M') }} - {{ restaurant.close_time.strftime('%H:%M') }}
+                {% else %}
+                Đang cập nhật
+                {% endif %}
+            </strong>
+        </div>
+
+        <div class="promo-section restaurant-meta-item mt-3">
+            <i class="bi bi-tag-fill"></i>
+            <span>Tận hưởng ưu đãi</span>
+            <a href="#" class="ms-2">Xem chi tiết</a>
+        </div>
+    </div>
+    <div class="category-navbar-wrapper mt-4">
+        <div class="category-navbar">
+
+            <!-- Nút cuộn trái -->
+            <button id="scroll-left-btn" class="scroll-btn left d-none">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+
+            <!-- Danh sách các danh mục -->
+            <div id="category-nav-list" class="category-nav-list">
+                {% if restaurant.dish_groups %}
+                {% for group in restaurant.dish_groups %}
+                <a href="#group-{{ group.id }}" class="category-nav-item {% if loop.first %}active{% endif %}">{{
+                    group.name }}</a>
+                {% endfor %}
+                {% endif %}
+            </div>
+
+            <!-- Nút cuộn phải -->
+            <button id="scroll-right-btn" class="scroll-btn right">
+                <i class="bi bi-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- ==== PHẦN HIỂN THỊ SẢN PHẨM ==== -->
+    {% if restaurant.dish_groups %}
+    {% for group in restaurant.dish_groups %}
+    <div id="group-{{ group.id }}" class="menu-section">
+        <h2 class="menu-section-title">{{ group.name }}</h2>
+        <div class="row g-4">
+            {% for dish in group.dishes %}
+            <div class="col-lg-4 col-md-6 d-flex">
+                <!-- THÊM CLASS CÓ ĐIỀU KIỆN: Nếu dish không active, thêm class 'product-card-unavailable' -->
+                <div class="product-card w-100 {% if not dish.active %}product-card-unavailable{% endif %}">
+                    <div class="product-card-img-wrapper">
+                        <img src="{{ dish.image if dish.image else 'https://via.placeholder.com/400x300' }}"
+                             alt="{{ dish.name }}">
+                    </div>
+                    <div class="product-card-body">
+                        <h5 class="product-card-title">{{ dish.name }}</h5>
+                        <p class="product-card-desc">{{ dish.description }}</p>
+                        <div class="product-card-footer">
+                            <div class="product-card-price">
+                                <div>
+                                    <span class="current-price">{{ "{:,.0f}".format(dish.price) }}</span>
+                                </div>
+                            </div>
+
+                            <!-- BỌC NÚT TRONG ĐIỀU KIỆN: Chỉ hiển thị nút '+' nếu dish active -->
+                            {% if dish.active %}
+                            <button class="btn-add-to-cart" data-bs-toggle="offcanvas"
+                                    data-bs-target="#productOptionsOffcanvas"
+                                    data-dish-id="{{ dish.id }}">+
+                            </button>
+                            {% endif %}
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            {# Hiển thị nếu một nhóm không có món ăn nào #}
+            <p class="text-muted">Chưa có món ăn nào trong mục này.</p>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <p class="text-center mt-5">Nhà hàng này hiện chưa có thực đơn.</p>
+    {% endif %}
+
+    <!-- Offcanvas cho Product Options -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="productOptionsOffcanvas" aria-labelledby="offcanvasLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="offcanvasLabel"></h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <!-- NỘI DUNG CÓ THỂ CUỘN -->
+            <div class="scrollable-content" id="offcanvas-content-wrapper">
+                <!-- JS chèn -->
+            </div>
+        </div>
+
+        <div class="offcanvas-footer d-flex align-items-center justify-content-between">
+            <div class="quantity-selector d-flex align-items-center">
+                <button class="btn" id="decrease-qty">-</button>
+                <input type="text" id="quantity" value="1" readonly>
+                <button class="btn" id="increase-qty">+</button>
+            </div>
+            <button class="btn btn-pink flex-grow-1 ms-3 fw-bold" id="add-to-basket-btn" disabled>Add to Basket
+            </button>
+        </div>
+    </div>
+</div>
+
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+ {{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // --- Phần 1: Các biến và phần tử cần thiết ---
+        const navList = document.getElementById('category-nav-list');
+        const navLinks = document.querySelectorAll('#category-nav-list .category-nav-item');
+        const sections = document.querySelectorAll('.menu-section');
+        const leftBtn = document.getElementById('scroll-left-btn');
+        const rightBtn = document.getElementById('scroll-right-btn');
+
+        // Chiều cao của header và thanh nav để tính toán vị trí cuộn chính xác
+        const offsetHeight = 150;
+
+        if (!navList) return; // Thoát nếu không có thanh nav
+
+        // --- Phần 2: Xử lý các nút cuộn trái/phải ---
+        if (leftBtn && rightBtn) {
+            const scrollAmount = 250;
+
+            function updateButtonVisibility() {
+                const maxScroll = navList.scrollWidth - navList.clientWidth;
+                leftBtn.classList.toggle('d-none', navList.scrollLeft <= 0);
+                rightBtn.classList.toggle('d-none', navList.scrollLeft >= maxScroll - 1);
+            }
+
+            leftBtn.addEventListener('click', () => navList.scrollBy({ left: -scrollAmount }));
+            rightBtn.addEventListener('click', () => navList.scrollBy({ left: scrollAmount }));
+            navList.addEventListener('scroll', updateButtonVisibility);
+            setTimeout(updateButtonVisibility, 100);
+        }
+
+        // --- Phần 3: Xử lý highlight tự động KHI CUỘN trang ---
+        function onWindowScroll() {
+            let currentSectionId = '';
+
+            // Tìm xem section nào đang ở trên cùng của màn hình
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop - offsetHeight;
+                if (window.pageYOffset >= sectionTop) {
+                    currentSectionId = '#' + section.id;
+                }
+            });
+
+            // Highlight link tương ứng trong thanh nav
+            navLinks.forEach(link => {
+                link.classList.remove('active'); // Xóa active khỏi tất cả
+                if (link.getAttribute('href') === currentSectionId) {
+                    link.classList.add('active'); // Thêm active cho link đúng
+                    // Tự động cuộn thanh nav để link active luôn được nhìn thấy
+                    link.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                }
+            });
+        }
+
+        // Gán sự kiện cuộn cho toàn bộ cửa sổ
+        window.addEventListener('scroll', onWindowScroll);
+
+
+        // --- Phần 4: Xử lý cuộn mượt mà KHI CLICK vào một mục trên nav ---
+        navLinks.forEach(link => {
+            link.addEventListener('click', function(event) {
+                event.preventDefault(); // Ngăn hành vi nhảy trang mặc định
+
+                const targetId = this.getAttribute('href');
+                const targetSection = document.querySelector(targetId);
+
+                if (targetSection) {
+                    const topPos = targetSection.offsetTop - (offsetHeight - 50); // Bớt đi một chút để không bị che
+                    window.scrollTo({
+                        top: topPos,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+
+    });
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const offcanvasElement = document.getElementById('productOptionsOffcanvas');
+        const offcanvasContentWrapper = document.getElementById('offcanvas-content-wrapper');
+        const addToBasketBtn = document.getElementById('add-to-basket-btn');
+        const quantityInput = document.getElementById('quantity');
+        const decreaseBtn = document.getElementById('decrease-qty');
+        const increaseBtn = document.getElementById('increase-qty');
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('vi-VN').format(value);
+        }
+
+        function initializeOffcanvasLogic(dishData,preselectedItemData = null) {
+            const optionInputs = offcanvasContentWrapper.querySelectorAll('input[type="radio"], input[type="checkbox"]');
+
+            if (preselectedItemData) {
+                quantityInput.value = preselectedItemData.quantity;
+
+                // 2. Lấy danh sách ID của các option đã chọn
+                const selectedOptionIds = preselectedItemData.options.map(opt => opt.id);
+
+                // 3. Duyệt qua tất cả các input và tick vào những cái đã được chọn
+                optionInputs.forEach(input => {
+                    const optionId = parseInt(input.id.replace('option-', ''));
+                    if (selectedOptionIds.includes(optionId)) {
+                        input.checked = true;
+                    }
+                });
+                const instructionsInput = offcanvasContentWrapper.querySelector('#specialInstructions');
+                if (instructionsInput && preselectedItemData.note) {
+                    instructionsInput.value = preselectedItemData.note;
+                }
+            }
+
+            // ===== HÀM VALIDATE ĐÃ ĐƯỢC CẬP NHẬT =====
+            function validateSelections() {
+                let allValid = true;
+
+                dishData.option_groups.forEach(group => {
+                    // Chỉ kiểm tra các nhóm bắt buộc
+                    if (!group.mandatory) return;
+
+                    const groupInputs = offcanvasContentWrapper.querySelectorAll(`input[name="group-${group.id}"]`);
+                    const selectedCount = [...groupInputs].filter(input => input.checked).length;
+
+                    // LOGIC MỚI: Nếu là nhóm bắt buộc, người dùng phải chọn ít nhất 1 mục.
+                    if (selectedCount < 1) {
+                        allValid = false;
+                    }
+                    // Việc giới hạn không được chọn quá `max_selection` đã được xử lý ở UI bên dưới.
+                });
+
+                return allValid;
+            }
+
+            function showWarningToast(message, duration = 3000) {
+                let toast = document.querySelector('.toast-notifications');
+                if (!toast) {
+                    toast = document.createElement('div');
+                    toast.className = 'toast-notifications';
+                    document.body.appendChild(toast);
+                }
+                toast.textContent = message;
+                toast.classList.add('show');
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, duration);
+            }
+
+            function updateTotal() {
+                let basePrice = parseFloat(dishData.price);
+                let optionsPrice = 0;
+                optionInputs.forEach(input => {
+                    if (input.checked) {
+                        optionsPrice += parseFloat(input.value);
+                    }
+                });
+                const quantity = parseInt(quantityInput.value);
+                const total = (basePrice + optionsPrice) * quantity;
+                addToBasketBtn.textContent = `Thêm vào giỏ - ${formatCurrency(total)} ₫`;
+                addToBasketBtn.disabled = !validateSelections();
+            }
+
+            // Chặn chọn quá max_selection với checkbox
+            dishData.option_groups.forEach(group => {
+                // Chỉ áp dụng cho checkbox (khi có thể chọn nhiều)
+                if (group.max_selection > 1) {
+                    const groupInputs = offcanvasContentWrapper.querySelectorAll(`input[name="group-${group.id}"]`);
+                    groupInputs.forEach(input => {
+                        input.addEventListener('change', () => {
+                            const selected = [...groupInputs].filter(i => i.checked);
+                            if (selected.length > group.max_selection) {
+                                input.checked = false; // Bỏ chọn mục vừa click
+                                showWarningToast(`Bạn chỉ được chọn tối đa ${group.max_selection} mục trong nhóm "${group.name}"`);
+                            }
+                            updateTotal(); // Cập nhật lại sau mỗi lần thay đổi
+                        });
+                    });
+                }
+            });
+
+            // Gán sự kiện update lại total cho tất cả các input
+            optionInputs.forEach(input => input.addEventListener('change', updateTotal));
+
+            // Gán sự kiện cho nút tăng/giảm số lượng
+            increaseBtn.onclick = () => {
+                quantityInput.value = parseInt(quantityInput.value) + 1;
+                updateTotal();
+            };
+            decreaseBtn.onclick = () => {
+                let currentQty = parseInt(quantityInput.value);
+                if (currentQty > 1) {
+                    quantityInput.value = currentQty - 1;
+                    updateTotal();
+                }
+            };
+
+            // Tính giá và kiểm tra validation lần đầu khi offcanvas được render xong
+            updateTotal();
+        }
+
+
+        // Lắng nghe sự kiện khi offcanvas sắp được hiển thị
+        offcanvasElement.addEventListener('show.bs.offcanvas', async function (event) {
+            const button = event.relatedTarget;
+            const dishId = button.dataset.dishId;
+            if (!dishId) return;
+
+            addToBasketBtn.dataset.dishId = dishId;
+
+            quantityInput.value = 1;
+            addToBasketBtn.textContent = 'Đang tải...';
+            addToBasketBtn.disabled = true;
+            offcanvasContentWrapper.innerHTML = '<div class="text-center p-5"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+
+            const itemKeyToEdit = offcanvasElement.dataset.editingItemKey;
+            let preselectedData = null;
+
+            // Nếu có item key (tức là đang chỉnh sửa) và giỏ hàng toàn cục tồn tại
+            if (itemKeyToEdit && window.currentCart) {
+                const restaurantId = String('{{ restaurant.id }}'); // Chuyển ID sang chuỗi để khớp với key
+
+                // Kiểm tra một cách an toàn
+                if (window.currentCart[restaurantId] && window.currentCart[restaurantId].items[itemKeyToEdit]) {
+                    preselectedData = window.currentCart[restaurantId].items[itemKeyToEdit];
+                }
+            }
+
+            try {
+                const response = await fetch(`/api/dish/${dishId}`);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
+
+                let html = `
+                    <div class="product-main-info d-flex align-items-start mb-3">
+                        <img src="${data.image || 'https://via.placeholder.com/100'}" class="product-image me-3" alt="${data.name}">
+                        <div class="flex-grow-1">
+                            <h5 class="fw-bold mb-1">${data.name}</h5>
+                            <p class="small text-muted">${data.description || ''}</p>
+                        </div>
+                        <div class="text-end ms-2 flex-shrink-0">
+                            <span class="fw-bold fs-5">${formatCurrency(data.price)}</span>
+                        </div>
+                    </div>
+                `;
+
+                data.option_groups.forEach(group => {
+                    html += `
+                        <div class="options-section">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <h6 class="fw-bold mb-0">${group.name}</h6>
+                                    ${group.max_selection ? `<small class="text-muted">Chọn tối đa ${group.max_selection}</small>` : ''}
+                                </div>
+                                <span class="badge ${group.mandatory ? 'bg-danger-subtle text-danger-emphasis' : 'bg-secondary-subtle text-secondary-emphasis'} rounded-pill">${group.mandatory ? 'Bắt buộc' : 'Tùy chọn'}</span>
+                            </div>
+                    `;
+                    group.options.forEach(option => {
+                        const inputType = group.max_selection === 1 ? 'radio' : 'checkbox';
+                        html += `
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="${inputType}" name="group-${group.id}" id="option-${option.id}" value="${option.price_change}">
+                                    <label class="form-check-label w-100" for="option-${option.id}">${option.name}</label>
+                                </div>
+                                <span class="fw-normal">+${formatCurrency(option.price_change)}</span>
+                            </div>
+                        `;
+                    });
+                    html += `</div>`;
+                });
+
+                html += `
+                    <div class="options-section">
+                        <div class="mb-2">
+                            <label for="specialInstructions" class="form-label">
+                                <strong class="me-2">Ghi chú</strong>
+                                <small class="text-muted">Tùy chọn</small>
+                            </label>
+                            <input type="text" class="form-control" id="specialInstructions" placeholder="Ví dụ: Ít đường, không đá...">
+                        </div>
+                    </div>
+                `;
+
+                offcanvasContentWrapper.innerHTML = html;
+                initializeOffcanvasLogic(data, preselectedData);
+
+            } catch (error) {
+                console.error('Failed to fetch dish details:', error);
+                offcanvasContentWrapper.innerHTML = '<p class="text-center text-danger">Không thể tải được chi tiết món ăn. Vui lòng thử lại.</p>';
+            }
+        });
+        // Gán sự kiện click cho nút "Thêm vào giỏ"
+        addToBasketBtn.addEventListener('click', function() {
+            const dishId = this.dataset.dishId; // Lấy dishId từ nút
+            const quantity = parseInt(quantityInput.value);
+            const selectedOptions = [...offcanvasContentWrapper.querySelectorAll('input:checked')].map(input => input.id.replace('option-', ''));
+            const itemKeyToEdit = offcanvasElement.dataset.editingItemKey;
+
+            const specialInstructionsInput = document.getElementById('specialInstructions');
+            const note = specialInstructionsInput ? specialInstructionsInput.value.trim() : '';
+
+            this.disabled = true;
+            this.textContent = 'Đang thêm...';
+
+            let payload = {
+                dish_id: dishId,
+                quantity: quantity,
+                options: selectedOptions,
+                note: note
+            };
+            if (itemKeyToEdit) {
+                payload.item_key_to_edit = itemKeyToEdit;
+            }
+
+            // Gọi API
+            fetch('/api/add-to-cart', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+
+                    document.dispatchEvent(new CustomEvent('cartUpdated', {
+                        detail: { cart: data.cart }
+                    }));
+
+
+                    const optionsOffcanvas = bootstrap.Offcanvas.getInstance(offcanvasElement);
+                    optionsOffcanvas.hide();
+                } else {
+                    alert('Lỗi: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Lỗi thêm vào giỏ:', error);
+                alert('Đã có lỗi xảy ra. Vui lòng thử lại.');
+            })
+            .finally(() => {
+                if (itemKeyToEdit) {
+                    delete offcanvasElement.dataset.editingItemKey;
+                }
+
+            });
+        });
+    });
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const favButton = document.getElementById('favorite-btn');
+
+        if (favButton) {
+            favButton.addEventListener('click', function() {
+                const restaurantId = this.dataset.restaurantId;
+                const icon = this.querySelector('i');
+
+                // Gửi request đến API
+                fetch(`/api/toggle-favorite/${restaurantId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (data.status === 'added') {
+                            // Chuyển sang trái tim đầy
+                            icon.classList.remove('bi-heart');
+                            icon.classList.add('bi-heart-fill', 'text-danger');
+                            showToast('Đã thêm vào danh sách yêu thích!');
+                        } else {
+                            // Chuyển sang trái tim rỗng
+                            icon.classList.remove('bi-heart-fill', 'text-danger');
+                            icon.classList.add('bi-heart');
+                            showToast('Đã xóa khỏi danh sách yêu thích.');
+                        }
+                    } else {
+                        alert('Lỗi: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Đã có lỗi mạng xảy ra.');
+                });
+            });
+        }
+
+        // Hàm hiển thị thông báo nhỏ (toast)
+        function showToast(message) {
+            const toastContainer = document.createElement('div');
+            toastContainer.className = 'toast-notification show';
+            toastContainer.textContent = message;
+            document.body.appendChild(toastContainer);
+
+            setTimeout(() => {
+                toastContainer.classList.remove('show');
+                setTimeout(() => {
+                    document.body.removeChild(toastContainer);
+                }, 500);
+            }, 2500);
+        }
+    });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const header = document.querySelector('header');
+            const categoryNavbarWrapper = document.querySelector('.category-navbar-wrapper');
+
+            if (!header || !categoryNavbarWrapper) {
+                return;
+            }
+
+            // Lấy vị trí ban đầu của thanh category-navbar so với đầu trang
+            const navbarOffsetTop = categoryNavbarWrapper.offsetTop;
+
+            // Hàm để kiểm tra và ẩn/hiện header
+            function toggleHeaderVisibility() {
+                const scrollPosition = window.pageYOffset;
+
+                if (scrollPosition >= navbarOffsetTop) {
+                    // Thêm một class để ẩn header đi
+                    header.classList.add('header-hidden');
+                } else {
+                    header.classList.remove('header-hidden');
+                }
+            }
+
+            window.addEventListener('scroll', toggleHeaderVisibility);
+
+            toggleHeaderVisibility();
+        });
+    </script>
+{% endblock %}
