@@ -48,6 +48,42 @@ with app.app_context():
                   password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()), role=UserRole.RESTAURANT)
     owner2 = User(name='Chị Mười Bún Bò', email='owner2@ofood.com', phone='0902222222',
                   password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()), role=UserRole.RESTAURANT)
+    owner3 = User(name='Jollibee', email='owner3@ofood.com', phone='0902372222',
+                  password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()), role=UserRole.RESTAURANT)
+    owner4 = User(name='Huỳnh Gia', email='owner4@ofood.com', phone='0906572222',
+                  password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()), role=UserRole.RESTAURANT)
+    owner5 = User(name='O Cương', email='owner5@ofood.com', phone='0902398222',
+                  password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()), role=UserRole.RESTAURANT)
+    owner6 = User(name='Ba Ghiền', email='owner6@ofood.com', phone='0902872222',
+                  password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()), role=UserRole.RESTAURANT)
+    owner7 = User(name='Phở Lệ', email='owner7@ofood.com', phone='0992372222',
+                  password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()), role=UserRole.RESTAURANT)
+    owner8 = User(name='Gogi', email='owner8@ofood.com', phone='0909672222',
+                  password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()), role=UserRole.RESTAURANT)
+    owner9 = User(name='Anh Ba', email='owner9@ofood.com', phone='0904572222',
+                  password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()), role=UserRole.RESTAURANT)
+    owner10 = User(name='Sushi Hokkaido', email='owner10@ofood.com', phone='0987372222',
+                  password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()), role=UserRole.RESTAURANT)
+    owner11 = User(name='KFC', email='owner11@ofood.com', phone='0987379222',
+                   password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()), role=UserRole.RESTAURANT)
+    owner12 = User(name='The Coffee House', email='owner12@ofood.com', phone='0987356222',
+                   password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()), role=UserRole.RESTAURANT)
+    owner13 = User(name='Bánh Canh Cua', email='owner13@ofood.com', phone='0987378422',
+                   password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()), role=UserRole.RESTAURANT)
+    owner14 = User(name='Pizza Hut', email='owner14@ofood.com', phone='0987329222',
+                   password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()), role=UserRole.RESTAURANT)
+    owner15 = User(name='Lẩu Nấm Ashima', email='owner15@ofood.com', phone='0987376122',
+                   password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()), role=UserRole.RESTAURANT)
+    owner16 = User(name='Bò Tơ Củ Chi', email='owner16@ofood.com', phone='0987092222',
+                   password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()), role=UserRole.RESTAURANT)
+    owner17 = User(name='Highlands Coffee', email='owner17@ofood.com', phone='0987372273',
+                   password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()), role=UserRole.RESTAURANT)
+    owner18 = User(name='Marukame Udon', email='owner18@ofood.com', phone='0987372992',
+                   password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()), role=UserRole.RESTAURANT)
+    owner19 = User(name='Bánh Xèo', email='owner19@ofood.com', phone='0987372211',
+                   password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()), role=UserRole.RESTAURANT)
+
+
 
     # Tạo các khách hàng
     customer1 = User(name='Khách Hàng A', email='customer1@email.com', phone='0981112222',
@@ -63,7 +99,8 @@ with app.app_context():
     customer5 = User(name='Khách Hàng F', email='customer6@email.com', phone='0982223336',
                      password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()), role=UserRole.USER)
 
-    db.session.add_all([admin_user, owner1, owner2, customer1, customer2, customer3, customer4, customer5, customer6])
+    db.session.add_all([admin_user, owner1, owner2,owner3,owner4,owner5,owner6,owner7,owner8,owner9,owner10,owner11,owner12,
+                           owner13,owner14,owner15,owner16,owner17,owner18,owner19,customer1, customer2, customer3, customer4, customer5, customer6])
     db.session.commit()
 
     # =====================================================================================================================
@@ -122,7 +159,7 @@ with app.app_context():
                              close_time=time(21, 30),
                              active=True)  # 09:30 PM
 
-    restaurant3 = Restaurant(owner_user_id=owner2.id,
+    restaurant3 = Restaurant(owner_user_id=owner3.id,
                              restaurant_name='Jollibee - EC Tô Hiến Thành',
                              address='333 Tô Hiến Thành, P. 13, Q. 10, TP.HCM',
                              description='Gà giòn vui vẻ, Mì Ý sốt bò bằm.',
@@ -134,7 +171,7 @@ with app.app_context():
                              close_time=time(22, 45),
                              active=True)  # 10:45 PM
 
-    restaurant4 = Restaurant(owner_user_id=owner1.id,
+    restaurant4 = Restaurant(owner_user_id=owner4.id,
                              restaurant_name='Bánh Mì Huỳnh Gia - Lê Văn Lương',
                              address='444 Lê Văn Lương, P. Tân Hưng, Q. 7, TP.HCM',
                              description='Bánh mì heo quay da giòn trứ danh.',
@@ -145,7 +182,7 @@ with app.app_context():
                              open_time=time(6, 30),  # 06:30 AM
                              close_time=time(20, 0),
                              active=True)  # 08:00 PM
-    restaurant5 = Restaurant(owner_user_id=owner1.id,
+    restaurant5 = Restaurant(owner_user_id=owner5.id,
                              restaurant_name='Bún Bò Huế O Cương Chú Điệp',
                              address='242/12 Nguyễn Thiện Thuật, P. 3, Q. 3, TP.HCM',
                              description='Bún bò Huế đậm đà hương vị truyền thống.',
@@ -156,7 +193,7 @@ with app.app_context():
                              open_time=time(10, 0),  # 10:00 AM
                              close_time=time(22, 0),
                              active=True)  # 10:00 PM,
-    restaurant6 = Restaurant(owner_user_id=owner2.id,
+    restaurant6 = Restaurant(owner_user_id=owner6.id,
                              restaurant_name='Cơm Tấm Ba Ghiền',
                              address='84 Đặng Văn Ngữ, P. 10, Q. Phú Nhuận, TP.HCM',
                              description='Sườn nướng mật ong trứ danh.',
@@ -167,7 +204,7 @@ with app.app_context():
                              open_time=time(10, 0),  # 10:00 AM
                              close_time=time(22, 0),
                              active=True)
-    restaurant7 = Restaurant(owner_user_id=owner2.id,
+    restaurant7 = Restaurant(owner_user_id=owner7.id,
                              restaurant_name='Phở Lệ - Nguyễn Trãi',
                              address='413-415 Nguyễn Trãi, P. 7, Q. 5, TP.HCM',
                              description='Tô phở đầy đặn, nước lèo ngọt thanh.',
@@ -178,7 +215,7 @@ with app.app_context():
                              open_time=time(10, 0),  # 10:00 AM
                              close_time=time(22, 0),
                              active=True)
-    restaurant8 = Restaurant(owner_user_id=owner1.id,
+    restaurant8 = Restaurant(owner_user_id=owner8.id,
                              restaurant_name='Gogi House - Quang Trung',
                              address='1 Quang Trung, P. 11, Q. Gò Vấp, TP.HCM',
                              description='Thịt nướng Hàn Quốc chuẩn vị.',
@@ -189,7 +226,7 @@ with app.app_context():
                              open_time=time(10, 0),  # 10:00 AM
                              close_time=time(22, 0),
                              active=True)
-    restaurant9 = Restaurant(owner_user_id=owner1.id,
+    restaurant9 = Restaurant(owner_user_id=owner9.id,
                              restaurant_name='Lẩu Dê 404 - Lê Văn Khương',
                              address='404 Lê Văn Khương, P. Thới An, Q. 12, TP.HCM',
                              description='Lẩu dê nóng hổi, thịt mềm.',
@@ -200,7 +237,7 @@ with app.app_context():
                              open_time=time(10, 0),  # 10:00 AM
                              close_time=time(22, 0),
                              active=True)
-    restaurant10 = Restaurant(owner_user_id=owner1.id,
+    restaurant10 = Restaurant(owner_user_id=owner10.id,
                               restaurant_name='Sushi Hokkaido Sachi - Vincom Thủ Đức',
                               address='216 Võ Văn Ngân, P. Bình Thọ, TP. Thủ Đức, TP.HCM',
                               description='Sushi và sashimi tươi ngon.',
@@ -211,7 +248,7 @@ with app.app_context():
                               open_time=time(10, 0),  # 10:00 AM
                               close_time=time(22, 0),
                               active=True)
-    restaurant11 = Restaurant(owner_user_id=owner1.id,
+    restaurant11 = Restaurant(owner_user_id=owner11.id,
                               restaurant_name='KFC - AEON Mall Bình Tân',
                               address='Số 1 đường số 17A, P. Bình Trị Đông B, Q. Bình Tân, TP.HCM',
                               description='Gà rán giòn tan, khoai tây chiên nóng hổi.',
@@ -222,7 +259,7 @@ with app.app_context():
                               open_time=time(10, 0),  # 10:00 AM
                               close_time=time(22, 0),
                               active=True)
-    restaurant12 = Restaurant(owner_user_id=owner1.id,
+    restaurant12 = Restaurant(owner_user_id=owner12.id,
                               restaurant_name='The Coffee House - Phan Văn Trị',
                               address='510 Phan Văn Trị, P. 7, Q. Gò Vấp, TP.HCM',
                               description='Không gian yên tĩnh, cà phê đậm đà.',
@@ -233,7 +270,7 @@ with app.app_context():
                               open_time=time(10, 0),  # 10:00 AM
                               close_time=time(22, 0),
                               active=True)
-    restaurant13 = Restaurant(owner_user_id=owner1.id,
+    restaurant13 = Restaurant(owner_user_id=owner13.id,
                               restaurant_name='Bánh Canh Cua 14 - Hóc Môn',
                               address='14 Song Hành, TT. Hóc Môn, Huyện Hóc Môn, TP.HCM',
                               description='Bánh canh cua đặc quánh, topping đầy đủ.',
@@ -244,7 +281,7 @@ with app.app_context():
                               open_time=time(10, 0),  # 10:00 AM
                               close_time=time(22, 0),
                               active=True)
-    restaurant14 = Restaurant(owner_user_id=owner1.id,
+    restaurant14 = Restaurant(owner_user_id=owner14.id,
                               restaurant_name='Pizza Hut - Co.opmart Thủ Đức',
                               address='Km 9 Xa lộ Hà Nội, P. Hiệp Phú, TP. Thủ Đức, TP.HCM',
                               description='Pizza viền phô mai béo ngậy.',
@@ -255,7 +292,7 @@ with app.app_context():
                               open_time=time(10, 0),  # 10:00 AM
                               close_time=time(22, 0),
                               active=True)
-    restaurant15 = Restaurant(owner_user_id=owner2.id,
+    restaurant15 = Restaurant(owner_user_id=owner15.id,
                               restaurant_name='Lẩu Nấm Ashima - Tú Xương',
                               address='35A Tú Xương, P. Võ Thị Sáu, Q. 3, TP.HCM',
                               description='Lẩu nấm thiên nhiên bổ dưỡng.',
@@ -266,7 +303,7 @@ with app.app_context():
                               open_time=time(10, 0),  # 10:00 AM
                               close_time=time(22, 0),
                               active=True)
-    restaurant16 = Restaurant(owner_user_id=owner2.id,
+    restaurant16 = Restaurant(owner_user_id=owner16.id,
                               restaurant_name='Bò Tơ Củ Chi - Xuyên Á',
                               address='Quốc lộ 22, Xã Tân Phú Trung, Huyện Củ Chi, TP.HCM',
                               description='Đặc sản bò tơ Củ Chi chính gốc.',
@@ -277,7 +314,7 @@ with app.app_context():
                               open_time=time(10, 0),  # 10:00 AM
                               close_time=time(22, 0),
                               active=True)
-    restaurant17 = Restaurant(owner_user_id=owner1.id,
+    restaurant17 = Restaurant(owner_user_id=owner17.id,
                               restaurant_name='Highlands Coffee - Gigamall',
                               address='240-242 Phạm Văn Đồng, P. Hiệp Bình Chánh, TP. Thủ Đức, TP.HCM',
                               description='Phin sữa đá và trà sen vàng nổi tiếng.',
@@ -288,7 +325,7 @@ with app.app_context():
                               open_time=time(10, 0),  # 10:00 AM
                               close_time=time(22, 0),
                               active=True)
-    restaurant18 = Restaurant(owner_user_id=owner1.id,
+    restaurant18 = Restaurant(owner_user_id=owner18.id,
                               restaurant_name='Marukame Udon - Lý Tự Trọng',
                               address='215-217 Lý Tự Trọng, P. Bến Thành, Q. 1, TP.HCM',
                               description='Mì Udon sợi tươi làm tại chỗ.',
@@ -299,7 +336,7 @@ with app.app_context():
                               open_time=time(10, 0),  # 10:00 AM
                               close_time=time(22, 0),
                               active=True)
-    restaurant19 = Restaurant(owner_user_id=owner1.id,
+    restaurant19 = Restaurant(owner_user_id=owner19.id,
                               restaurant_name='Bánh Xèo Ăn Là Ghiền',
                               address='74 Sương Nguyệt Ánh, P. Bến Thành, Q. 1, TP.HCM',
                               description='Bánh xèo giòn rụm, rau rừng tươi ngon.',
@@ -432,9 +469,9 @@ with app.app_context():
     db.session.commit()
 
     detail1_1 = OrderDetail(order_id=order1.id, dish_id=dish1_1.id, quantity=1, price=dish1_1.price,
-                            dish_name=dish1_1.name, selected_options_luc_dat={})
+                            dish_name=dish1_1.name, selected_options_luc_dat={"note": "không hành", "options": [{"id": 1, "name": "50% đường", "price": 0.0}]})
     detail1_2 = OrderDetail(order_id=order1.id, dish_id=dish1_3.id, quantity=1, price=dish1_3.price,
-                            dish_name=dish1_3.name, selected_options_luc_dat={})
+                            dish_name=dish1_3.name, selected_options_luc_dat={"note": "không hành", "options": [{"id": 8, "name": "Trân châu đen", "price": 5000.0}, {"id": 4, "name": "50% đá", "price": 10000.0}]})
     db.session.add_all([detail1_1, detail1_2])
     db.session.commit()
 
