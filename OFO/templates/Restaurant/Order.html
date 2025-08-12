@@ -1,0 +1,332 @@
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/Restaurant/Orders.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+</head>
+{% extends 'layout/base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="restaurant-info-block mb-4">
+        <div class="restaurant-management-nav">
+            <ul>
+                <li><a href="{{ url_for('main.home', restaurant_id=restaurant.id) }}"><i class="fas fa-utensils"></i><span>Thực Đơn</span></a></li>
+                <li><a href="{{ url_for('main.restaurant_orders', restaurant_id=restaurant.id) }}" class="active"><i class="fas fa-receipt"></i><span>Đơn Hàng</span></a></li>
+                <li><a href="{{ url_for('main.revenue', restaurant_id=restaurant.id) }}" ><i class="fas fa-chart-line"></i><span>Doanh Thu</span></a></li>
+                <li><a href="{{ url_for('main.voucher', restaurant_id=restaurant.id) }}"><i class="fas fa-tags"></i><span>Khuyến Mãi</span></a></li>
+            </ul>
+        </div>
+        <h1 class="restaurant-title mt-3">{{ restaurant.restaurant_name }}</h1>
+    </div>
+
+    <div class="order-board">
+        {# Lặp qua tất cả các trạng thái đơn hàng để tạo cột #}
+        {% for status_enum in OrderState %}
+        {% if status_enum.name != 'UNPAID' %}
+        {% set status_id = status_enum.name %} {# PENDING, CONFIRMED, ... #}
+        {% set status_display = status_enum.value %} {# Đang chờ, Đã xác nhận, ... #}
+
+        <div class="order-status-column" data-status-id="{{ status_id }}">
+            <div class="order-status-column-header">
+                <h5>{{ status_display }}</h5>
+                {# Đếm số lượng đơn hàng trong cột này #}
+                {% set order_count = orders | selectattr('order_status.name', 'equalto', status_id) | list | length %}
+                <span class="badge bg-secondary">{{ order_count }}</span>
+            </div>
+
+            <div class="order-list" data-status-id="{{ status_id }}">
+                {# Lặp qua các đơn hàng và chỉ hiển thị những đơn hàng có trạng thái khớp #}
+                {% for order in orders %}
+                {% if order.order_status.name == status_id %}
+                <div class="order-card" data-order-id="{{ order.id }}" draggable="true">
+                    <div class="order-card-header">
+                        <span class="order-id">#{{ order.id }}</span>
+                        <span class="order-time">{{ order.order_date.strftime('%H:%M %d/%m/%y') }}</span>
+                    </div>
+                    <div class="order-card-body">
+                        <p><strong>Khách:</strong> {{ order.user.name }}</p>
+                        <p><strong>Tổng:</strong> {{ '{:,.0f}'.format(order.total) }} đ</p>
+                        <p><strong>Địa chỉ:</strong> {{ order.delivery_address }}</p>
+                        {% if order.order_status.name == 'DELIVERING' and order.estimated_delivery_time %}
+                        <div class="delivery-countdown mt-2"
+                             data-delivery-time="{{ order.estimated_delivery_time.isoformat() if order.estimated_delivery_time else '' }}">
+                            <i class="fas fa-shipping-fast text-primary"></i>
+                            <span>Giao xong trong:</span>
+                            <strong class="countdown-timer">Đang tính...</strong>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="order-card-footer">
+                        <button class="btn btn-sm btn-outline-primary">Chi tiết</button>
+                        {% if status_id == 'PENDING' %}
+                        <button class="btn btn-sm btn-outline-success btn-confirm-order" data-order-id="{{ order.id }}">
+                            Xác nhận
+                        </button>
+
+                        {% elif status_id == 'CONFIRMED' %}
+                        <button class="btn btn-sm btn-outline-warning btn-deliver-order" data-order-id="{{ order.id }}">
+                            Giao hàng
+                        </button>
+
+                        {% elif status_id == 'COMPLETED' %}
+                        <button class="btn btn-sm btn-outline-info btn-complete-order" data-order-id="{{ order.id }}">Đã Hoàn Tất
+                        </button>
+
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+                {# Thông báo nếu không có đơn hàng nào trong cột #}
+                {% if order_count == 0 %}
+                <p class="text-center text-muted mt-3">Không có đơn hàng nào ở trạng thái này.</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Offcanvas để hiển thị chi tiết đơn hàng (được ẩn mặc định) -->
+<!-- Offcanvas đã được tối ưu hóa HTML -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="orderDetailOffcanvas" aria-labelledby="offcanvasLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasLabel">Chi tiết Đơn hàng <span id="offcanvas-order-id"></span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <!-- Vùng loading -->
+        <div id="offcanvas-loading">
+            <!-- ... Nội dung spinner ... -->
+        </div>
+
+        <!-- Vùng nội dung chi tiết -->
+        <div id="offcanvas-content" class="d-none">
+            <!-- Thêm class 'detail-section' cho các khối -->
+            <div class="detail-section">
+                <h6>Thông tin chung</h6>
+                <div class="info-list">
+                    <div class="info-item"><strong>Trạng thái:</strong> <span id="offcanvas-status"></span></div>
+                    <div class="info-item"><strong>Khách hàng:</strong> <span id="offcanvas-user"></span></div>
+                    <div class="info-item"><strong>Ngày đặt:</strong> <span id="offcanvas-date"></span></div>
+                    <div class="info-item full-width">
+                        <strong>Địa chỉ giao hàng:</strong>
+                        <p id="offcanvas-address"></p>
+                    </div>
+                    <div class="info-item full-width" id="offcanvas-note-wrapper">
+                        <strong>Ghi chú:</strong>
+                        <p id="offcanvas-note" class="text-muted fst-italic"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <h6>Các món đã đặt</h6>
+                <table class="table" id="details-table">
+                    <thead>
+                    <tr>
+                        <th>Tên món</th>
+                        <th class="text-center">SL</th>
+                        <th class="text-end">Thành tiền</th>
+                    </tr>
+                    </thead>
+                    <tbody id="offcanvas-details-table"></tbody>
+                </table>
+            </div>
+
+            <div class="detail-section">
+                <h6>Thanh toán</h6>
+                <div class="info-list payment-summary">
+                    <div class="info-item"><span>Tạm tính:</span> <span id="offcanvas-subtotal"></span></div>
+                    <div class="info-item"><span>Phí giao hàng:</span> <span id="offcanvas-shipping"></span></div>
+                    <div class="info-item text-danger"><span>Giảm giá:</span> <span id="offcanvas-discount"></span>
+                    </div>
+                    <div class="info-item total">
+                        <strong>Tổng cộng:</strong>
+                        <strong id="offcanvas-total"></strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+
+         // Thông báo
+
+         function showToast(message, type = 'success') {
+             const existingToast = document.querySelector('.toast-notification');
+             if (existingToast) existingToast.remove();
+             const toastContainer = document.createElement('div');
+             toastContainer.className = `toast-notification ${type}`;
+             toastContainer.textContent = message;
+             document.body.appendChild(toastContainer);
+             setTimeout(() => toastContainer.classList.add('show'), 10);
+             setTimeout(() => {
+                 toastContainer.classList.remove('show');
+                 setTimeout(() => { if (toastContainer.parentNode) toastContainer.parentNode.removeChild(toastContainer); }, 400);
+             }, 3000);
+         }
+
+         function formatCurrency(number) {
+             return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(number);
+         }
+         function executeStatusUpdate(orderId, newStatus, extraData = {}) {
+             const payload = { status: newStatus, ...extraData }; // Gộp status và extraData
+
+             return fetch(`/api/orders/${orderId}/status`, {
+                 method: 'POST',
+                 headers: { 'Content-Type': 'application/json' },
+                 body: JSON.stringify(payload)
+             })
+             .then(res => res.json())
+             .then(data => {
+                 if (!data.success) {
+                     throw new Error(data.message || 'Cập nhật thất bại.');
+                 }
+                 showToast(data.message, 'success');
+                 // Luôn reload để đồng bộ trạng thái từ server
+                 setTimeout(() => { location.reload(); }, 1000);
+             })
+             .catch(err => {
+                 Swal.fire('Thao tác thất bại!', err.message, 'error');
+             });
+         }
+
+         document.querySelectorAll('.btn-confirm-order').forEach(button => {
+             button.addEventListener('click', function() {
+                 const orderId = this.dataset.orderId;
+                 Swal.fire({
+                     title: 'Xác nhận đơn hàng?',
+                     icon: 'question',
+                     showCancelButton: true
+                 }).then(result => {
+                     if (result.isConfirmed) {
+                         executeStatusUpdate(orderId, 'CONFIRMED');
+                     }
+                 });
+             });
+         });
+
+
+
+         // Gán sự kiện cho nút "Giao hàng"
+         document.querySelectorAll('.btn-deliver-order').forEach(button => {
+    button.addEventListener('click', function() {
+        const orderId = this.dataset.orderId;
+
+        // Chỉ cần hỏi xác nhận, không cần fetch thời gian
+        Swal.fire({
+            title: 'Bắt đầu giao hàng?',
+            text: 'Hệ thống sẽ tự động bắt đầu đếm ngược thời gian.',
+            icon: 'info',
+            showCancelButton: true
+        }).then(result => {
+            if (result.isConfirmed) {
+                // Chỉ cần gửi trạng thái mới. Backend sẽ tự lo phần còn lại.
+                executeStatusUpdate(orderId, 'DELIVERING');
+            }
+        });
+    });
+});
+        document.querySelectorAll('.delivery-countdown').forEach(countdownElement => {
+    const deliveryTimeStr = countdownElement.dataset.deliveryTime;
+    if (!deliveryTimeStr) return;
+
+    const deliveryTime = new Date(deliveryTimeStr);
+    const orderId = countdownElement.closest('.order-card').dataset.orderId;
+    const timerSpan = countdownElement.querySelector('.countdown-timer');
+
+    const interval = setInterval(function() {
+        const now = new Date();
+        const timeLeft = deliveryTime - now;
+
+        if (timeLeft <= 0) {
+            clearInterval(interval);
+            timerSpan.textContent = "Hoàn thành!";
+            executeStatusUpdate(orderId, 'COMPLETED');
+            return;
+        }
+        const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+        timerSpan.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+    }, 1000);
+});
+        //  MỞ OFFCANVAS
+        const offcanvasElement = document.getElementById('orderDetailOffcanvas');
+        if (offcanvasElement) {
+            const bsOffcanvas = new bootstrap.Offcanvas(offcanvasElement);
+            const offcanvasLoading = document.getElementById('offcanvas-loading');
+            const offcanvasContent = document.getElementById('offcanvas-content');
+
+            document.querySelectorAll('.order-card-footer button.btn-outline-primary').forEach(button => {
+                const card = button.closest('.order-card');
+                if (!card) return;
+                const orderId = card.dataset.orderId;
+
+                button.addEventListener('click', function() {
+                    bsOffcanvas.show();
+                    offcanvasLoading.classList.remove('d-none');
+                    offcanvasContent.classList.add('d-none');
+                    offcanvasLoading.innerHTML = `<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><p class="mt-2">Đang tải dữ liệu...</p>`;
+
+                    fetch(`/api/orders/${orderId}`)
+                        .then(response => {
+                            if (!response.ok) throw new Error('Không thể tải chi tiết đơn hàng.');
+                            return response.json();
+                        })
+                        .then(data => {
+                            document.getElementById('offcanvas-order-id').textContent = `#${data.id}`;
+                            document.getElementById('offcanvas-status').textContent = data.status;
+                            document.getElementById('offcanvas-user').textContent = data.user;
+                            document.getElementById('offcanvas-date').textContent = data.order_date;
+                            document.getElementById('offcanvas-address').textContent = data.delivery_address;
+                            const noteWrapper = document.getElementById('offcanvas-note-wrapper');
+                            if (data.note) {
+                                document.getElementById('offcanvas-note').textContent = `"${data.note}"`;
+                                noteWrapper.classList.remove('d-none');
+                            } else {
+                                noteWrapper.classList.add('d-none');
+                            }
+                            const detailsTable = document.getElementById('offcanvas-details-table');
+                            detailsTable.innerHTML = '';
+                            data.details.forEach(item => {
+                                let optionsHtml = '';
+                                if (item.options && Object.keys(item.options).length > 0) {
+                                    optionsHtml = '<ul class="list-unstyled mb-0 small text-muted">';
+                                    for (const key in item.options) { optionsHtml += `<li>+ ${key}: ${item.options[key]}</li>`; }
+                                    optionsHtml += '</ul>';
+                                }
+                                const row = `<tr><td><p class="fw-bold mb-0">${item.dish_name}</p>${optionsHtml}</td><td class="text-center align-middle">${item.quantity}</td><td class="text-end align-middle">${formatCurrency(item.total_item_price)}</td></tr>`;
+                                detailsTable.innerHTML += row;
+                            });
+                            document.getElementById('offcanvas-subtotal').textContent = formatCurrency(data.subtotal);
+                            document.getElementById('offcanvas-shipping').textContent = formatCurrency(data.shipping_fee);
+                            document.getElementById('offcanvas-discount').textContent = `- ${formatCurrency(data.discount)}`;
+                            document.getElementById('offcanvas-total').textContent = formatCurrency(data.total);
+
+                            offcanvasLoading.classList.add('d-none');
+                            offcanvasContent.classList.remove('d-none');
+                        })
+                        .catch(error => {
+                            offcanvasLoading.innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
+                        });
+                });
+            });
+        }
+    });
+</script>
+
+{% endblock %}
+

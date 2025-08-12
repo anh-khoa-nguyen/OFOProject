@@ -1,0 +1,135 @@
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/Order_Pay.css') }}"/>
+</head>
+
+{% extends 'layout/base.html' %}
+{% block content %}
+<div class="checkout-page">
+    <div class="checkout-container">
+        <h1>Chi Tiết Đơn Hàng #{{ order.id }}</h1>
+
+        <div class="checkout-header">
+            <img src="{{ order.restaurant.image }}" alt="Avatar của {{ order.restaurant.restaurant_name }}"
+                 class="restaurant-avatar">
+            <div class="restaurant-details">
+                <span class="header-title">{{ order.restaurant.restaurant_name }}</span>
+            </div>
+        </div>
+
+        <div class="checkout-layout">
+            <!-- CỘT BÊN TRÁI -->
+            <div class="checkout-main">
+                <!-- Thông tin giao hàng -->
+                <div class="checkout-section">
+                    <h3>Giao đến</h3>
+                    <div class="info-box">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#E91E63"
+                             class="bi bi-geo-alt-fill" viewBox="0 0 16 16">
+                            <path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10zm0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/>
+                        </svg>
+                        <p class="address-text">{{ order.delivery_address }}</p>
+                    </div>
+                </div>
+                <!-- Ghi chú -->
+                <div class="checkout-section">
+                    <h3>Ghi chú cho tài xế</h3>
+                    <p class="static-note">{{ order.note if order.note else 'Không có ghi chú.' }}</p>
+                </div>
+                <!-- Khuyến mãi đã áp dụng -->
+                <div class="checkout-section">
+                    <h3>Khuyến mãi đã áp dụng</h3>
+                    {% if order.vouchers %}
+                    {% for voucher in order.vouchers %}
+                    <div class="info-box promo-box">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
+                             class="bi bi-ticket-detailed-fill" viewBox="0 0 16 16">
+                            <path d="M0 4.5A1.5 1.5 0 0 1 1.5 3h13A1.5 1.5 0 0 1 16 4.5V6a.5.5 0 0 1-.5.5 1.5 1.5 0 0 0 0 3 .5.5 0 0 1 .5.5v1.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 11.5V10a.5.5 0 0 1 .5-.5 1.5 1.5 0 1 0 0-3A.5.5 0 0 1 0 6V4.5Zm4 1a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 0-1h-7a.5.5 0 0 0-.5.5Zm0 5a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 0-1h-7a.5.5 0 0 0-.5.5ZM4 8.5a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 0-1h-3a.5.5 0 0 0-.5.5Z"/>
+                        </svg>
+                        <p class="promo-text">{{ voucher.name }}</p>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="static-note">Không áp dụng khuyến mãi.</p>
+                    {% endif %}
+                </div>
+                <!-- Phương thức thanh toán -->
+                <div class="checkout-section">
+                    <h3>Phương thức thanh toán</h3>
+                    <div class="info-box payment-box">
+                        <img src="https://res.cloudinary.com/dbb1oslnw/image/upload/v1753960673/MoMo_Logo_att5zs.png" alt="VNPay Logo"
+                             class="payment-logo">
+                        <p class="payment-text">Ví MOMO</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CỘT BÊN PHẢI -->
+            <div class="checkout-sidebar">
+                <div class="order-summary">
+                    <h3>Tóm tắt đơn hàng</h3>
+                    <div class="order-items">
+                        {% for detail in order.details %}
+                            <!--
+                              ===================================================================
+                              === SỬA LỖI TẠI ĐÂY: Toàn bộ thông tin món ăn nằm trong .order-item ===
+                              ===================================================================
+                            -->
+                            <div class="order-item">
+                                <!-- Dòng chính chứa tên món và giá -->
+                                <div class="item-top-line">
+                                    <div class="item-main">
+                                        <span class="item-qty">{{ detail.quantity }}x</span>
+                                        <span class="item-name">{{ detail.dish_name }}</span>
+                                    </div>
+                                    <span class="item-price">{{ "{:,.0f}đ".format(detail.price * detail.quantity) }}</span>
+                                </div>
+
+                                <!-- Khối chứa các tùy chọn và ghi chú (nếu có) -->
+                                {% if detail.selected_options_luc_dat %}
+                                    <div class="item-options-list">
+                                        {# Chỉ lặp qua 'options' NẾU nó tồn tại và không rỗng #}
+                                        {% if detail.selected_options_luc_dat.options %}
+                                            {% for option in detail.selected_options_luc_dat.options %}
+                                                <div class="option-line">{{ option.name }}</div>
+                                            {% endfor %}
+                                        {% endif %}
+
+                                        {# Chỉ hiển thị 'note' NẾU nó tồn tại và không rỗng #}
+                                        {% if detail.selected_options_luc_dat.note %}
+                                            <div class="note-line">
+                                                <i class="bi bi-chat-left-text-fill"></i>
+                                                <span>{{ detail.selected_options_luc_dat.note }}</span>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <div class="price-details">
+                        <div class="price-line">
+                            <span>Tạm tính</span>
+                            <span>{{ "{:,.0f}đ".format(order.subtotal) }}</span>
+                        </div>
+                        <div class="price-line">
+                            <span>Phí giao hàng</span>
+                            {# Model Order chưa có phí giao hàng, bạn có thể thêm sau. Tạm thời để giá trị mặc định. #}
+                            <span>15.000đ</span>
+                        </div>
+                        <div class="price-line promo-line">
+                            <span>Giảm giá</span>
+                            <span>-{{ "{:,.0f}đ".format(order.discount) }}</span>
+                        </div>
+                    </div>
+                    <div class="price-total">
+                        <span>Tổng cộng</span>
+                        <span class="total-amount">{{ "{:,.0f}đ".format(order.total) }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+</div>
+{% endblock %}
