@@ -18,18 +18,12 @@ with app.app_context():
 
     with db.engine.connect() as connection:
         with connection.begin():
-            print("--- Tạm thời vô hiệu hóa Foreign Key Checks ---")
             connection.execute(text('SET FOREIGN_KEY_CHECKS=0;'))
 
-            print("--- Bắt đầu xóa tất cả các bảng ---")
             db.metadata.drop_all(bind=connection)
-            print("--- Xóa bảng thành công ---")
 
-            print("--- Bắt đầu tạo tất cả các bảng ---")
             db.metadata.create_all(bind=connection)
-            print("--- Tạo bảng thành công ---")
 
-            print("--- Kích hoạt lại Foreign Key Checks ---")
             connection.execute(text('SET FOREIGN_KEY_CHECKS=1;'))
 
     print("\n--- Bắt đầu thêm dữ liệu mẫu ---")
@@ -852,7 +846,6 @@ with app.app_context():
 
     # --- ĐƠN HÀNG 10 (Customer 1 đặt ở Restaurant 1, lại là Cơm Tấm) ---
     # Yêu cầu: customer1, restaurant1, dish1_1, dish1_2 phải tồn tại
-    print("Tạo đơn hàng 10...")
     order10_subtotal = dish1_1.price + dish1_2.price  # Cơm sườn + cơm bì chả
     order10_discount = 0
     order10_total = order10_subtotal
@@ -871,7 +864,6 @@ with app.app_context():
                              dish_name=dish1_2.name, selected_options_luc_dat={})
     db.session.add_all([detail10_1, detail10_2])
     db.session.commit()
-    print(f"-> Đã tạo Order ID: {order10.id}")
 
     # Cuối cùng
     db.session.commit()
