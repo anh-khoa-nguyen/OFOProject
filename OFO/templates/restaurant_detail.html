@@ -12,7 +12,7 @@
     <div class="restaurant-info-block">
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Trang chủ</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Trang chủ</a></li>
                 <li class="breadcrumb-item"><a href="#">Nhà hàng</a></li>
                 <li class="breadcrumb-item active" aria-current="page">{{ restaurant.restaurant_name }}</li>
 
@@ -42,7 +42,7 @@
 
                 <span class="ms-1 fw-bold">{{ restaurant.star_average or 0 }}</span>
 
-                <a href="{{ url_for('restaurant_reviews', restaurant_id=restaurant.id) }}"
+                <a href="{{ url_for('main.restaurant_reviews', restaurant_id=restaurant.id) }}"
                    class="btn btn-sm btn-outline-secondary ms-1">
                     Xem đánh giá
                 </a>

@@ -11,10 +11,10 @@
     <div class="restaurant-info-block mb-4">
         <div class="restaurant-management-nav">
             <ul>
-                <li><a href="{{ url_for('home', restaurant_id=restaurant.id) }}"><i class="fas fa-utensils"></i><span>Thực Đơn</span></a></li>
-                <li><a href="{{ url_for('restaurant_orders', restaurant_id=restaurant.id) }}" ><i class="fas fa-receipt"></i><span>Đơn Hàng</span></a></li>
-                <li><a href="{{ url_for('revenue', restaurant_id=restaurant.id) }}" class="active"><i class="fas fa-chart-line"></i><span>Doanh Thu</span></a></li>
-                <li><a href="{{ url_for('voucher', restaurant_id=restaurant.id) }}"><i class="fas fa-tags"></i><span>Khuyến Mãi</span></a></li>
+                <li><a href="{{ url_for('main.home', restaurant_id=restaurant.id) }}"><i class="fas fa-utensils"></i><span>Thực Đơn</span></a></li>
+                <li><a href="{{ url_for('main.restaurant_orders', restaurant_id=restaurant.id) }}" ><i class="fas fa-receipt"></i><span>Đơn Hàng</span></a></li>
+                <li><a href="{{ url_for('main.revenue', restaurant_id=restaurant.id) }}" class="active"><i class="fas fa-chart-line"></i><span>Doanh Thu</span></a></li>
+                <li><a href="{{ url_for('main.voucher', restaurant_id=restaurant.id) }}"><i class="fas fa-tags"></i><span>Khuyến Mãi</span></a></li>
             </ul>
         </div>
         <h1 class="restaurant-title mt-3">{{ restaurant.restaurant_name }}</h1>

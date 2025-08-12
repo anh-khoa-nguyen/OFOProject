@@ -10,7 +10,7 @@
 <div class="row justify-content-center">
     <div class="col-md-8 col-lg-6 col-xl-5">
         <div class="login-container"> {# Tái sử dụng class .login-container từ file styles.css #}
-            <a class="navbar-brand d-flex justify-content-center" href="{{ url_for('index') }}">
+            <a class="navbar-brand d-flex justify-content-center" href="{{ url_for('main.index') }}">
                         <img src="{{ url_for('static', filename='images/logokymie1.png') }}" alt="GrabFood Logo"
                              style="height: 70px;">
                     </a>
@@ -39,7 +39,7 @@
                 </div>
 
                 <div class="text-center">
-                    <p>Bạn đã có tài khoản? <a href="{{ url_for('login_view') }}">Đăng nhập</a></p> {# Giả sử route của bạn tên là 'login' #}
+                    <p>Bạn đã có tài khoản? <a href="{{ url_for('main.login_view') }}">Đăng nhập</a></p> {# Giả sử route của bạn tên là 'login' #}
                 </div>
             </form>
         </div>

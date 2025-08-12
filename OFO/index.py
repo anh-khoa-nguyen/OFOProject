@@ -1,18 +1,21 @@
 import os, json
-from __init__ import app, db, login
+from __init__ import db, login
 import dao
 from flask_login import login_user, logout_user, login_required, current_user
 from models import *
 from flask import session
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, Blueprint
 import cloudinary.uploader
 from datetime import datetime, timezone
 from geopy.distance import geodesic
 from flask_socketio import join_room
 from __init__ import socketio
 from datetime import datetime, timezone, timedelta
+from flask import current_app
+import hashlib
+main_bp = Blueprint('main', __name__)
 
-@app.route("/", methods=['GET','POST'])
+@main_bp.route("/", methods=['GET','POST'])
 def index():
     categories = dao.load_categories(8)
 
@@ -31,7 +34,7 @@ def index():
 
     return render_template('index.html', categories=categories, restaurants=restaurants_to_show)
 
-@app.route('/search')
+@main_bp.route('/search')
 def search():
     """
     Route tìm kiếm chính, xử lý cả tìm kiếm theo vị trí và danh mục.
@@ -77,15 +80,15 @@ def search():
                            categories=all_categories,
                            searched_category=searched_category)
 
-@app.route('/search/<string:category_name>')
+@main_bp.route('/search/<string:category_name>')
 def search_by_category(category_name):
     """
     Route cũ này giờ sẽ chuyển hướng đến route tìm kiếm chính.
     Điều này đảm bảo các link cũ không bị hỏng.
     """
-    return redirect(url_for('search', category_name=category_name))
+    return redirect(url_for('main.search', category_name=category_name))
 
-@app.route('/restaurant/<int:restaurant_id>')
+@main_bp.route('/restaurant/<int:restaurant_id>')
 def restaurant_detail(restaurant_id):
     """
     Route này hiển thị trang chi tiết cho một nhà hàng cụ thể.
@@ -100,7 +103,7 @@ def restaurant_detail(restaurant_id):
 
     return render_template('restaurant_detail.html', restaurant=restaurant, is_favorited=is_favorited)
 
-@app.route('/api/dish/<int:dish_id>')
+@main_bp.route('/api/dish/<int:dish_id>')
 def get_dish_options_api(dish_id):
     """
     API endpoint để lấy thông tin chi tiết của một món ăn và các tùy chọn của nó
@@ -141,25 +144,25 @@ def get_dish_options_api(dish_id):
         print(f"Lỗi tại API get_dish_options_api: {e}")
         return jsonify({'error': 'Lỗi hệ thống'}), 500
 
-@app.route('/rating')
+@main_bp.route('/rating')
 def rating():
     return render_template('rating.html')
 
 
-@app.route('/rating/<int:order_id>', methods=['GET', 'POST'])
+@main_bp.route('/rating/<int:order_id>', methods=['GET', 'POST'])
 def rating_page(order_id):
     order = dao.Order.query.get(order_id)
 
     # --- Các bước kiểm tra an toàn (giữ nguyên) ---
     if not order:
         flash("Đơn hàng không tồn tại!", "danger")
-        return redirect(url_for('index'))
+        return redirect(url_for('main.index'))
     if order.user_id != current_user.id:
         flash("Bạn không có quyền đánh giá đơn hàng này.", "danger")
-        return redirect(url_for('index'))
+        return redirect(url_for('main.index'))
     if order.review:
         flash("Đơn hàng này đã được bạn đánh giá rồi.", "info")
-        return redirect(url_for('restaurant_detail', restaurant_id=order.restaurant_id))
+        return redirect(url_for('main.restaurant_detail', restaurant_id=order.restaurant_id))
 
     if request.method == 'POST':
         try:
@@ -204,14 +207,14 @@ def rating_page(order_id):
     return render_template('rating.html', restaurant=restaurant, order=order)
 
 
-@app.route('/review/<int:restaurant_id>')
+@main_bp.route('/review/<int:restaurant_id>')
 def restaurant_reviews(restaurant_id):
     # Lấy đối tượng nhà hàng, đã bao gồm 'star_average'
     restaurant = dao.get_restaurant_by_id(restaurant_id)
 
     if not restaurant:
         flash("Nhà hàng không tồn tại!", "danger")
-        return redirect(url_for('index'))
+        return redirect(url_for('main.index'))
 
     # Lấy danh sách chi tiết các review
     reviews = dao.get_reviews_by_restaurant(restaurant_id)
@@ -225,7 +228,7 @@ def restaurant_reviews(restaurant_id):
                            reviews=reviews,
                            summary_data=summary_data)
 
-@app.route('/api/toggle-favorite/<int:restaurant_id>', methods=['POST'])
+@main_bp.route('/api/toggle-favorite/<int:restaurant_id>', methods=['POST'])
 @login_required
 def toggle_favorite_api(restaurant_id):
     """
@@ -243,7 +246,7 @@ def toggle_favorite_api(restaurant_id):
         return jsonify({'success': False, 'message': 'Đã có lỗi xảy ra.'}), 500
 
 
-@app.route('/api/set-address', methods=['POST'])
+@main_bp.route('/api/set-address', methods=['POST'])
 def set_delivery_address():
     """
     API endpoint để nhận địa chỉ, kinh độ, vĩ độ và lưu vào session.
@@ -264,7 +267,7 @@ def set_delivery_address():
     return jsonify({'success': True, 'message': 'Đã cập nhật địa chỉ giao hàng.'})
 
 
-@app.route('/clear-address')
+@main_bp.route('/clear-address')
 def clear_delivery_address():
     """
     Xóa tất cả thông tin địa chỉ khỏi session và chuyển hướng về trang chủ.
@@ -272,10 +275,10 @@ def clear_delivery_address():
     session.pop('delivery_address', None)
     session.pop('delivery_latitude', None)
     session.pop('delivery_longitude', None)
-    return redirect(url_for('index'))
+    return redirect(url_for('main.index'))
 
 
-@app.context_processor
+@main_bp.context_processor
 def inject_delivery_address():
     """
     Làm cho các biến địa chỉ có sẵn trong tất cả các template.
@@ -289,7 +292,7 @@ def inject_delivery_address():
         chat_history = session.get('chat_history', [])
     )
 
-@app.route('/login',methods=['GET', 'POST'])
+@main_bp.route('/login',methods=['GET', 'POST'])
 def login_view():
     error = None
     if request.method == 'POST':
@@ -310,8 +313,13 @@ def login_view():
                 return redirect('/admin/')
             elif u.role == UserRole.RESTAURANT:
                 restaurant = dao.get_restaurant_by_user_id(u.id)
-                session['restaurant_id'] = restaurant.id
-                return redirect(f"/restaurante/{restaurant.id}")
+                print(f"DEBUG: Restaurant found for user {u.id}: {restaurant}")  # <<< THÊM DÒNG NÀY
+                if restaurant:  # <-- THÊM KIỂM TRA NÀY
+                    session['restaurant_id'] = restaurant.id
+                    return redirect(f"/restaurante/{restaurant.id}")
+                else:
+                    flash("Lỗi: Chủ nhà hàng chưa có nhà hàng liên kết.", "danger")
+                    return redirect(url_for('main.login'))
             else:
                 return redirect('/')
 
@@ -320,7 +328,7 @@ def login_view():
             return render_template('login.html', error=error)
     return render_template('login.html')
 
-@app.route("/logout")
+@main_bp.route("/logout")
 def logout_process():
     logout_user()
     session.pop('restaurant_id', None)
@@ -329,7 +337,7 @@ def logout_process():
     return redirect('/login')
 
 
-@app.route('/preregister', methods=['GET', 'POST'])
+@main_bp.route('/preregister', methods=['GET', 'POST'])
 def preregister():
     if request.method == 'POST':
         phone = request.form.get('phone')
@@ -357,10 +365,10 @@ def preregister():
 
         # Nếu chưa tồn tại thì chuyển sang đăng ký
         session['phone'] = phone
-        return redirect(url_for('register', phone=phone))
+        return redirect(url_for('main.register', phone=phone))
     return render_template('preregister.html')
 
-@app.route('/register', methods=['GET', 'POST'])
+@main_bp.route('/register', methods=['GET', 'POST'])
 def register():
     phone = request.args.get('phone')  # Nhận phone từ URL
     if request.method == 'POST':
@@ -390,25 +398,25 @@ def register():
 
 
 #Restaurant
-@app.route('/resregister')
+@main_bp.route('/resregister')
 
 def render_registration_page():
     """Hiển thị trang đăng ký và truyền danh sách category."""
     categories = dao.get_categories()
     return render_template('Restaurant/ResRegister.html', categories=categories)
 
-@app.route('/reslogin')
+@main_bp.route('/reslogin', methods=['GET', 'POST'])
 def reslogin():
     return render_template('Restaurant/ResLogin.html')
 
-@app.route('/restaurante/<int:restaurant_id>')
+@main_bp.route('/restaurante/<int:restaurant_id>')
 def home(restaurant_id):
     restaurant= dao.get_restaurant_by_id(restaurant_id)
     dish_groups = dao.get_dish_groups_by_restaurant(restaurant_id)
     dish_option_group= dao.get_dish_option_groups_by_restaurant(restaurant_id)
     return render_template('restaurant_main.html',restaurant=restaurant, dish_groups=dish_groups,dish_option_group=dish_option_group)
 
-@app.route('/add_dishgroup', methods=['POST'])
+@main_bp.route('/add_dishgroup', methods=['POST'])
 def add_dishgroup_route():
     data = request.get_json()
     name = data.get('name')
@@ -419,7 +427,7 @@ def add_dishgroup_route():
         return jsonify(result), 200
     else:
         return jsonify(result), 400
-@app.route('/delete_dishgroup/<int:group_id>', methods=['DELETE'])
+@main_bp.route('/delete_dishgroup/<int:group_id>', methods=['DELETE'])
 def delete_dishgroup(group_id):
     try:
         from dao import delete_dishgroup_by_id
@@ -432,7 +440,7 @@ def delete_dishgroup(group_id):
         print('Lỗi:', e)
         return jsonify({'success': False, 'message': 'Lỗi server'}), 500
 
-@app.route('/add_dish', methods=['POST'])
+@main_bp.route('/add_dish', methods=['POST'])
 def add_dish_route():
     try:
         name = request.form.get('name')
@@ -456,7 +464,7 @@ def add_dish_route():
         return jsonify({'success': False, 'message': str(e)})
 
 
-@app.route('/api/dish-details/<int:dish_id>', methods=['GET'])
+@main_bp.route('/api/dish-details/<int:dish_id>', methods=['GET'])
 def get_dish_details_api(dish_id):
     dish_data = dao.get_dish_details_for_edit(dish_id)
     if dish_data:
@@ -466,7 +474,7 @@ def get_dish_details_api(dish_id):
 
 
 
-@app.route('/update_dish', methods=['POST'])
+@main_bp.route('/update_dish', methods=['POST'])
 def update_dish_route():
     image = request.files.get('image')
     image_url = None
@@ -485,7 +493,7 @@ def update_dish_route():
     except Exception as e:
         print(f"❌ Lỗi nghiêm trọng tại route /update_dish: {e}")
         return jsonify({'success': False, 'message': 'Lỗi hệ thống.'}), 500
-@app.route('/delete_dish', methods=['POST'])
+@main_bp.route('/delete_dish', methods=['POST'])
 def delete_dish_route():
     try:
         data = request.get_json()
@@ -494,7 +502,7 @@ def delete_dish_route():
         return jsonify({'success': success, 'message': message})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
-@app.route('/api/add_option_group', methods=['POST'])
+@main_bp.route('/api/add_option_group', methods=['POST'])
 def api_add_option_group():
     data = request.get_json()
     print("Dữ liệu nhận được từ form:", data)  # convert thành dict
@@ -512,7 +520,7 @@ def api_add_option_group():
     else:
         # Nếu thất bại, trả về lỗi server
         return jsonify({'success': False, 'message': 'Có lỗi xảy ra phía máy chủ.'}), 500
-@app.route('/api/option-group/update', methods=['POST'])
+@main_bp.route('/api/option-group/update', methods=['POST'])
 def update_option_group_api():
     """
     API Endpoint để cập nhật nhóm tùy chọn.
@@ -543,7 +551,7 @@ def update_option_group_api():
             'success': False,
             'message': error_message
         }), status_code
-@app.route('/api/option-group/<int:group_id>', methods=['GET'])
+@main_bp.route('/api/option-group/<int:group_id>', methods=['GET'])
 def get_option_group_details_api(group_id):
     """
     API để cung cấp dữ_liệu chi tiết của một DishOptionGroup và các DishOption con.
@@ -562,7 +570,7 @@ def get_option_group_details_api(group_id):
         ]
     }
     return jsonify(group_data)
-@app.route('/api/option-group/delete/<int:group_id>', methods=['DELETE'])
+@main_bp.route('/api/option-group/delete/<int:group_id>', methods=['DELETE'])
 def delete_option_group_api(group_id):
     success, message = dao.delete_option_group_by_id(group_id)
     if success:
@@ -578,7 +586,7 @@ def delete_option_group_api(group_id):
             'message': message
         }), status_code
 #ĐĂNG KÍ NHÀ HÀNG
-@app.route('/register_restaurant', methods=['POST'])
+@main_bp.route('/register_restaurant', methods=['POST'])
 def handle_restaurant_registration():
     """
     API endpoint xử lý đăng ký nhà hàng.
@@ -662,19 +670,19 @@ def handle_restaurant_registration():
     except Exception as e:
         print(f"Lỗi nghiêm trọng khi đăng ký: {e}")
         return jsonify({'success': False, 'message': 'Có lỗi xảy ra ở phía máy chủ.'}), 500
-@app.route("/tim-kiem")
+@main_bp.route("/tim-kiem")
 def tim_kiem():
     return render_template('tim-kiem.html')
 
 # 3.3.6 Module Lịch sử và chi tiết đơn hàng, nhà hàng yêu thích
-@app.route('/history')
+@main_bp.route('/history')
 @login_required
 def order_history():
     # Lấy tất cả đơn hàng của người dùng hiện tại, sắp xếp từ mới nhất đến cũ nhất
     orders = dao.get_orders_by_user_id(current_user.id)
     return render_template('User/order_list.html', orders=orders)
 
-@app.route('/order/<int:order_id>')
+@main_bp.route('/order/<int:order_id>')
 @login_required
 def order_detail_page(order_id):
     # 1. Lấy thông tin chi tiết đơn hàng từ DAO
@@ -706,7 +714,7 @@ def get_user_by_id(user_id):
 
 # Trong file index.py
 
-@app.route('/api/dish/<int:dish_id>')
+@main_bp.route('/api/dish/<int:dish_id>')
 def get_dish_details(dish_id):
     """
     API endpoint để trả về chi tiết của một món ăn dưới dạng JSON.
@@ -720,7 +728,7 @@ def get_dish_details(dish_id):
 
 from dao import get_dish_by_id, get_options_by_ids
 
-@app.route('/api/add-to-cart', methods=['POST'])
+@main_bp.route('/api/add-to-cart', methods=['POST'])
 def add_to_cart():
     data = request.json
     dish_id = data.get('dish_id')
@@ -781,7 +789,7 @@ def add_to_cart():
     return jsonify({'success': True, 'message': 'Đã cập nhật giỏ hàng', 'cart': cart})
 
 # Nên dùng Api thay vì ssesion vì gửi những thông tin nhạy cảm như là giá tiền, ng dùng có thể dùng F12 thay đổi giá tiền -> rất nguy hiểm
-@app.route('/api/update-cart-item', methods=['POST'])
+@main_bp.route('/api/update-cart-item', methods=['POST'])
 def update_cart_item():
     """
     API để cập nhật số lượng của một món ăn trong giỏ hàng.
@@ -809,7 +817,7 @@ def update_cart_item():
     return jsonify({'success': False, 'message': 'Món ăn không tìm thấy trong giỏ'}), 404
 
 
-@app.route('/api/delete-cart-item', methods=['POST'])
+@main_bp.route('/api/delete-cart-item', methods=['POST'])
 def delete_cart_item():
     """
     API để xóa hoàn toàn một món ăn khỏi giỏ hàng.
@@ -833,14 +841,14 @@ def delete_cart_item():
 
 # Thêm vào file index.py
 
-@app.route('/my-favorites')
+@main_bp.route('/my-favorites')
 @login_required # Đảm bảo chỉ người dùng đã đăng nhập mới truy cập được
 def favorite_restaurants_page():
 
     favorite_list = current_user.favorite_restaurants.all()
     return render_template('favorite_restaurant.html', favorite_restaurants=favorite_list)
 
-@app.context_processor
+@main_bp.context_processor
 def inject_cart():
     return {
         'cart': session.get('cart', {})
@@ -873,7 +881,7 @@ def _parse_voucher_form(form_data):
 
     return data
 
-@app.route('/voucher/<int:restaurant_id>')
+@main_bp.route('/voucher/<int:restaurant_id>')
 def voucher(restaurant_id):
     restaurant = dao.get_restaurant_by_id(restaurant_id)
     vouchers = dao.get_vouchers_by_restaurant(restaurant_id)
@@ -884,7 +892,7 @@ def voucher(restaurant_id):
         vouchers=vouchers
     )
 
-@app.template_filter('format_currency')
+@main_bp.app_template_filter('format_currency')
 def format_currency_filter(value):
     """
     Một bộ lọc Jinja2 an toàn để định dạng số thành tiền tệ.
@@ -902,7 +910,7 @@ def format_currency_filter(value):
 
 # Trong file index.py
 
-# @app.route('/checkout/<int:restaurant_id>', methods=['GET', 'POST'])
+# @main_bp.route('/checkout/<int:restaurant_id>', methods=['GET', 'POST'])
 # @login_required
 # def checkout(restaurant_id):
 #     cart = session.get('cart', {})
@@ -1010,22 +1018,20 @@ def format_currency_filter(value):
 #                            shipping_vouchers=shipping_vouchers_data,
 #                            shop_vouchers=shop_vouchers_data)
 
-@app.route('/checkout/<int:restaurant_id>', methods=['GET', 'POST'])
+@main_bp.route('/checkout/<int:restaurant_id>', methods=['GET', 'POST'])
 @login_required
 def checkout(restaurant_id):
     cart = session.get('cart', {})
     restaurant_id_str = str(restaurant_id)
 
-    # --- KIỂM TRA GIỎ HÀNG ---
     if restaurant_id_str not in cart or not cart[restaurant_id_str]['items']:
         flash('Giỏ hàng của bạn cho nhà hàng này đang trống.', 'warning')
-        return redirect(url_for('restaurant_detail', restaurant_id=restaurant_id))
+        return redirect(url_for('main.restaurant_detail', restaurant_id=restaurant_id))
 
     restaurant_cart = cart[restaurant_id_str]
     restaurant = dao.get_restaurant_by_id(restaurant_id)
     subtotal = sum(item['price'] * item['quantity'] for item in restaurant_cart['items'].values())
 
-    # --- TÍNH TOÁN PHÍ SHIP  ---
     user_lat = session.get('delivery_latitude')
     user_lng = session.get('delivery_longitude')
     distance_km, delivery_time, shipping_fee = None, None, 15000
@@ -1034,21 +1040,20 @@ def checkout(restaurant_id):
         delivery_time = round(10 + (distance_km * 5))
         shipping_fee = round((15000 + max(0, distance_km - 3) * 4000) / 1000) * 1000
 
-    # --- XỬ LÝ POST REQUEST  ---
+    # --- XỬ LÝ POST REQUEST (ĐẶT HÀNG) ---
     if request.method == 'POST':
-        # 1. Lấy dữ liệu từ form
         delivery_address = request.form.get('delivery_address')
         note = request.form.get('note')
         voucher_ids_str = request.form.get('voucher_ids')
         discount_amount = float(request.form.get('discount_amount', 0))
-        payment_method = request.form.get('payment_method')
+        payment_method = request.form.get('payment_method')  # Sẽ nhận 'momo' sau khi sửa HTML
 
         if not delivery_address:
             flash('Vui lòng chọn địa chỉ giao hàng.', 'danger')
-            return redirect(url_for('checkout', restaurant_id=restaurant_id))
+            return redirect(url_for('main.checkout', restaurant_id=restaurant_id))
 
-        # 2. Tạo đơn hàng trong CSDL
         try:
+            # 1. Tạo đơn hàng với trạng thái UNPAID trước
             voucher_ids = [int(vid) for vid in voucher_ids_str.split(',')] if voucher_ids_str else []
             order = dao.create_order_from_cart(
                 user_id=current_user.id,
@@ -1060,29 +1065,35 @@ def checkout(restaurant_id):
                 shipping_fee=shipping_fee,
                 discount=discount_amount,
                 voucher_ids=voucher_ids,
-                initial_status=OrderState.UNPAID,
+                initial_status=OrderState.UNPAID,  # Bắt đầu với trạng thái chưa thanh toán
                 delivery_time=delivery_time
             )
 
+            # 2. Xử lý theo phương thức thanh toán đã chọn
+            if payment_method == 'momo':
+                # Chỉ tạo bản ghi payment KHI cần
+                payment_record = dao.create_payment_record(order=order, payment_method='momo')
+                pay_url = create_momo_payment_request(payment=payment_record)
+
+                if pay_url:
+                    # Nếu tạo link MoMo thành công, xóa giỏ hàng và chuyển hướng
+                    del session['cart'][restaurant_id_str]
+                    session.modified = True
+                    return redirect(pay_url)
+                else:
+                    # Nếu thất bại, báo lỗi cho người dùng
+                    flash('Không thể tạo thanh toán MoMo. Vui lòng thử lại hoặc kiểm tra cấu hình.', 'danger')
+                    # Quan trọng: Không xóa đơn hàng, người dùng có thể thử lại
+                    return redirect(url_for('main.checkout', restaurant_id=restaurant_id))
+
+            # (Bạn có thể thêm các `elif payment_method == 'cod'` ở đây trong tương lai)
+
         except Exception as e:
-            print(f'Đã có lỗi xảy ra khi tạo đơn hàng: {e}', 'danger')
-            return redirect(url_for('checkout', restaurant_id=restaurant_id))
+            print(f'Đã có lỗi nghiêm trọng khi xử lý đặt hàng: {e}', 'danger')
+            return redirect(url_for('main.checkout', restaurant_id=restaurant_id))
 
-        # 3. Xử lý theo phương thức thanh toán
-
-        if payment_method == 'vnpay':
-            payment = dao.create_payment_record(order=order, payment_method='momo')
-            pay_url = dao.create_momo_payment_request(payment)
-
-            if pay_url:
-                del session['cart'][restaurant_id_str]
-                session.modified = True
-                return redirect(pay_url)
-            else:
-                flash('Không thể tạo thanh toán MoMo. Vui lòng thử lại hoặc chọn phương thức khác.', 'danger')
-                return redirect(url_for('checkout', restaurant_id=restaurant_id))
-
-    # --- XỬ LÝ GET REQUEST  ---
+    # --- XỬ LÝ GET REQUEST (HIỂN THỊ TRANG) ---
+    # Code này giữ nguyên như cũ
     all_valid_vouchers = dao.get_valid_vouchers(restaurant_id, subtotal)
     shipping_vouchers_data = []
     shop_vouchers_data = []
@@ -1104,7 +1115,7 @@ def checkout(restaurant_id):
                            shipping_vouchers=shipping_vouchers_data,
                            shop_vouchers=shop_vouchers_data)
 
-@app.route('/api/apply-voucher', methods=['POST'])
+@main_bp.route('/api/apply-voucher', methods=['POST'])
 @login_required
 def apply_voucher_api():
     data = request.json
@@ -1118,7 +1129,7 @@ def apply_voucher_api():
     result = dao.apply_voucher(voucher_code, restaurant_id, subtotal)
     return jsonify(result)
 
-@app.route('/track-order/<int:order_id>')
+@main_bp.route('/track-order/<int:order_id>')
 @login_required
 def track_order_page(order_id):
     """
@@ -1130,73 +1141,72 @@ def track_order_page(order_id):
     # 2. Kiểm tra xem đơn hàng có tồn tại không
     if not order:
         flash("Đơn hàng không tồn tại!", "danger")
-        return redirect(url_for('index'))
+        return redirect(url_for('main.index'))
 
     # 3. KIỂM TRA QUYỀN TRUY CẬP
     if current_user.id != order.user_id:
         flash("Bạn không có quyền xem đơn hàng này.", "danger")
-        return redirect(url_for('index'))
+        return redirect(url_for('main.index'))
 
     # 4. Nếu tất cả kiểm tra đều qua, hiển thị trang
     return render_template('track_order.html', order=order)
 import admin
 
 # 3.3.10 Module VNPay, chatbot
-@app.route('/momo/confirm-payment/<int:payment_id>', methods=['POST'])
+# index.py
+
+from sqlalchemy.orm import joinedload  # <<< THÊM IMPORT NÀY Ở ĐẦU TỆP
+
+
+# ...
+
+@main_bp.route('/momo/confirm-payment/<int:payment_id>', methods=['POST'])
 def momo_ipn_handler(payment_id):
-    """
-    Lắng nghe kết quả giao dịch từ MoMo (IPN - Instant Payment Notification).
-    """
     response_data = request.get_json()
 
+    # SỬA LẠI CÁCH TRUY VẤN: Dùng joinedload để tải sẵn thông tin user
+    payment = db.session.query(Payment).options(
+        joinedload(Payment.order).joinedload(Order.user)
+    ).get(payment_id)
 
-    payment = Payment.query.get(payment_id)
     if not payment:
-        # Không tìm thấy payment, trả lỗi để MoMo không gọi lại nữa
         return jsonify({"status": "error", "message": "Payment not found"}), 404
 
-    if response_data.get('resultCode') == 0 and payment.order.order_status.value == OrderState.UNPAID.value:
-        # Thanh toán thành công
+    if response_data.get('resultCode') == 0 and payment.order.order_status == OrderState.UNPAID:
         payment.payment_status = PaymentStatus.PAID
         payment.order.order_status = OrderState.PENDING
         db.session.commit()
 
         order = payment.order
         daily_order_number = dao.count_orders_for_restaurant_today(order.restaurant_id)
+
+        # Bây giờ order.user chắc chắn đã được tải và không gây lỗi
+        customer_name = order.user.name if order.user else "Khách hàng"
+
+        # Gửi sự kiện Socket.IO
         socketio.emit('new_order', {
             'order_id': order.id,
             'daily_order_number': daily_order_number,
-            'total': "{:,.0f}đ".format(order.total),
-            'customer_name': order.user.name
+            'total': f"{order.total:,.0f}đ",
+            'customer_name': customer_name
         }, room=f'restaurant_{order.restaurant_id}')
 
-        print(f"Thanh toán {payment_id} đã được xác nhận thành công.")
+        print(f"Thanh toán {payment_id} đã được xác nhận thành công VÀ THÔNG BÁO ĐÃ ĐƯỢC GỬI.")
     else:
-        # Thanh toán thất bại
         payment.payment_status = PaymentStatus.FAILED
         db.session.commit()
         print(f"Thanh toán {payment_id} thất bại. Lý do: {response_data.get('message')}")
 
-    # Phải trả về response với status 204 để MoMo biết đã nhận được
     return '', 204
 
-@app.route('/my-active-orders')
+
+@main_bp.route('/my-active-orders')
 @login_required
 def active_orders_page():
     active_orders = dao.get_active_orders_for_user(current_user.id)
     return render_template('active_orders.html', orders=active_orders)
 
-#xử lý thông báo nhà hàng
-@socketio.on('connect')
-def handle_connect():
-    if current_user.is_authenticated and current_user.role == UserRole.RESTAURANT:
-        restaurant_id = session.get('restaurant_id')
-        if restaurant_id:
-            room_name = f'restaurant_{restaurant_id}'
-            join_room(room_name)
-            print(f"Restaurant {restaurant_id} has connected and joined room '{room_name}'")
-
-@app.route('/api/chat', methods=['POST'])
+@main_bp.route('/api/chat', methods=['POST'])
 def handle_chat():
     data = request.get_json()
     user_message = data.get('message')
@@ -1223,7 +1233,7 @@ def handle_chat():
     # 6. Trả về chỉ câu trả lời mới nhất cho frontend
     return jsonify({'reply': ai_response})
 
-@app.route('/restaurant/<int:restaurant_id>/orders')
+@main_bp.route('/restaurant/<int:restaurant_id>/orders')
 def restaurant_orders(restaurant_id):
     restaurant = dao.get_restaurant_by_id(restaurant_id)
     orders = dao.get_orders_by_restaurant(restaurant_id)
@@ -1234,7 +1244,7 @@ def restaurant_orders(restaurant_id):
     )
 
 
-@app.route('/api/orders/<int:order_id>/status', methods=['POST', 'PUT'])
+@main_bp.route('/api/orders/<int:order_id>/status', methods=['POST', 'PUT'])
 def update_order_status(order_id):
     try:
         data = request.get_json()
@@ -1271,7 +1281,7 @@ def update_order_status(order_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "message": f"Lỗi hệ thống: {str(e)}"}), 500
-@app.route('/api/orders/<int:order_id>')
+@main_bp.route('/api/orders/<int:order_id>')
 def get_order_details_api(order_id):
 
     order = dao.get_order_by_id(order_id)
@@ -1303,7 +1313,7 @@ def get_order_details_api(order_id):
     return jsonify(order_data)
 
 
-@app.route('/api/orders/<int:order_id>/estimate-delivery-time')
+@main_bp.route('/api/orders/<int:order_id>/estimate-delivery-time')
 def get_delivery_time_api(order_id):
     order = dao.get_order_by_id(order_id)
     if not order:
@@ -1365,7 +1375,7 @@ def _parse_voucher_form(form_data):
 
     return data
 
-@app.route('/api/vouchers/<int:voucher_id>', methods=['GET'])
+@main_bp.route('/api/vouchers/<int:voucher_id>', methods=['GET'])
 def get_voucher_api(voucher_id):
     voucher = dao.get_voucher_by_id(voucher_id)
     if voucher:
@@ -1380,7 +1390,7 @@ def get_voucher_api(voucher_id):
     return jsonify({'error': 'Voucher not found'}), 404
 
 
-@app.route('/api/vouchers', methods=['POST'])
+@main_bp.route('/api/vouchers', methods=['POST'])
 def create_voucher_api():
     print("Dữ liệu form nhận được:", request.form)
     try:
@@ -1392,7 +1402,7 @@ def create_voucher_api():
     except Exception as e:
         return jsonify({'error': f'Dữ liệu không hợp lệ: {e}'}), 400
 
-@app.route('/api/vouchers/<int:voucher_id>', methods=['POST', 'PUT'])
+@main_bp.route('/api/vouchers/<int:voucher_id>', methods=['POST', 'PUT'])
 def update_voucher_api(voucher_id):
     voucher = dao.get_voucher_by_id(voucher_id)
     if not voucher:
@@ -1407,13 +1417,14 @@ def update_voucher_api(voucher_id):
     except Exception as e:
         return jsonify({'error': f'Dữ liệu không hợp lệ: {e}'}), 400
 
-@app.route('/api/vouchers/<int:voucher_id>', methods=['DELETE'])
+@main_bp.route('/api/vouchers/<int:voucher_id>', methods=['DELETE'])
 def delete_voucher_api(voucher_id):
     success = dao.delete_voucher(voucher_id)
     if success:
         return jsonify({'message': 'Xóa voucher thành công!'})
     return jsonify({'error': 'Không tìm thấy voucher hoặc lỗi khi xóa'}), 404
-@app.template_filter('format_currency')
+
+@main_bp.app_template_filter('format_currency')
 def format_currency_filter(value):
     """
     Một bộ lọc Jinja2 an toàn để định dạng số thành tiền tệ.
@@ -1426,7 +1437,7 @@ def format_currency_filter(value):
     except (ValueError, TypeError):
         return "0đ"
 #REVENUE
-@app.route('/revenue/<int:restaurant_id>', methods=['GET'])
+@main_bp.route('/revenue/<int:restaurant_id>', methods=['GET'])
 def revenue(restaurant_id):
 
     restaurant = Restaurant.query.get(restaurant_id)
@@ -1438,7 +1449,7 @@ def revenue(restaurant_id):
     )
 
 
-@app.route('/api/orders/raw/<int:restaurant_id>', methods=['GET'])
+@main_bp.route('/api/orders/raw/<int:restaurant_id>', methods=['GET'])
 def get_raw_orders_api(restaurant_id):
     try:
         start_date_str = request.args.get('start_date')
@@ -1462,10 +1473,73 @@ def get_raw_orders_api(restaurant_id):
         })
 
     return jsonify(orders_list)
-from __init__ import socketio
-if __name__ == '__main__':
-    with app.app_context():
 
-        import admin
-        # app.run(debug=True)
-        socketio.run(app, debug=True,port=5000)
+import uuid
+import hmac
+import requests
+
+def create_momo_payment_request(payment: Payment):
+    """
+    Tạo yêu cầu thanh toán đến MoMo và trả về URL thanh toán.
+    Args:
+        payment: Đối tượng Payment vừa được tạo.
+    Returns:
+        URL thanh toán của MoMo hoặc None nếu có lỗi.
+    """
+    PARTNER_CODE = current_app.config.get('MOMO_PARTNER_CODE')
+    ACCESS_KEY = current_app.config.get('MOMO_ACCESS_KEY')
+    SECRET_KEY = current_app.config.get('MOMO_SECRET_KEY')
+    IPN_URL_BASE = current_app.config.get('MOMO_IPN_URL_BASE')
+    REDIRECT_ID = payment.order_id
+    REDIRECT_URL = current_app.config.get('MOMO_REDIRECT_URL')
+    MOMO_ENDPOINT = current_app.config.get('MOMO_ENDPOINT')
+    print(PARTNER_CODE)
+
+    order_id_momo = str(uuid.uuid4()) # Tạo một ID duy nhất cho giao dịch MoMo
+    request_id = str(uuid.uuid4())
+    amount = str(int(payment.amount))
+    order_info = f"Thanh toan don hang #{payment.order_id}"
+    ipn_url = f"{IPN_URL_BASE}/{payment.id}" # MoMo sẽ gọi về URL này
+    redirect_url = f"{REDIRECT_URL}/track-order/{REDIRECT_ID}"
+    extra_data = ""
+
+    raw_signature = (
+        f"accessKey={ACCESS_KEY}&amount={amount}&extraData={extra_data}"
+        f"&ipnUrl={ipn_url}&orderId={order_id_momo}&orderInfo={order_info}"
+        f"&partnerCode={PARTNER_CODE}&redirectUrl={redirect_url}"
+        f"&requestId={request_id}&requestType=captureWallet"
+    )
+    print(raw_signature)
+
+    signature = hmac.new(SECRET_KEY.encode(), raw_signature.encode(), hashlib.sha256).hexdigest()
+
+    payload = {
+        'partnerCode': PARTNER_CODE,
+        'requestId': request_id,
+        'amount': amount,
+        'orderId': order_id_momo,
+        'orderInfo': order_info,
+        'redirectUrl': redirect_url,
+        'ipnUrl': ipn_url,
+        'lang': "vi",
+        'extraData': extra_data,
+        'requestType': 'captureWallet',
+        'signature': signature
+    }
+
+    try:
+        response = requests.post(MOMO_ENDPOINT, data=json.dumps(payload), headers={'Content-Type': 'application/json'})
+        response_data = response.json()
+
+        if response_data.get("resultCode") == 0:
+            payment.momo_order_id = order_id_momo
+            payment.pay_url = response_data.get("payUrl")
+            db.session.commit()
+            return response_data.get("payUrl")
+        else:
+            print(f"Lỗi MoMo: {response_data.get('message')}")
+            return None
+    except Exception as e:
+        print(f"Lỗi khi gọi MoMo API: {e}")
+        return None
+

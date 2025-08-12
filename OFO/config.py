@@ -1,22 +1,22 @@
 import os
 from urllib.parse import quote
 
-SERVER = 'https://workable-primarily-ferret.ngrok-free.app'
-
-MOMO_PARTNER_CODE = 'MOMO'
-MOMO_ACCESS_KEY = 'F8BBA842ECF85'
-MOMO_SECRET_KEY = 'K951B6PE1waDMi640xX08PD3vg6EkVlz'
-
-# --- URL MoMo sẽ gọi về server của bạn ---
-# Thay 'https://yourdomain.com' bằng tên miền thực tế của bạn khi triển khai
-# IPN_URL_BASE = 'https://yourdomain.com/momo/ipn-handler'
-MOMO_IPN_URL_BASE = f'{SERVER}/momo/confirm-payment'
-MOMO_REDIRECT_URL = f'{SERVER}'  # Trang thông báo thành công
-
-# --- Endpoint của MoMo (dùng môi trường test) ---
-MOMO_ENDPOINT = 'https://test-payment.momo.vn/v2/gateway/api/create'
-
-GOOGLE_API_KEY = "AIzaSyDLm2z59TLtXOhuy8L6L2tN6uPXJHdhxhQ"
+# SERVER = 'https://workable-primarily-ferret.ngrok-free.app'
+#
+# MOMO_PARTNER_CODE = 'MOMO'
+# MOMO_ACCESS_KEY = 'F8BBA842ECF85'
+# MOMO_SECRET_KEY = 'K951B6PE1waDMi640xX08PD3vg6EkVlz'
+#
+# # --- URL MoMo sẽ gọi về server của bạn ---
+# # Thay 'https://yourdomain.com' bằng tên miền thực tế của bạn khi triển khai
+# # IPN_URL_BASE = 'https://yourdomain.com/momo/ipn-handler'
+# MOMO_IPN_URL_BASE = f'{SERVER}/momo/confirm-payment'
+# MOMO_REDIRECT_URL = f'{SERVER}'  # Trang thông báo thành công
+#
+# # --- Endpoint của MoMo (dùng môi trường test) ---
+# MOMO_ENDPOINT = 'https://test-payment.momo.vn/v2/gateway/api/create'
+#
+# GOOGLE_API_KEY = "AIzaSyDLm2z59TLtXOhuy8L6L2tN6uPXJHdhxhQ"
 
 
 class Config:
@@ -31,7 +31,16 @@ class Config:
 class DevelopmentConfig(Config):
     """Cấu hình cho môi trường phát triển"""
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = "mysql+pymysql://root:%s@localhost/ofodb?charset=utf8mb4" % quote('Abc@123')
+    SQLALCHEMY_DATABASE_URI = "mysql+pymysql://root:%s@localhost/ofodb?charset=utf8mb4" % quote('admin')
+    SERVER = 'https://workable-primarily-ferret.ngrok-free.app'
+
+    MOMO_PARTNER_CODE = 'MOMO'
+    MOMO_ACCESS_KEY = 'F8BBA842ECF85'
+    MOMO_SECRET_KEY = 'K951B6PE1waDMi640xX08PD3vg6EkVlz'
+    MOMO_IPN_URL_BASE = f'{SERVER}/momo/confirm-payment'
+    MOMO_REDIRECT_URL = f'{SERVER}'  # Trang thông báo thành công
+    MOMO_ENDPOINT = 'https://test-payment.momo.vn/v2/gateway/api/create'
+    GOOGLE_API_KEY = "AIzaSyDLm2z59TLtXOhuy8L6L2tN6uPXJHdhxhQ"
 
 class TestingConfig(Config):
     """Cấu hình cho môi trường test"""
@@ -40,6 +49,7 @@ class TestingConfig(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
     # Tắt CSRF trong form khi test (nếu bạn dùng Flask-WTF)
     WTF_CSRF_ENABLED = False
+    SERVER_NAME = 'localhost.test'
 
 # Dictionary để dễ dàng truy cập các lớp config
 config_by_name = {

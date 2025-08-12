@@ -2,8 +2,8 @@ from flask_admin import Admin,AdminIndexView,expose
 from flask_admin.contrib.sqla import ModelView
 from flask_login import current_user, logout_user
 from wtforms.fields import SelectField
-from __init__ import app, db
-from models import User, UserRole
+from __init__ import db
+from models import User, UserRole, Restaurant
 from wtforms import FileField
 import cloudinary.uploader
 from flask import redirect,url_for,request,flash
@@ -14,7 +14,7 @@ class AdminAccess:
         return current_user.is_authenticated and current_user.role == UserRole.ADMIN
 
     def inaccessible_callback(self, name, **kwargs):
-        return redirect(url_for('login', next=request.url))
+        return redirect(url_for('main.login_view', next=request.url))
 
 class MyAdminIndexView(AdminAccess,AdminIndexView):
     @expose('/')
@@ -24,10 +24,10 @@ class MyAdminIndexView(AdminAccess,AdminIndexView):
         return current_user.is_authenticated and current_user.role == UserRole.ADMIN
 
     def inaccessible_callback(self, name, **kwargs):
-        return redirect(url_for('login_view', next=request.url))
+        return redirect(url_for('main.login_view', next=request.url))
 
 
-admin = Admin(app=app, name='Kymie Food', template_mode='bootstrap4',index_view=MyAdminIndexView())
+# admin = Admin(app=app, name='Kymie Food', template_mode='bootstrap4',index_view=MyAdminIndexView())
 
 from flask_admin.contrib.sqla import ModelView
 from wtforms import PasswordField
@@ -45,7 +45,7 @@ class AdminSecureView(AdminAccess, ModelView):
 
     def inaccessible_callback(self, name, **kwargs):
         flash("Bạn không có quyền truy cập trang quản trị!", "danger")
-        return redirect(url_for('login', next=request.url))
+        return redirect(url_for('main.login_view', next=request.url))
 
 class UserView(AdminSecureView):
     column_labels = {
@@ -94,49 +94,64 @@ class UserView(AdminSecureView):
     form_excluded_columns = ['password']
     column_exclude_list = ['password','avatar']
 
+
+# admin.py
+
+# ... (các import và các class View khác của bạn) ...
+from models import Restaurant, User, UserRole
+from sqlalchemy import inspect as sa_inspect  # Import inspect để lấy tên cột
+
+
 class RestaurantPendingView(AdminSecureView):
     can_create = False
     can_edit = True
-    can_delete = False
+    can_delete = True
 
+    # 1. HIỂN THỊ CỘT 'user' (Tên của relationship trong model Restaurant)
+    column_list = ['restaurant_name', 'user', 'address', 'active']
     column_labels = {
-        'name': 'Tên nhà hàng',
-        'email': 'Email',
-        'phone': 'Số điện thoại',
-        'active': 'Trạng thái',
+        'restaurant_name': 'Tên nhà hàng',
+        'user': 'Chủ sở hữu',
+        'address': 'Địa chỉ',
+        'active': 'Trạng thái'
     }
 
-    column_list = ['name', 'email', 'phone', 'active']
-    form_excluded_columns = ['avatar']
+    # 2. BỔ SUNG TÌM KIẾM THEO TÊN VÀ SĐT CỦA CHỦ SỞ HỮU
+    # Cú pháp 'user.name' và 'user.phone' ở đây là hoàn toàn hợp lệ
+    # Flask-Admin sẽ tự động tạo câu lệnh JOIN
+    column_searchable_list = ['restaurant_name', 'user.name', 'user.phone']
+
+    # Bổ sung bộ lọc theo tên và SĐT của chủ sở hữu
+    column_filters = ['active', 'user.name', 'user.phone']
+    def search_placeholder(self):
+        return 'Tìm theo tên nhà hàng, tên hoặc SĐT chủ sở hữu'
+
+    # --- CÁC THUỘC TÍNH KHÁC GIỮ NGUYÊN ---
     form_columns = ['active']
+    form_edit_rules = ('active',)
 
     def get_query(self):
-        return super().get_query().filter(User.role == UserRole.RESTAURANT, User.active == False)
+        return super().get_query().filter(Restaurant.active == False)
 
     def get_count_query(self):
-        return super().get_count_query().filter(User.role == UserRole.RESTAURANT, User.active == False)
+        return super().get_count_query().filter(Restaurant.active == False)
 
-    def on_model_change(self, form, model, is_created):
-        if isinstance(form.role.data, str):
-            model.role = UserRole(form.role.data)
-
-    @action('approve', 'Duyệt', 'Bạn có chắc muốn duyệt các nhà hàng đã chọn không?')
+    @action('approve', 'Duyệt nhà hàng', 'Bạn có chắc muốn duyệt các nhà hàng đã chọn?')
     def action_approve(self, ids):
         try:
-            query = User.query.filter(User.id.in_(ids))
+            query = Restaurant.query.filter(Restaurant.id.in_(ids))
             count = 0
-            for user in query.all():
-                if user.role == UserRole.RESTAURANT and not user.active:
-                    user.active = True
+            for restaurant in query.all():
+                if not restaurant.active:
+                    restaurant.active = True
+                    if restaurant.user and not restaurant.user.active:
+                        restaurant.user.active = True
                     count += 1
             db.session.commit()
-            flash(f'Đã duyệt {count} nhà hàng.', 'success')
+            flash(f'Đã duyệt thành công {count} nhà hàng.', 'success')
         except Exception as e:
             db.session.rollback()
-            flash('Có lỗi xảy ra khi duyệt nhà hàng.', 'error')
-
-
-admin.add_view(UserView(User, db.session, name='Người dùng'))
-admin.add_view(RestaurantPendingView(User, db.session, name='Duyệt nhà hàng', endpoint='pending_users'))
+            flash(f'Có lỗi xảy ra khi duyệt nhà hàng: {str(e)}', 'error')
+# admin.add_view(RestaurantPendingView(User, db.session, name='Duyệt nhà hàng', endpoint='pending_users'))
 
 

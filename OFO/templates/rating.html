@@ -13,7 +13,7 @@
             <p>{{ restaurant.restaurant_name }}</p>
         </header>
 
-        <form id="review-form" method="POST" action="{{ url_for('rating_page', order_id=order.id) }}"
+        <form id="review-form" method="POST" action="{{ url_for('main.rating_page', order_id=order.id) }}"
               enctype="multipart/form-data">
             <div class="row g-4 align-items-start">
                 <!-- CỘT TRÁI: ĐÁNH GIÁ VÀ NHẬN XÉT -->
@@ -228,7 +228,7 @@
             .then(data => {
                 if (data.success) {
                     alert(data.message);
-                    window.location.href = "{{ url_for('restaurant_detail', restaurant_id=restaurant.id) }}";
+                    window.location.href = "{{ url_for('main.restaurant_detail', restaurant_id=restaurant.id) }}";
                 } else {
                     alert('Lỗi: ' + data.message);
                     submitButton.disabled = false;

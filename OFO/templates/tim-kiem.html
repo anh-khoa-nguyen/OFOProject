@@ -29,14 +29,14 @@
 
     <!-- Horizontal category scroll -->
     <div class="category-scroll d-flex align-items-center gap-3 overflow-auto w-100 py-2">
-        <a href="{{ url_for('search') }}"
+        <a href="{{ url_for('main.search') }}"
            class="category-card all-category {% if not searched_category %}active{% endif %}">
             <span class="overlay-text">Tất cả</span>
         </a>
 
         {% for category in categories %}
         <div class="category-card position-relative flex-fill mx-2">
-        <a href="{{ url_for('search', category_name=category.name) }}"
+        <a href="{{ url_for('main.search', category_name=category.name) }}"
            class="{% if searched_category and category.name == searched_category.name %}active{% endif %}">
             <img src="{{ category.image }}" alt="{{ category.name }}"/>
             <span class="overlay-text">{{ category.name }}</span>
@@ -50,11 +50,11 @@
 
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb align-items-center">
-        <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Trang chủ</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Trang chủ</a></li>
         {% if searched_category %}
             <li class="breadcrumb-item active" aria-current="page">
                 {{ searched_category.name }}
-                <a href="{{ url_for('search') }}" class="btn btn-sm btn-outline-danger ms-2" title="Xóa bộ lọc này">
+                <a href="{{ url_for('main.search') }}" class="btn btn-sm btn-outline-danger ms-2" title="Xóa bộ lọc này">
                     <i class="bi bi-x-lg"></i>
                 </a>
             </li>
@@ -79,7 +79,7 @@
              data-search-name="{{ restaurant.restaurant_name | lower }}"
              data-search-dishes="{{ dish_names | lower }}"
              data-star-rating="{{ restaurant.star_average or 0 }}">
-            <a href="{{ url_for('restaurant_detail', restaurant_id=restaurant.id) }}" class="text-decoration-none text-dark">
+            <a href="{{ url_for('main.restaurant_detail', restaurant_id=restaurant.id) }}" class="text-decoration-none text-dark">
                 <!-- Nội dung card đầy đủ -->
                 <div class="position-relative">
                     <img src="{{ restaurant.image }}" class="img-food" alt="{{ restaurant.restaurant_name }}">
@@ -130,7 +130,7 @@
              data-search-name="{{ restaurant.restaurant_name | lower }}"
              data-search-dishes="{{ dish_names | lower }}"
              data-star-rating="{{ restaurant.star_average or 0 }}">
-            <a href="{{ url_for('restaurant_detail', restaurant_id=restaurant.id) }}" class="text-decoration-none text-dark d-flex flex-column h-100">
+            <a href="{{ url_for('main.restaurant_detail', restaurant_id=restaurant.id) }}" class="text-decoration-none text-dark d-flex flex-column h-100">
                 <!-- Nội dung card đầy đủ -->
                 <div class="position-relative">
                     <img src="{{ restaurant.image }}" class="img-food" alt="{{ restaurant.restaurant_name }}">
