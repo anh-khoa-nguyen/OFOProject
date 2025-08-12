@@ -10,7 +10,7 @@
         <h1>Thanh Toán</h1>
 
         <div class="checkout-header">
-            <a href="{{ url_for('restaurant_detail', restaurant_id=restaurant.id) }}" class="back-button">
+            <a href="{{ url_for('main.restaurant_detail', restaurant_id=restaurant.id) }}" class="back-button">
                 <i class="bi bi-arrow-left"></i>
             </a>
             <img src="{{ restaurant.image }}" alt="{{ restaurant.restaurant_name }}" class="restaurant-avatar">
@@ -50,7 +50,7 @@
                         <label class="info-box payment-box selected">
                             <img src="https://res.cloudinary.com/dbb1oslnw/image/upload/v1753960673/MoMo_Logo_att5zs.png" alt="VNPay Logo" class="payment-logo">
                             <p class="payment-text">Ví MOMO</p>
-                            <input type="radio" name="payment_method" value="vnpay" checked>
+                            <input type="radio" name="payment_method" value="momo" checked>
                         </label>
                     </div>
                 </div>

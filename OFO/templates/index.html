@@ -14,7 +14,7 @@
 {% block content %}
 <div class="bg-full"
      style="background-image: url('{{ url_for('static', filename='images/cookie.png') }}'); height: 50vh;"
-     data-search-url="{{ url_for('search') }}">
+     data-search-url="{{ url_for('main.search') }}">
     <!-- Overlay Form -->
     <div class="overlay-form">
         <h6 class="text-muted mb-1">Chào {{ greeting }}</h6>
@@ -26,7 +26,7 @@
             {# Hiển thị một ô input tĩnh, bị vô hiệu hóa với giá trị là địa chỉ đã lưu #}
             <input type="text" class="form-control" value="{{ delivery_address }}" disabled>
         </div>
-        <a href="{{ url_for('clear_delivery_address') }}" class="btn btn-secondary w-100">Thay đổi địa chỉ</a>
+        <a href="{{ url_for('main.clear_delivery_address') }}" class="btn btn-secondary w-100">Thay đổi địa chỉ</a>
         {% else %}
         <div class="input-group mb-3" id="goong_search_container">
             <span class="input-group-text"><i class="bi bi-geo-alt-fill text-danger"></i></span>
@@ -64,7 +64,7 @@
             {% if restaurants %}
             {% for restaurant in restaurants %}
             <div class="card card-promo">
-                <a href="{{ url_for('restaurant_detail', restaurant_id=restaurant.id) }}"
+                <a href="{{ url_for('main.restaurant_detail', restaurant_id=restaurant.id) }}"
                    class="text-decoration-none text-dark">
                         <div class="position-relative">
                             <img src="{{ restaurant.image }}" class="img-food" alt="{{ restaurant.restaurant_name }}">
@@ -102,7 +102,7 @@
                id="see-all-btn"
                class="text-muted text-decoration-none fw-semibold"
                data-has-address="{% if delivery_address and delivery_address != '...' %}true{% else %}false{% endif %}"
-               data-search-url="{{ url_for('search') }}">
+               data-search-url="{{ url_for('main.search') }}">
                 Nhiều hơn nữa . . .
             </a>
         </div>
@@ -116,7 +116,7 @@
             {% if categories %}
             {% for category in categories %}
             <div class="col-6 col-md-3">
-                <a href="{{ url_for('search_by_category', category_name=category.name) }}"
+                <a href="{{ url_for('main.search_by_category', category_name=category.name) }}"
                    class="text-decoration-none text-dark">
                     <img src="{{ category.image }}" class="category-img" alt="{{ category.name }}">
                     <div class="category-title">{{ category.name }}</div>
@@ -160,7 +160,7 @@
 </script>
 
 <script>
-    const SEARCH_URL = "{{ url_for('search') }}";
+    const SEARCH_URL = "{{ url_for('main.search') }}";
 </script>
 
 

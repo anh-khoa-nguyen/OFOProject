@@ -9,7 +9,7 @@
 <div class="row justify-content-center">
     <div class="col-md-8 col-lg-6 col-xl-5">
         <div class="login-container ">
-        <a class="navbar-brand d-flex justify-content-center" href="{{ url_for('index') }}">
+        <a class="navbar-brand d-flex justify-content-center" href="{{ url_for('main.index') }}">
                         <img src="{{ url_for('static', filename='images/logokymie1.png') }}" alt="GrabFood Logo"
                              style="height: 85px;">
                     </a>
@@ -37,7 +37,7 @@
                 </div>
 
                 <div class="text-center mt-4">
-                    <p>Nếu bạn chưa có tài khoản, vui lòng <a href="{{ url_for('preregister') }}">Đăng kí tài khoản</a></p>
+                    <p>Nếu bạn chưa có tài khoản, vui lòng <a href="{{ url_for('main.preregister') }}">Đăng kí tài khoản</a></p>
                 </div>
             </form>
         </div>

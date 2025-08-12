@@ -12,10 +12,10 @@
     <div class="restaurant-info-block">
         <div class="restaurant-management-nav">
              <ul>
-                <li><a href="{{ url_for('home', restaurant_id=restaurant.id) }}" class="active"><i class="fas fa-utensils"></i><span>Thực Đơn</span></a></li>
-                <li><a href="{{ url_for('restaurant_orders', restaurant_id=restaurant.id) }}" ><i class="fas fa-receipt"></i><span>Đơn Hàng</span></a></li>
-                <li><a href="{{ url_for('revenue', restaurant_id=restaurant.id) }}" ><i class="fas fa-chart-line"></i><span>Doanh Thu</span></a></li>
-                <li><a href="{{ url_for('voucher', restaurant_id=restaurant.id) }}"><i class="fas fa-tags"></i><span>Khuyến Mãi</span></a></li>
+                <li><a href="{{ url_for('main.home', restaurant_id=restaurant.id) }}" class="active"><i class="fas fa-utensils"></i><span>Thực Đơn</span></a></li>
+                <li><a href="{{ url_for('main.restaurant_orders', restaurant_id=restaurant.id) }}" ><i class="fas fa-receipt"></i><span>Đơn Hàng</span></a></li>
+                <li><a href="{{ url_for('main.revenue', restaurant_id=restaurant.id) }}" ><i class="fas fa-chart-line"></i><span>Doanh Thu</span></a></li>
+                <li><a href="{{ url_for('main.voucher', restaurant_id=restaurant.id) }}"><i class="fas fa-tags"></i><span>Khuyến Mãi</span></a></li>
             </ul>
         </div>
 
@@ -208,7 +208,7 @@
             <form id="form_add_dish" enctype="multipart/form-data">
                 <!-- TRƯỜNG ẨN: Rất quan trọng để biết món ăn này thuộc nhóm nào -->
                 <input type="hidden" id="dish_group_id_input" name="dish_group_id">
-                <input type="hidden" name="restaurant_id" value="1"> <!-- Giả sử ID nhà hàng là 1 -->
+                <input type="hidden" name="restaurant_id" value="{{ restaurant.id }}">
 
                 <div class="form-group">
                     <label for="input_dish_name">Tên món ăn</label>
@@ -263,7 +263,7 @@
             <h2>Sửa Món Ăn</h2>
             <form id="form_edit_dish" enctype="multipart/form-data">
                 <input type="hidden" name="dish_id" id="edit_dish_id">
-                <input type="hidden" name="restaurant_id" value="1">
+                <input type="hidden" name="restaurant_id" value="{{ restaurant.id }}">
                 <input type="hidden" name="dish_group_id" id="edit_group_id">
 
                 <div class="form-group">
@@ -1316,38 +1316,55 @@ if (editDishForm) {
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // 1. Kết nối đến server Socket.IO
+    // Bỏ `autoConnect: false` và kết nối ngay lập tức
     const socket = io();
 
-    // 2. Lấy các phần tử HTML
+    // 2. Lấy các phần tử HTML (giữ nguyên)
     const audio = document.getElementById('notification-sound');
     const toastEl = document.getElementById('newOrderToast');
     const toastBody = document.getElementById('toast-body');
+    // Quan trọng: Phải khởi tạo đối tượng Toast của Bootstrap
     const toast = new bootstrap.Toast(toastEl);
 
-    // 3. Lắng nghe sự kiện 'new_order' từ server
+    // 3. Lắng nghe sự kiện 'connect' từ server
+    socket.on('connect', function() {
+        console.log('Socket.IO Client: Connected to server!');
+
+        // Lấy restaurant_id trực tiếp từ biến Jinja2
+        const restaurantId = {{ restaurant.id }};
+
+        if (restaurantId) {
+            console.log('Socket.IO Client: Emitting join_restaurant_room for restaurant ID:', restaurantId);
+            // Gửi sự kiện để tham gia phòng
+            socket.emit('join_restaurant_room', { 'restaurant_id': restaurantId });
+        } else {
+            console.error('Socket.IO Client: Restaurant ID not found in template.');
+        }
+    });
+
+    // 4. Lắng nghe sự kiện 'new_order' từ server
     socket.on('new_order', function(data) {
-        console.log('Nhận được đơn hàng mới:', data);
+        console.log('Socket.IO Client: Received new_order event:', data);
 
         // Cập nhật nội dung thông báo
         toastBody.innerHTML = `
             <p class="mb-1">Đơn hàng mới <strong>#${data.daily_order_number} trong ngày</strong> từ khách hàng <strong>${data.customer_name}</strong>.</p>
             <p class="mb-0">Tổng giá trị: <strong>${data.total}</strong></p>
-            <a href="{{ url_for('restaurant_orders', restaurant_id=restaurant.id) }}" class="btn btn-primary btn-sm mt-2">Xem chi tiết</a>
+            <a href="{{ url_for('main.restaurant_orders', restaurant_id=restaurant.id) }}" class="btn btn-primary btn-sm mt-2">Xem chi tiết</a>
         `;
 
         // Hiển thị thông báo
         toast.show();
 
         // Phát âm thanh
-        // Cần .catch() để tránh lỗi trên trình duyệt nếu người dùng chưa tương tác với trang
         audio.play().catch(error => {
-            console.log("Không thể tự động phát âm thanh, cần người dùng tương tác với trang trước.");
+            console.warn("Could not play notification sound automatically. User interaction may be required.");
         });
+    });
 
-        // (Tùy chọn) Tự động tải lại trang để cập nhật danh sách đơn hàng
-        // setTimeout(() => {
-        //     location.reload();
-        // }, 5000); // Tải lại sau 5 giây
+    // (Tùy chọn) Lắng nghe các sự kiện khác để gỡ lỗi
+    socket.on('disconnect', function() {
+        console.log('Socket.IO Client: Disconnected from server.');
     });
 });
 </script>

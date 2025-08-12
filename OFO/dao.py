@@ -7,7 +7,8 @@ from sqlalchemy.exc import SQLAlchemyError
 import config
 import hashlib
 from  models import *
-from __init__ import db, app
+from __init__ import db
+from flask import current_app
 import cloudinary.uploader
 from sqlalchemy import func, event, text
 from sqlalchemy.orm import subqueryload, joinedload
@@ -37,7 +38,7 @@ def get_random_slogan():
     Đọc file JSON và lấy một câu slogan chào mừng ngẫu nhiên.
     """
     # Tạo đường dẫn tuyệt đối đến file JSON
-    file_path = os.path.join(app.static_folder, 'json', 'greeting_content.json')
+    file_path = os.path.join(current_app.static_folder, 'json', 'greeting_content.json')
     try:
         # Mở và đọc file với encoding utf-8 để hỗ trợ tiếng Việt
         with open(file_path, 'r', encoding='utf-8') as f:
@@ -573,7 +574,7 @@ def update_dish_with_options(form_data, image_file=None):
 
         if image_file and image_file.filename != '':
 
-            upload_dir = os.path.join(app.root_path, 'static/image')
+            upload_dir = os.path.join(current_app.root_path, 'static/image')
             os.makedirs(upload_dir, exist_ok=True)
 
             # Lưu file vào thư mục
@@ -885,74 +886,7 @@ def create_payment_record(order: Order, payment_method: str):
     db.session.commit()
     return payment
 
-import uuid
-import hmac
-import requests
 
-def create_momo_payment_request(payment: Payment):
-    """
-    Tạo yêu cầu thanh toán đến MoMo và trả về URL thanh toán.
-    Args:
-        payment: Đối tượng Payment vừa được tạo.
-    Returns:
-        URL thanh toán của MoMo hoặc None nếu có lỗi.
-    """
-    PARTNER_CODE = app.config.get('MOMO_PARTNER_CODE')
-    ACCESS_KEY = app.config.get('MOMO_ACCESS_KEY')
-    SECRET_KEY = app.config.get('MOMO_SECRET_KEY')
-    IPN_URL_BASE = app.config.get('MOMO_IPN_URL_BASE')
-    REDIRECT_ID = payment.order_id
-    REDIRECT_URL = app.config.get('MOMO_REDIRECT_URL')
-    MOMO_ENDPOINT = app.config.get('MOMO_ENDPOINT')
-    print(PARTNER_CODE)
-
-    order_id_momo = str(uuid.uuid4()) # Tạo một ID duy nhất cho giao dịch MoMo
-    request_id = str(uuid.uuid4())
-    amount = str(int(payment.amount))
-    order_info = f"Thanh toan don hang #{payment.order_id}"
-    ipn_url = f"{IPN_URL_BASE}/{payment.id}" # MoMo sẽ gọi về URL này
-    redirect_url = f"{REDIRECT_URL}/track-order/{REDIRECT_ID}"
-    extra_data = ""
-
-    raw_signature = (
-        f"accessKey={ACCESS_KEY}&amount={amount}&extraData={extra_data}"
-        f"&ipnUrl={ipn_url}&orderId={order_id_momo}&orderInfo={order_info}"
-        f"&partnerCode={PARTNER_CODE}&redirectUrl={redirect_url}"
-        f"&requestId={request_id}&requestType=captureWallet"
-    )
-    print(raw_signature)
-
-    signature = hmac.new(SECRET_KEY.encode(), raw_signature.encode(), hashlib.sha256).hexdigest()
-
-    payload = {
-        'partnerCode': PARTNER_CODE,
-        'requestId': request_id,
-        'amount': amount,
-        'orderId': order_id_momo,
-        'orderInfo': order_info,
-        'redirectUrl': redirect_url,
-        'ipnUrl': ipn_url,
-        'lang': "vi",
-        'extraData': extra_data,
-        'requestType': 'captureWallet',
-        'signature': signature
-    }
-
-    try:
-        response = requests.post(MOMO_ENDPOINT, data=json.dumps(payload), headers={'Content-Type': 'application/json'})
-        response_data = response.json()
-
-        if response_data.get("resultCode") == 0:
-            payment.momo_order_id = order_id_momo
-            payment.pay_url = response_data.get("payUrl")
-            db.session.commit()
-            return response_data.get("payUrl")
-        else:
-            print(f"Lỗi MoMo: {response_data.get('message')}")
-            return None
-    except Exception as e:
-        print(f"Lỗi khi gọi MoMo API: {e}")
-        return None
 def get_active_orders_for_user(user_id):
     """
     Lấy danh sách các đơn hàng đang hoạt động
@@ -1001,7 +935,7 @@ def call_gemini_api(user_message):
     """
     Gửi tin nhắn đến Google Gemini API và nhận phản hồi.
     """
-    GOOGLE_API_KEY = app.config.get('GOOGLE_API_KEY')
+    GOOGLE_API_KEY = current_app.config.get('GOOGLE_API_KEY')
 
     try:
         # Lấy API key từ biến môi trường đã được tải

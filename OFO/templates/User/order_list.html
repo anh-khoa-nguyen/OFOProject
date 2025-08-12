@@ -33,7 +33,7 @@
                                 <!-- Cột thông tin quán và món -->
                                 <div class="col">
                                     <div>
-                                        <a href="{{ url_for('restaurant_detail', restaurant_id=order.restaurant.id) }}" class="restaurant-name">{{ order.restaurant.restaurant_name }}</a>
+                                        <a href="{{ url_for('main.restaurant_detail', restaurant_id=order.restaurant.id) }}" class="restaurant-name">{{ order.restaurant.restaurant_name }}</a>
                                     </div>
                                     <p class="text-muted mt-1 mb-0">
                                         {% if order.details %}
@@ -48,7 +48,7 @@
                                 <div class="col-12 col-md-auto text-md-end">
                                     <h5 class="order-price mb-1">{{ order.total|format_currency }}</h5>
                                     <div class="order-item-count">
-                                        <a href="{{ url_for('order_detail_page', order_id=order.id) }}">
+                                        <a href="{{ url_for('main.order_detail_page', order_id=order.id) }}">
                                             {{ order.details|length }} món <i class="bi bi-chevron-right"></i>
                                         </a>
                                     </div>
@@ -56,7 +56,7 @@
                             </div>
                         </div>
                         <div class="card-footer d-flex justify-content-between align-items-center ">
-                            <a href="{{ url_for('order_detail_page', order_id=order.id) }}" class="btn btn-outline-secondary btn-sm">Xem chi tiết</a>
+                            <a href="{{ url_for('main.order_detail_page', order_id=order.id) }}" class="btn btn-outline-secondary btn-sm">Xem chi tiết</a>
 
 
                             <div class="buttons">
@@ -64,10 +64,10 @@
                                 {% if order.review %}
                                     <button class="btn btn-outline-secondary btn-sm disabled">Đã đánh giá</button>
                                 {% else %}
-                                    <a href="{{ url_for('rating_page', order_id=order.id) }}" class="btn btn-outline-success btn-sm">Đánh giá</a>
+                                    <a href="{{ url_for('main.rating_page', order_id=order.id) }}" class="btn btn-outline-success btn-sm">Đánh giá</a>
                                 {% endif %}
 
-                                <a href="{{ url_for('restaurant_detail', restaurant_id=order.restaurant.id) }}" class="btn btn-danger btn-sm">Đặt lại</a>
+                                <a href="{{ url_for('main.restaurant_detail', restaurant_id=order.restaurant.id) }}" class="btn btn-danger btn-sm">Đặt lại</a>
                             </div>
                         </div>
                     </div>
@@ -76,7 +76,7 @@
         {% else %}
             <div class="text-center p-5 bg-light rounded">
                 <p class="lead">Bạn chưa có đơn hàng nào.</p>
-                <a href="{{ url_for('index') }}" class="btn btn-danger">Bắt đầu đặt hàng ngay!</a>
+                <a href="{{ url_for('main.index') }}" class="btn btn-danger">Bắt đầu đặt hàng ngay!</a>
             </div>
         {% endif %}
     </div>
