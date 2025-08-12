@@ -47,7 +47,7 @@ def create_app(config_name='development'):
     login.init_app(app)
     socketio.init_app(app)
     # Cấu hình trang login cho Flask-Login, nó sẽ dùng blueprint 'main'
-    login.login_view = 'main.login'
+    login.login_view = 'main.login_view'
 
     # 3. Cấu hình Cloudinary
     cloudinary.config(

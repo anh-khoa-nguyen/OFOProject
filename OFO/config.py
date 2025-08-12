@@ -50,6 +50,12 @@ class TestingConfig(Config):
     # Tắt CSRF trong form khi test (nếu bạn dùng Flask-WTF)
     WTF_CSRF_ENABLED = False
     SERVER_NAME = 'localhost.test'
+    MOMO_PARTNER_CODE = "DUMMY_CODE"
+    MOMO_ACCESS_KEY = "DUMMY_KEY"
+    MOMO_SECRET_KEY = "DUMMY_SECRET"
+    MOMO_ENDPOINT = "https://test-payment.momo.vn/v2/gateway/api/create"
+    MOMO_IPN_URL_BASE = "http://localhost.test/momo"
+    MOMO_REDIRECT_URL = "http://localhost.test"
 
 # Dictionary để dễ dàng truy cập các lớp config
 config_by_name = {
