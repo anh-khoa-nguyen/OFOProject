@@ -7,7 +7,9 @@ from flask_admin import Admin
 import cloudinary
 import config
 from flask_socketio import SocketIO,join_room
-
+from sqlalchemy import event
+from sqlalchemy.engine import Engine
+import sqlite3
 # Khởi tạo các extension "trống" (chưa gắn vào app nào)
 db = SQLAlchemy()
 login = LoginManager()
@@ -68,3 +70,10 @@ def create_app(config_name='development'):
     app.register_blueprint(main_bp)
 
     return app
+#bắt lỗi khóa ngoại
+@event.listens_for(Engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    if isinstance(dbapi_connection, sqlite3.Connection):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON;")
+        cursor.close()
