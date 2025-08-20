@@ -133,31 +133,6 @@ class DishOption(db.Model):
     price = Column(Float, default=0)
     group = relationship('DishOptionGroup', back_populates='options')
 
-
-
-# class Cart(db.Model):
-#     id = Column(Integer, primary_key=True, autoincrement=True)
-#     user_id = Column(Integer, ForeignKey(User.id), nullable=False)
-#     restaurant_id = Column(Integer, ForeignKey(Restaurant.id), nullable=False)
-#     items = relationship('CartItem', backref='cart', lazy=True, cascade="all, delete-orphan")
-
-# class CartItem(db.Model):
-#     id = Column(Integer, primary_key=True, autoincrement=True)
-#     cart_id = Column(Integer, ForeignKey(Cart.id), nullable=False)
-#     dish_id = Column(Integer, ForeignKey(Dish.id), nullable=False)
-#     quantity = Column(Integer, nullable=False, default=1)
-#
-#     dish = relationship('Dish', lazy='joined')
-#     selected_options = relationship('DishOption', secondary='cart_item_option', backref='cart_item',
-#                                     lazy='joined'
-#                                     )
-#
-# class CartItemOption(db.Model):
-#     cart_item_id = Column(Integer, ForeignKey(CartItem.id), primary_key=True, nullable=False)
-#     dish_option_id = Column(Integer, ForeignKey(DishOption.id), primary_key=True, nullable=False)
-#     quantity = Column(Integer, default=1)
-
-
 class OrderState(PyEnum):
     UNPAID = 'Chưa thanh toán'
     PENDING = "Pending"

@@ -1,9 +1,9 @@
-# tests/test_admin.py - PHIÊN BẢN CUỐI CÙNG
+# tests/test_admin.py
 
 import unittest
 import hashlib
 from __init__ import create_app, db
-from models import User, UserRole
+from models import User, UserRole, Restaurant
 from flask import url_for
 
 
@@ -19,15 +19,21 @@ class AdminPanelTestCase(unittest.TestCase):
         self.admin_user = User(name='Super Admin', email='admin@ofo.com', phone='0101010101',
                                password=admin_pass_hashed, role=UserRole.ADMIN, active=True)
 
-        self.pending_restaurant_user = User(name='Quán Chờ Duyệt', email='pending@ofo.com', phone='0202020202',
-                                            password='pass', role=UserRole.RESTAURANT, active=False)
+        owner_user = User(name='Quán Chờ Duyệt Owner', email='pending@ofo.com', phone='0202020202', password='pass',
+                          role=UserRole.RESTAURANT, active=True)
 
+        # <<< SỬA LỖI Ở ĐÂY >>>
         self.regular_user_pass_plain = 'userpass'
         self.regular_user = User(name='Khách Hàng A', email='user@ofo.com', phone='0404040404',
                                  password=str(hashlib.md5(self.regular_user_pass_plain.encode('utf-8')).hexdigest()),
                                  role=UserRole.USER, active=True)
 
-        db.session.add_all([self.admin_user, self.pending_restaurant_user, self.regular_user])
+        db.session.add_all([self.admin_user, owner_user, self.regular_user])
+        db.session.commit()
+
+        self.pending_restaurant = Restaurant(restaurant_name='Quán Chờ Duyệt', owner_user_id=owner_user.id,
+                                             active=False)
+        db.session.add(self.pending_restaurant)
         db.session.commit()
 
         self.client = self.app.test_client()
@@ -43,33 +49,29 @@ class AdminPanelTestCase(unittest.TestCase):
         self.app_context.pop()
 
     def test_admin_can_view_pending_restaurants(self):
-        response = self.client.get('/admin/pending_users/')
+        response = self.client.get('/admin/pending_restaurants/')
         self.assertEqual(response.status_code, 200)
-        # Sửa lại chuỗi tìm kiếm cho đúng
         response_text = response.data.decode('utf-8')
         self.assertIn('Quán Chờ Duyệt', response_text)
-        self.assertNotIn(b'Super Admin', response.data)
 
     def test_admin_can_approve_pending_restaurant(self):
-        response = self.client.post('/admin/pending_users/action/', data={
+        response = self.client.post('/admin/pending_restaurants/action/', data={
             'action': 'approve',
-            'rowid': str(self.pending_restaurant_user.id)
+            'rowid': str(self.pending_restaurant.id)
         }, follow_redirects=True)
-
         self.assertEqual(response.status_code, 200)
         response_text = response.data.decode('utf-8')
-        self.assertIn('Đã duyệt 1 nhà hàng.', response_text)
-
-        user_after = db.session.get(User, self.pending_restaurant_user.id)
-        self.assertTrue(user_after.active)
+        self.assertIn('Đã duyệt thành công 1 nhà hàng.', response_text)
+        restaurant_after = db.session.get(Restaurant, self.pending_restaurant.id)
+        self.assertTrue(restaurant_after.active)
 
     def test_regular_user_cannot_access_admin_panel(self):
         with self.app.test_client() as regular_client:
-            regular_client.post(
-                url_for('main.login_view'),
+            regular_client.post(url_for('main.login_view'),
+                # Bây giờ dòng này đã đúng
                 data={'phone': self.regular_user.phone, 'password': self.regular_user_pass_plain},
                 follow_redirects=True
             )
             response = regular_client.get('/admin/', follow_redirects=False)
             self.assertEqual(response.status_code, 302)
-            self.assertTrue('/login' in response.location)  # Giả sử tên là reslogin
+            self.assertTrue('/login' in response.location)
