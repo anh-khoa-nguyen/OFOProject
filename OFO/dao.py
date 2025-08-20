@@ -21,7 +21,7 @@ from __init__ import db, socketio
 from models import *
 
 # =====================================================================
-# 3.2.1 GIAO DIỆN TRANG CHỦ VÀ TÌM KIẾM NHÀ HÀNG
+# 3.2.1 GIAO DIỆN TRANG CHỦ VÀ TÌM KIẾM NHÀ HÀNG..
 # =====================================================================
 
 def get_greeting():
