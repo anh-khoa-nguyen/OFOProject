@@ -1,28 +1,30 @@
+# 1. THƯ VIỆN CHUẨN CỦA PYTHON
+import hashlib
 import json
 import os
-from sqlalchemy import func, event, text, desc
-
-from sqlalchemy.exc import SQLAlchemyError
-
-import config
-import hashlib
-from  models import *
-from __init__ import db
-from flask import current_app
-import cloudinary.uploader
-from sqlalchemy import func, event, text
-from sqlalchemy.orm import subqueryload, joinedload
-from geopy.distance import geodesic
-from flask import request, jsonify
-from zoneinfo import ZoneInfo
 import random
 import traceback
-from __init__ import socketio
-from sqlalchemy import inspect
-from sqlalchemy import event
+from datetime import date, datetime
+from zoneinfo import ZoneInfo
+
+# 2. THƯ VIỆN BÊN THỨ BA
+import cloudinary.uploader
+import google.generativeai as genai
+from flask import current_app, jsonify, request
+from geopy.distance import geodesic
+from sqlalchemy import desc, event, func, inspect, text
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import joinedload, subqueryload
+
+# 3. THƯ VIỆN CỦA DỰ ÁN
+from __init__ import db, socketio
+from models import *
+
+# =====================================================================
+# 3.2.1 GIAO DIỆN TRANG CHỦ VÀ TÌM KIẾM NHÀ HÀNG
+# =====================================================================
 
 def get_greeting():
-    """Lấy lời chào (sáng, trưa, chiều, tối) theo giờ Việt Nam."""
     hour = datetime.datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).hour
     if 5 <= hour < 11:
         return "buổi sáng"
@@ -34,10 +36,6 @@ def get_greeting():
         return "buổi tối"
 
 def get_random_slogan():
-    """
-    Đọc file JSON và lấy một câu slogan chào mừng ngẫu nhiên.
-    """
-    # Tạo đường dẫn tuyệt đối đến file JSON
     file_path = os.path.join(current_app.static_folder, 'json', 'greeting_content.json')
     try:
         # Mở và đọc file với encoding utf-8 để hỗ trợ tiếng Việt
@@ -52,31 +50,6 @@ def get_random_slogan():
     # Trả về một câu mặc định nếu có lỗi xảy ra
     return "Bạn ơi, bạn đang ở đâu zậy?"
 
-# Đăng nhập.
-def auth_user(phone, password):
-    password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
-
-    u = User.query.filter(User.phone.__eq__(phone),
-                          User.password.__eq__(password))
-    return u.first()
-
-def get_user_by_id(user_id):
-    return User.query.get(user_id)
-
-def add_user(name,phone,email,password,avatar=None):
-     password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
-     u = User(name=name,phone=phone,email=email,password=password)
-     if avatar:
-         res = cloudinary.uploader.upload(avatar)
-         u.avatar = res.get('secure_url')
-
-
-     db.session.add(u)
-     db.session.commit()
-def get_restaurant_by_user_id(user_id):
-    return Restaurant.query.filter_by(owner_user_id=user_id).first()
-
-
 def load_categories(limit=8):
     """
     Hàm để tải tất cả các danh mục (Category) từ CSDL.
@@ -87,31 +60,8 @@ def load_categories(limit=8):
         query = query.limit(limit)
     return query.all()
 
-
-def _distance_and_time(restaurants, user_lat, user_lng):
-    """
-    Hàm phụ trợ: Nhận vào một danh sách nhà hàng và tọa độ người dùng,
-    tính toán và thêm thuộc tính .distance_km và .delivery_time_minutes.
-    """
-    # Chỉ thực hiện nếu có đầy đủ thông tin.
-    if not all([restaurants, user_lat is not None, user_lng is not None]):
-        return restaurants  # Trả về danh sách gốc nếu thiếu thông tin
-
-    try:
-        user_location = (float(user_lat), float(user_lng))
-        for restaurant in restaurants:
-            restaurant.distance_km = None
-            restaurant.delivery_time_minutes = None  # Đổi tên cho rõ ràng
-
-            if restaurant.lat and restaurant.lng:
-                restaurant_location = (float(restaurant.lat), float(restaurant.lng))
-                distance = geodesic(user_location, restaurant_location).km
-                restaurant.distance_km = round(distance, 1)
-                restaurant.delivery_time_minutes = round(10 + (distance * 5))
-    except (ValueError, TypeError) as e:
-        print(f"Lỗi khi xử lý tọa độ: {e}. Bỏ qua tính toán.")
-
-    return restaurants
+def get_category_by_name(name):
+    return Category.query.filter(Category.name.ilike(f"%{name}%")).first()
 
 def load_random_restaurants(limit=10, user_lat=None, user_lng=None):
     """
@@ -174,30 +124,6 @@ def get_top_rated_restaurants(limit=10):
 
     return restaurants
 
-def get_restaurant_by_id(restaurant_id):
-    """
-    Lấy thông tin của một nhà hàng duy nhất bằng ID của nó.
-    """
-    # .get() là cách nhanh và hiệu quả nhất để truy vấn bằng khóa chính
-    restaurant = Restaurant.query.options(
-        subqueryload(Restaurant.dish_groups)
-        .subqueryload(DishGroup.dishes)
-    ).get(restaurant_id)
-
-    return restaurant
-
-def get_dish_with_options(dish_id):
-    """
-    Lấy chi tiết một món ăn bao gồm các nhóm tùy chọn và tùy chọn con của nó.
-    Sử dụng joinedload để tải trước tất cả dữ liệu liên quan trong một câu lệnh query.
-    """
-    dish = Dish.query.options(
-        joinedload(Dish.option_groups).joinedload(DishOptionGroup.options)
-    ).get(dish_id)
-
-    return dish
-
-
 def search_and_classify_restaurants(category_name=None, user_lat=None, user_lng=None, radius_km=10):
     """
     Tìm kiếm và phân loại nhà hàng thành hai nhóm:
@@ -245,6 +171,58 @@ def search_and_classify_restaurants(category_name=None, user_lat=None, user_lng=
 
     return nearby_restaurants, other_restaurants
 
+# =====================================================================
+# 3.2.2 GIAO DIỆN GIỎ HÀNG VÀ ĐÁNH GIÁ ĐƠN HÀNG
+# =====================================================================
+def create_order_from_cart(user_id, restaurant_id, cart_data, delivery_address, note, subtotal, shipping_fee, discount, delivery_time,
+                           voucher_ids=None,initial_status=OrderState.PENDING):
+    """
+    Tạo một bản ghi Order và các OrderDetail tương ứng từ dữ liệu giỏ hàng trong session.
+    """
+    try:
+        with db.session.begin_nested():
+            total = subtotal + shipping_fee - discount
+            new_order = Order(
+                user_id=user_id,
+                restaurant_id=restaurant_id,
+                subtotal=subtotal,
+                shipping_fee=shipping_fee,
+                discount=discount,
+                total=total,
+                delivery_address=delivery_address,
+                note=note,
+                order_status=initial_status,
+                delivery_time = delivery_time
+            )
+
+            if voucher_ids:
+                vouchers = Voucher.query.filter(Voucher.id.in_(voucher_ids)).all()
+                if vouchers:
+                    new_order.vouchers.extend(vouchers)
+
+            db.session.add(new_order)
+
+            for item_key, item_info in cart_data['items'].items():
+                detail = OrderDetail(
+                    order=new_order,
+                    dish_id=item_info['dish_id'],
+                    quantity=item_info['quantity'],
+                    price=item_info['price'],
+                    dish_name=item_info['name'],
+                    selected_options_luc_dat={
+                        'options': item_info['options'],
+                        'note': item_info.get('note', '')
+                    }
+                )
+                db.session.add(detail)
+
+        db.session.commit()
+        return new_order
+    except Exception as e:
+        db.session.rollback()
+        print(f"Lỗi khi tạo đơn hàng từ giỏ hàng: {e}")
+        raise e
+
 def add_review(order_id, star, comment, image_urls=None):
     """
     Thêm một đánh giá mới vào CSDL, bao gồm cả các link ảnh.
@@ -276,6 +254,40 @@ def add_review(order_id, star, comment, image_urls=None):
 
     return new_review
 
+def get_reviews_by_restaurant(restaurant_id):
+    """
+    Lấy tất cả các đánh giá cho một nhà hàng cụ thể, sắp xếp từ mới nhất đến cũ nhất.
+    """
+    # .options(joinedload(Review.user)) sẽ tải trước thông tin người dùng để tránh N+1 query
+    return Review.query.filter_by(restaurant_id=restaurant_id)\
+                       .order_by(Review.date.desc())\
+                       .all()
+
+def get_restaurant_review_summary(restaurant_id):
+    """
+    Lấy dữ liệu tổng hợp về đánh giá cho một nhà hàng.
+    Bao gồm: tổng số review và số lượng cho từng mức sao.
+    """
+    # Dùng một câu query duy nhất để lấy số lượng cho từng mức sao
+    breakdown_query = db.session.query(
+        Review.star,
+        func.count(Review.id)
+    ).filter(Review.restaurant_id == restaurant_id).group_by(Review.star).all()
+
+    # Chuyển kết quả thành một dictionary, ví dụ: {5: 10, 4: 5, ...}
+    # Đồng thời tính tổng số review
+    total_reviews = 0
+    breakdown_dict = {star: 0 for star in range(1, 6)}  # Khởi tạo với tất cả giá trị = 0
+
+    for star, count in breakdown_query:
+        breakdown_dict[star] = count
+        total_reviews += count
+
+    return {
+        'total_reviews': total_reviews,
+        'breakdown': breakdown_dict
+    }
+
 @event.listens_for(Review, 'after_insert')
 def receive_after_insert(mapper, connection, target):
     """
@@ -303,141 +315,150 @@ def receive_after_insert(mapper, connection, target):
         )
         # Thực thi câu lệnh UPDATE
         connection.execute(stmt)
+# =====================================================================
+# 3.2.3 GIAO DIỆN CHI TIẾT NHÀ HÀNG
+# =====================================================================
 
-def get_reviews_by_restaurant(restaurant_id):
+def get_restaurant_by_id(restaurant_id):
     """
-    Lấy tất cả các đánh giá cho một nhà hàng cụ thể, sắp xếp từ mới nhất đến cũ nhất.
+    Lấy thông tin của một nhà hàng duy nhất bằng ID của nó.
     """
-    # .options(joinedload(Review.user)) sẽ tải trước thông tin người dùng để tránh N+1 query
-    return Review.query.filter_by(restaurant_id=restaurant_id)\
-                       .order_by(Review.date.desc())\
-                       .all()
+    # .get() là cách nhanh và hiệu quả nhất để truy vấn bằng khóa chính
+    restaurant = Restaurant.query.options(
+        subqueryload(Restaurant.dish_groups)
+        .subqueryload(DishGroup.dishes)
+    ).get(restaurant_id)
 
+    return restaurant
 
-def get_restaurant_review_summary(restaurant_id):
+def get_dish_with_options(dish_id):
     """
-    Lấy dữ liệu tổng hợp về đánh giá cho một nhà hàng.
-    Bao gồm: tổng số review và số lượng cho từng mức sao.
+    Lấy chi tiết một món ăn bao gồm các nhóm tùy chọn và tùy chọn con của nó.
+    Sử dụng joinedload để tải trước tất cả dữ liệu liên quan trong một câu lệnh query.
     """
-    # Dùng một câu query duy nhất để lấy số lượng cho từng mức sao
-    breakdown_query = db.session.query(
-        Review.star,
-        func.count(Review.id)
-    ).filter(Review.restaurant_id == restaurant_id).group_by(Review.star).all()
+    dish = Dish.query.options(
+        joinedload(Dish.option_groups).joinedload(DishOptionGroup.options)
+    ).get(dish_id)
 
-    # Chuyển kết quả thành một dictionary, ví dụ: {5: 10, 4: 5, ...}
-    # Đồng thời tính tổng số review
-    total_reviews = 0
-    breakdown_dict = {star: 0 for star in range(1, 6)}  # Khởi tạo với tất cả giá trị = 0
+    return dish
 
-    for star, count in breakdown_query:
-        breakdown_dict[star] = count
-        total_reviews += count
+# =====================================================================
+# 3.2.4 GIAO DIỆN ĐĂNG KÝ VÀ QUẢN LÝ NHÀ HÀNG
+# =====================================================================
+def get_categories():
+    try:
+        return Category.query.all()
+    except Exception as e:
+        print(f"Lỗi khi lấy danh sách category: {e}")
+        return []
 
-    return {
-        'total_reviews': total_reviews,
-        'breakdown': breakdown_dict
-    }
+def register_restaurant_and_user(username, email, password, phone, res_name, address,
+                                 description, open_time, close_time, category_id,
+                                 avatar_url=None, cover_url=None):
+    if User.query.filter_by(email=email.strip()).first():
+        return (False, 'Email này đã được sử dụng cho một tài khoản khác.')
+    if User.query.filter_by(phone=phone.strip()).first():
+        return (False, 'Số điện thoại này đã được đăng ký.')
+    try:
+        hashed_password = hashlib.md5(password.encode('utf-8')).hexdigest()
 
-def is_favorite(user_id, restaurant_id):
-    """
-    Kiểm tra xem một nhà hàng đã được người dùng yêu thích hay chưa..
-    """
-    user = User.query.get(user_id)
-    if user:
-        # .any() là cách hiệu quả để kiểm tra sự tồn tại
-        return user.favorite_restaurants.filter(Restaurant.id == restaurant_id).first() is not None
-    return False
-#Load restaurant_main:
+        new_user = User(
+            name=username.strip(),
+            email=email.strip(),
+            password=hashed_password,
+            phone=phone.strip(),
+            avatar=avatar_url,
+            role=UserRole.RESTAURANT
+        )
+        open_t = datetime.datetime.strptime(open_time, '%H:%M').time()
+        close_t = datetime.datetime.strptime(close_time, '%H:%M').time()
+        new_restaurant = Restaurant(
+            restaurant_name=res_name,
+            address=address,
+            description=description,
+            open_time=open_t,
+            close_time=close_t,
+            image=cover_url,
+            category_id=int(category_id)
+        )
+
+        new_restaurant.user = new_user
+        db.session.add(new_user)
+        db.session.add(new_restaurant)
+
+        db.session.commit()
+        return (True, new_user)
+
+    except Exception as e:
+        db.session.rollback()
+        print("‼️ ERROR TRONG DAO:", e)
+        traceback.print_exc()
+        return (False, 'Đã có lỗi xảy ra trong quá trình xử lý dữ liệu.')
+
+def get_restaurant_by_user_id(user_id):
+    return Restaurant.query.filter_by(owner_user_id=user_id).first()
+
 def get_dish_groups_by_restaurant(restaurant_id):
     return DishGroup.query.filter_by(restaurant_id=restaurant_id).all()
-def get_dish_option_groups_by_restaurant(restaurant_id):
-    return DishOptionGroup.query.filter_by(restaurant_id=restaurant_id).order_by(DishOptionGroup.name).all()
-def update_option_group_with_options(data):
-        group_id = data.get('id')
-        if not group_id:
-            return False, "Thiếu ID của nhóm cần cập nhật."
-        try:
-            with db.session.begin_nested():
-                # 1. Tìm đối tượng cần sửa trong database
-                group_to_update = db.session.query(DishOptionGroup).get(group_id)
-                if not group_to_update:
-                    return False, f"Không tìm thấy nhóm tùy chọn với ID {group_id}."
-                # 2. Cập nhật các thuộc tính của nhóm cha
-                group_to_update.name = data.get('name', '').strip()
-                group_to_update.max = data.get('max')
-                group_to_update.mandatory = data.get('mandatory', False)
-                # Xóa các option cũ khỏi session
-                for option in list(group_to_update.options):
-                    db.session.delete(option)
 
-                # Thêm các option mới từ payload vào session
-                new_options_data = data.get('options', [])
-                for option_data in new_options_data:
-                    if option_data.get('name'):  # Chỉ thêm nếu có tên
-                        new_option = DishOption(
-                            name=option_data.get('name').strip(),
-                            price=option_data.get('price', 0)
-                        )
-                        group_to_update.options.append(new_option)
-            db.session.commit()
-            return True, group_to_update
-        except SQLAlchemyError as e:
-            db.session.rollback()
-            print(f"LỖI DATABASE KHI CẬP NHẬT NHÓM TÙY CHỌN (DAO): {e}")
-            return False, "Lỗi cơ sở dữ liệu khi cập nhật."
-        except Exception as e:
-            db.session.rollback()
-            print(f"LỖI KHÔNG MONG MUỐN KHI CẬP NHẬT NHÓM TÙY CHỌN (DAO): {e}")
-            return False, "Có lỗi không mong muốn xảy ra."
-def add_option_group_with_options(data):
-
+def get_dish_by_id(dish_id):
     try:
-        new_group = DishOptionGroup(
-            restaurant_id=data.get('restaurant_id'),
-            name=data.get('name'),
-            mandatory=data.get('mandatory', False),
-            max=data.get('max')
-        )
-        options_data = data.get('options', [])
-        if not options_data:
-            raise ValueError("Nhóm tùy chọn phải có ít nhất một lựa chọn.")
-
-        for option_data in options_data:
-            new_option = DishOption(
-                name=option_data.get('name'),
-                price=option_data.get('price', 0)
-            )
-            new_group.options.append(new_option)
-
-        db.session.add(new_group)
-        db.session.commit()
-        return new_group
-    except (SQLAlchemyError, ValueError) as e:
-        # Nếu có bất kỳ lỗi nào, hủy bỏ mọi thay đổi
-        print(f"ERROR - Could not add option group: {e}")
-        db.session.rollback()
+        return db.session.get(Dish, int(dish_id))
+    except (ValueError, TypeError):
         return None
 
 
-def delete_option_group_by_id(group_id):
+def get_options_by_ids(option_ids):
+    if not option_ids:
+        return []
     try:
-        __tablename__ = 'dish_option_group'
-        group_to_delete = db.session.query(DishOptionGroup).get(group_id)
-        if not group_to_delete:
-            return False, f"Không tìm thấy nhóm tùy chọn với ID {group_id}."
-        group_name = group_to_delete.name
-        db.session.delete(group_to_delete)
-        db.session.commit()
-        return True, f'Đã xóa thành công nhóm "{group_name}".'
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        print(f"LỖI DATABASE KHI XÓA NHÓM TÙY CHỌN (DAO): {e}")
-        return False, "Lỗi cơ sở dữ liệu khi xóa."
-    except Exception as e:
-        db.session.rollback()
-        print(f"LỖI KHÔNG MONG MUỐN KHI XÓA NHÓM TÙY CHỌN (DAO): {e}")
-        return False, "Có lỗi không mong muốn xảy ra."
+        int_option_ids = [int(opt_id) for opt_id in option_ids]
+
+        # Sử dụng filter và .in_() để truy vấn hiệu quả nhiều ID cùng lúc
+        return DishOption.query.filter(DishOption.id.in_(int_option_ids)).all()
+    except (ValueError, TypeError):
+        return []
+
+def get_dish_details_by_id(dish_id):
+    """
+    Lấy thông tin chi tiết của một món ăn, bao gồm cả các nhóm tùy chọn
+    và các tùy chọn con của nó.
+    """
+    try:
+        dish = db.session.get(Dish, int(dish_id))
+        if not dish:
+            return None
+
+        dish_data = {
+            "id": dish.id,
+            "name": dish.name,
+            "description": dish.description,
+            "price": dish.price,
+            "image": dish.image,
+            "option_groups": []
+        }
+
+        # Lấy các nhóm tùy chọn được liên kết với món ăn này
+        for group in dish.option_groups:
+            group_data = {
+                "id": group.id,
+                "name": group.name,
+                "mandatory": group.mandatory,
+                "max_selection": group.max,
+                "options": []
+            }
+            for option in group.options:
+                option_data = {
+                    "id": option.id,
+                    "name": option.name,
+                    "price_change": option.price
+                }
+                group_data["options"].append(option_data)
+            dish_data["option_groups"].append(group_data)
+
+        return dish_data
+    except (ValueError, TypeError):
+        return None
 
 def add_dishgroup(name, restaurant_id):
 
@@ -465,7 +486,6 @@ def add_dishgroup(name, restaurant_id):
         print(f"LỖI KHI THÊM NHÓM MÓN: {e}")
         return {'success': False, 'message': 'Có lỗi xảy ra, không thể thêm nhóm món.'}
 
-
 def delete_dishgroup_by_id(group_id):
     group = DishGroup.query.get(group_id)
 
@@ -481,7 +501,6 @@ def delete_dishgroup_by_id(group_id):
             print(f"LỖI KHI XÓA NHÓM MÓN VÀ CÁC MÓN ĂN: {e}")
             return False
 
-    return False
 def add_dish(name, description, price,active, image_url, dish_group_id, restaurant_id,option_group_ids=None):
     try:
         dish = Dish(
@@ -511,34 +530,6 @@ def add_dish(name, description, price,active, image_url, dish_group_id, restaura
         db.session.rollback()
         print("❌ Lỗi khi thêm món ăn trong DAO:", e)
         return False
-
-
-def get_dish_details_for_edit(dish_id):
-    """
-    Lấy thông tin chi tiết của một món ăn để điền vào form sửa.
-    Bao gồm cả danh sách ID của các nhóm tùy chọn đã được liên kết.
-    """
-    try:
-        dish = Dish.query.get(dish_id)
-        if not dish:
-            return None
-
-        # Tạo một dictionary để chứa dữ liệu trả về
-        dish_data = {
-            "id": dish.id,
-            "name": dish.name,
-            "description": dish.description,
-            "price": dish.price,
-            "active": dish.active,
-            "dish_group_id": dish.dish_group_id,
-            # Dùng list comprehension để lấy danh sách ID của các nhóm đã liên kết
-            "linked_option_group_ids": [group.id for group in dish.option_groups]
-        }
-        return dish_data
-    except Exception as e:
-        print(f"❌ Lỗi khi lấy chi tiết món ăn (DAO): {e}")
-        return None
-
 
 def update_dish_with_options(form_data, image_file=None):
     """
@@ -603,7 +594,6 @@ def update_dish_with_options(form_data, image_file=None):
         print(f"❌ Lỗi khi cập nhật món ăn (DAO): {e}")
         return False, str(e)  # Trả về lỗi cụ thể
 
-
 def delete_dish(dish_id):
     try:
         dish = Dish.query.get(dish_id)
@@ -616,61 +606,168 @@ def delete_dish(dish_id):
         db.session.rollback()
         return False, str(e)
 
-#ĐĂNG KÍ NHÀ HÀNG
-def get_categories():
+def get_dish_details_for_edit(dish_id):
+    """
+    Lấy thông tin chi tiết của một món ăn để điền vào form sửa.
+    Bao gồm cả danh sách ID của các nhóm tùy chọn đã được liên kết.
+    """
     try:
-        return Category.query.all()
+        dish = Dish.query.get(dish_id)
+        if not dish:
+            return None
+
+        # Tạo một dictionary để chứa dữ liệu trả về
+        dish_data = {
+            "id": dish.id,
+            "name": dish.name,
+            "description": dish.description,
+            "price": dish.price,
+            "active": dish.active,
+            "dish_group_id": dish.dish_group_id,
+            # Dùng list comprehension để lấy danh sách ID của các nhóm đã liên kết
+            "linked_option_group_ids": [group.id for group in dish.option_groups]
+        }
+        return dish_data
     except Exception as e:
-        print(f"Lỗi khi lấy danh sách category: {e}")
-        return []
+        print(f"❌ Lỗi khi lấy chi tiết món ăn (DAO): {e}")
+        return None
 
+def get_dish_option_groups_by_restaurant(restaurant_id):
+    return DishOptionGroup.query.filter_by(restaurant_id=restaurant_id).order_by(DishOptionGroup.name).all()
 
-def register_restaurant_and_user(username, email, password, phone, res_name, address,
-                                 description, open_time, close_time, category_id,
-                                 avatar_url=None, cover_url=None):
-
-    if User.query.filter_by(email=email.strip()).first():
-        return (False, 'Email này đã được sử dụng cho một tài khoản khác.')
-    if User.query.filter_by(phone=phone.strip()).first():
-        return (False, 'Số điện thoại này đã được đăng ký.')
+def add_option_group_with_options(data):
     try:
-        hashed_password = hashlib.md5(password.encode('utf-8')).hexdigest()
-
-        new_user = User(
-            name=username.strip(),
-            email=email.strip(),
-            password=hashed_password,
-            phone=phone.strip(),
-            avatar=avatar_url,
-            role=UserRole.RESTAURANT
+        new_group = DishOptionGroup(
+            restaurant_id=data.get('restaurant_id'),
+            name=data.get('name'),
+            mandatory=data.get('mandatory', False),
+            max=data.get('max')
         )
-        open_t = datetime.datetime.strptime(open_time, '%H:%M').time()
-        close_t = datetime.datetime.strptime(close_time, '%H:%M').time()
-        new_restaurant = Restaurant(
-            restaurant_name=res_name,
-            address=address,
-            description=description,
-            open_time=open_t,
-            close_time=close_t,
-            image=cover_url,
-            category_id=int(category_id)
-        )
+        options_data = data.get('options', [])
+        if not options_data:
+            raise ValueError("Nhóm tùy chọn phải có ít nhất một lựa chọn.")
 
-        new_restaurant.user = new_user
-        db.session.add(new_user)
-        db.session.add(new_restaurant)
+        for option_data in options_data:
+            new_option = DishOption(
+                name=option_data.get('name'),
+                price=option_data.get('price', 0)
+            )
+            new_group.options.append(new_option)
 
+        db.session.add(new_group)
         db.session.commit()
-        return (True, new_user)
+        return new_group
+    except (SQLAlchemyError, ValueError) as e:
+        # Nếu có bất kỳ lỗi nào, hủy bỏ mọi thay đổi
+        print(f"ERROR - Could not add option group: {e}")
+        db.session.rollback()
+        return None
 
+def delete_dishgroup_by_id(group_id):
+    group = DishGroup.query.get(group_id)
+
+    if group:
+        try:
+            for dish in group.dishes:
+                db.session.delete(dish)
+            db.session.delete(group)
+            db.session.commit()
+            return True
+        except Exception as e:
+            db.session.rollback()  # Hủy bỏ nếu có lỗi
+            print(f"LỖI KHI XÓA NHÓM MÓN VÀ CÁC MÓN ĂN: {e}")
+            return False
+
+    return False
+
+def update_option_group_with_options(data):
+    group_id = data.get('id')
+    if not group_id:
+        return False, "Thiếu ID của nhóm cần cập nhật."
+    try:
+        with db.session.begin_nested():
+            # 1. Tìm đối tượng cần sửa trong database
+            group_to_update = db.session.query(DishOptionGroup).get(group_id)
+            if not group_to_update:
+                return False, f"Không tìm thấy nhóm tùy chọn với ID {group_id}."
+            # 2. Cập nhật các thuộc tính của nhóm cha
+            group_to_update.name = data.get('name', '').strip()
+            group_to_update.max = data.get('max')
+            group_to_update.mandatory = data.get('mandatory', False)
+            # Xóa các option cũ khỏi session
+            for option in list(group_to_update.options):
+                db.session.delete(option)
+
+            # Thêm các option mới từ payload vào session
+            new_options_data = data.get('options', [])
+            for option_data in new_options_data:
+                if option_data.get('name'):  # Chỉ thêm nếu có tên
+                    new_option = DishOption(
+                        name=option_data.get('name').strip(),
+                        price=option_data.get('price', 0)
+                    )
+                    group_to_update.options.append(new_option)
+        db.session.commit()
+        return True, group_to_update
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        print(f"LỖI DATABASE KHI CẬP NHẬT NHÓM TÙY CHỌN (DAO): {e}")
+        return False, "Lỗi cơ sở dữ liệu khi cập nhật."
     except Exception as e:
         db.session.rollback()
-        print("‼️ ERROR TRONG DAO:", e)
-        traceback.print_exc()
-        return (False, 'Đã có lỗi xảy ra trong quá trình xử lý dữ liệu.')
+        print(f"LỖI KHÔNG MONG MUỐN KHI CẬP NHẬT NHÓM TÙY CHỌN (DAO): {e}")
+        return False, "Có lỗi không mong muốn xảy ra."
 
-def get_category_by_name(name):
-    return Category.query.filter(Category.name.ilike(f"%{name}%")).first()
+def delete_option_group_by_id(group_id):
+    try:
+        __tablename__ = 'dish_option_group'
+        group_to_delete = db.session.query(DishOptionGroup).get(group_id)
+        if not group_to_delete:
+            return False, f"Không tìm thấy nhóm tùy chọn với ID {group_id}."
+        group_name = group_to_delete.name
+        db.session.delete(group_to_delete)
+        db.session.commit()
+        return True, f'Đã xóa thành công nhóm "{group_name}".'
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        print(f"LỖI DATABASE KHI XÓA NHÓM TÙY CHỌN (DAO): {e}")
+        return False, "Lỗi cơ sở dữ liệu khi xóa."
+    except Exception as e:
+        db.session.rollback()
+        print(f"LỖI KHÔNG MONG MUỐN KHI XÓA NHÓM TÙY CHỌN (DAO): {e}")
+        return False, "Có lỗi không mong muốn xảy ra."
+
+@event.listens_for(Order, 'after_update')
+def emit_status_update_on_change(mapper, connection, target):
+    """
+    Tự động phát sự kiện SocketIO mỗi khi trạng thái đơn hàng được cập nhật.
+    'target' chính là đối tượng Order vừa được cập nhật.
+    """
+    # Lấy lịch sử thay đổi của thuộc tính 'order_status'
+    history = inspect(target).get_history('order_status', True)
+
+    # Kiểm tra xem thuộc tính này có thực sự thay đổi không
+    if history.has_changes():
+        # Phát sự kiện đến client
+        socketio.emit('order_status_updated', {
+            'order_id': target.id,
+            'status': target.order_status.value
+        })
+
+# =====================================================================
+# 3.2.5 GIAO DIỆN NHÀ HÀNG YÊU THÍCH VÀ CHI TIẾT ĐƠN HÀNG
+# =====================================================================
+
+def is_favorite(user_id, restaurant_id):
+    """
+    Kiểm tra xem một nhà hàng đã được người dùng yêu thích hay chưa..
+    """
+    user = User.query.get(user_id)
+    if user:
+        # .any() là cách hiệu quả để kiểm tra sự tồn tại
+        return user.favorite_restaurants.filter(Restaurant.id == restaurant_id).first() is not None
+    return False
+
 def toggle_favorite(user_id, restaurant_id):
     user = User.query.get(user_id)
     restaurant = Restaurant.query.get(restaurant_id)
@@ -689,66 +786,6 @@ def toggle_favorite(user_id, restaurant_id):
         db.session.commit()
         return 'added'
 
-
-def get_dish_by_id(dish_id):
-    try:
-        return db.session.get(Dish, int(dish_id))
-    except (ValueError, TypeError):
-        return None
-
-
-def get_options_by_ids(option_ids):
-    if not option_ids:
-        return []
-    try:
-        int_option_ids = [int(opt_id) for opt_id in option_ids]
-
-        # Sử dụng filter và .in_() để truy vấn hiệu quả nhiều ID cùng lúc
-        return DishOption.query.filter(DishOption.id.in_(int_option_ids)).all()
-    except (ValueError, TypeError):
-        return []
-def get_dish_details_by_id(dish_id):
-    """
-    Lấy thông tin chi tiết của một món ăn, bao gồm cả các nhóm tùy chọn
-    và các tùy chọn con của nó.
-    """
-    try:
-        dish = db.session.get(Dish, int(dish_id))
-        if not dish:
-            return None
-
-        dish_data = {
-            "id": dish.id,
-            "name": dish.name,
-            "description": dish.description,
-            "price": dish.price,
-            "image": dish.image,
-            "option_groups": []
-        }
-
-        # Lấy các nhóm tùy chọn được liên kết với món ăn này
-        for group in dish.option_groups:
-            group_data = {
-                "id": group.id,
-                "name": group.name,
-                "mandatory": group.mandatory,
-                "max_selection": group.max,
-                "options": []
-            }
-            for option in group.options:
-                option_data = {
-                    "id": option.id,
-                    "name": option.name,
-                    "price_change": option.price
-                }
-                group_data["options"].append(option_data)
-            dish_data["option_groups"].append(group_data)
-
-        return dish_data
-    except (ValueError, TypeError):
-        return None
-
-# 3.3.6 Module Lịch sử và chi tiết đơn hàng, nhà hàng yêu thích
 def get_orders_by_user_id(user_id):
     """
     Lấy danh sách các đơn hàng của một người dùng, sắp xếp theo ngày đặt mới nhất.
@@ -772,7 +809,107 @@ def get_order_details_by_id(order_id):
         print(f"Đã xảy ra lỗi khi lấy chi tiết đơn hàng: {e}")
         return None
 
-#Xử lý thanh toán và voucher
+def get_active_orders_for_user(user_id):
+    """
+    Lấy danh sách các đơn hàng đang hoạt động
+    của một người dùng.
+    """
+    # Các trạng thái được coi là "không hoạt động"
+    inactive_statuses = [OrderState.COMPLETED]
+
+    return Order.query.filter(
+        Order.user_id == user_id,
+        ~Order.order_status.in_(inactive_statuses) # Dấu ~ có nghĩa là NOT IN
+    ).order_by(Order.order_date.desc()).all()
+
+def get_orders_by_restaurant(restaurant_id):
+    try:
+        query = Order.query \
+            .filter_by(restaurant_id=restaurant_id) \
+            .order_by(desc(Order.order_date)) \
+            .all()
+
+        return query
+    except Exception as e:
+        print(f"Lỗi khi lấy đơn hàng theo nhà hàng: {e}")
+        return []
+
+def get_order_by_id(order_id):
+    return Order.query.get(order_id)
+
+# =====================================================================
+# 3.2.6 GIAO DIỆN ĐĂNG NHẬP, ĐĂNG KÝ
+# =====================================================================
+
+def auth_user(phone, password):
+    password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
+
+    u = User.query.filter(User.phone.__eq__(phone),
+                          User.password.__eq__(password))
+    return u.first()
+
+def get_user_by_id(user_id):
+    return User.query.get(user_id)
+
+def add_user(name, phone, email, password, avatar=None):
+    password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
+    u = User(name=name, phone=phone, email=email, password=password)
+    if avatar:
+        res = cloudinary.uploader.upload(avatar)
+        u.avatar = res.get('secure_url')
+
+    db.session.add(u)
+    db.session.commit()
+
+# =====================================================================
+# 3.2.7 GIAO DIỆN KHUYẾN MÃI
+# =====================================================================
+
+def get_vouchers_by_restaurant(restaurant_id):
+    return Voucher.query.filter_by(restaurant_id=restaurant_id).order_by(desc(Voucher.end_date)).all()
+
+def get_voucher_by_id(voucher_id):
+    return db.session.get(Voucher, voucher_id)
+
+def add_voucher(data):
+    try:
+        new_voucher = Voucher(**data)
+        db.session.add(new_voucher)
+        db.session.commit()
+        return new_voucher
+    except Exception as e:
+        print(f"Lỗi khi thêm voucher: {e}")
+        db.session.rollback()
+        return None
+
+def update_voucher(voucher_id, data):
+    voucher = get_voucher_by_id(voucher_id)
+    if voucher:
+        try:
+            for key, value in data.items():
+                setattr(voucher, key, value)
+            db.session.commit()
+            return voucher
+        except Exception as e:
+            print(f"Lỗi khi cập nhật voucher: {e}")
+            db.session.rollback()
+            return None
+    return None
+
+def delete_voucher(voucher_id):
+    """Xóa một voucher khỏi cơ sở dữ liệu."""
+    voucher = get_voucher_by_id(voucher_id)
+    if voucher:
+        try:
+            db.session.delete(voucher)
+            db.session.commit()
+            return True
+        except Exception as e:
+            print(f"Lỗi khi xóa voucher: {e}")
+            db.session.rollback()
+            return False
+    return False
+
 def get_valid_vouchers(restaurant_id, subtotal):
     """
     Lấy danh sách các voucher đang hoạt động của một nhà hàng
@@ -823,101 +960,24 @@ def apply_voucher(code, restaurant_id, subtotal):
         'message': f'Áp dụng thành công mã "{voucher.name}"!'
     }
 
-
-def create_order_from_cart(user_id, restaurant_id, cart_data, delivery_address, note, subtotal, shipping_fee, discount, delivery_time,
-                           voucher_ids=None,initial_status=OrderState.PENDING):
+# =====================================================================
+# 3.2.9 GIAO DIỆN THỐNG KÊ BÁO CÁO
+# =====================================================================
+def get_raw_orders_in_range(restaurant_id, start_date, end_date):
     """
-    Tạo một bản ghi Order và các OrderDetail tương ứng từ dữ liệu giỏ hàng trong session.
+    Lấy tất cả các đơn hàng CÓ TRẠNG THÁI LÀ 'COMPLETED'
+    của một nhà hàng trong một khoảng thời gian nhất định.
     """
-    try:
-        with db.session.begin_nested():
-            total = subtotal + shipping_fee - discount
-            new_order = Order(
-                user_id=user_id,
-                restaurant_id=restaurant_id,
-                subtotal=subtotal,
-                shipping_fee=shipping_fee,
-                discount=discount,
-                total=total,
-                delivery_address=delivery_address,
-                note=note,
-                order_status=initial_status,
-                delivery_time = delivery_time
-            )
-
-            if voucher_ids:
-                vouchers = Voucher.query.filter(Voucher.id.in_(voucher_ids)).all()
-                if vouchers:
-                    new_order.vouchers.extend(vouchers)
-
-            db.session.add(new_order)
-
-            for item_key, item_info in cart_data['items'].items():
-                detail = OrderDetail(
-                    order=new_order,
-                    dish_id=item_info['dish_id'],
-                    quantity=item_info['quantity'],
-                    price=item_info['price'],
-                    dish_name=item_info['name'],
-                    selected_options_luc_dat={
-                        'options': item_info['options'],
-                        'note': item_info.get('note', '')
-                    }
-                )
-                db.session.add(detail)
-
-        db.session.commit()
-        return new_order
-    except Exception as e:
-        db.session.rollback()
-        print(f"Lỗi khi tạo đơn hàng từ giỏ hàng: {e}")
-        raise e
-
-# 3.3.10 Module Momo, chatbot (Google AI)
-def create_payment_record(order: Order, payment_method: str):
-    """Tạo một bản ghi thanh toán mới cho một đơn hàng."""
-    payment = Payment(
-        order_id=order.id,
-        amount=order.total,
-        payment_method=payment_method,
-        payment_status=PaymentStatus.UNPAID
-    )
-    db.session.add(payment)
-    db.session.commit()
-    return payment
+    orders = Order.query.filter(
+        Order.restaurant_id == restaurant_id,
 
 
-def get_active_orders_for_user(user_id):
-    """
-    Lấy danh sách các đơn hàng đang hoạt động
-    của một người dùng.
-    """
-    # Các trạng thái được coi là "không hoạt động"
-    inactive_statuses = [OrderState.COMPLETED]
 
-    return Order.query.filter(
-        Order.user_id == user_id,
-        ~Order.order_status.in_(inactive_statuses) # Dấu ~ có nghĩa là NOT IN
-    ).order_by(Order.order_date.desc()).all()
+        Order.order_date >= start_date,
+        Order.order_date <= end_date
+    ).order_by(Order.order_date).all()
+    return orders
 
-@event.listens_for(Order, 'after_update')
-def emit_status_update_on_change(mapper, connection, target):
-    """
-    Tự động phát sự kiện SocketIO mỗi khi trạng thái đơn hàng được cập nhật.
-    'target' chính là đối tượng Order vừa được cập nhật.
-    """
-    # Lấy lịch sử thay đổi của thuộc tính 'order_status'
-    history = inspect(target).get_history('order_status', True)
-
-    # Kiểm tra xem thuộc tính này có thực sự thay đổi không
-    if history.has_changes():
-        # Phát sự kiện đến client
-        socketio.emit('order_status_updated', {
-            'order_id': target.id,
-            'status': target.order_status.value
-        })
-from datetime import date
-from sqlalchemy import func
 def count_orders_for_restaurant_today(restaurant_id):
     """Đếm số lượng đơn hàng của một nhà hàng trong ngày hôm nay."""
     today = date.today()
@@ -929,8 +989,9 @@ def count_orders_for_restaurant_today(restaurant_id):
     ).count()
     return count
 
-import google.generativeai as genai
-
+# =====================================================================
+# CÁC CHỨC NĂNG KHÁC (CHATBOT, THANH TOÁN, HELPERS)
+# =====================================================================
 def call_gemini_api(user_message):
     """
     Gửi tin nhắn đến Google Gemini API và nhận phản hồi.
@@ -967,81 +1028,45 @@ def call_gemini_api(user_message):
     except Exception as e:
         print(f"Lỗi khi gọi Gemini API: {e}")
         return "Xin lỗi, trợ lý ảo đang gặp sự cố. Vui lòng thử lại sau."
-#Khuyến mãi
-def get_vouchers_by_restaurant(restaurant_id):
-    return Voucher.query.filter_by(restaurant_id=restaurant_id).order_by(desc(Voucher.end_date)).all()
 
-def get_voucher_by_id(voucher_id):
-    return db.session.get(Voucher, voucher_id)
-
-def add_voucher(data):
-    try:
-        new_voucher = Voucher(**data)
-        db.session.add(new_voucher)
-        db.session.commit()
-        return new_voucher
-    except Exception as e:
-        print(f"Lỗi khi thêm voucher: {e}")
-        db.session.rollback()
-        return None
-
-def update_voucher(voucher_id, data):
-    voucher = get_voucher_by_id(voucher_id)
-    if voucher:
-        try:
-            for key, value in data.items():
-                setattr(voucher, key, value)
-            db.session.commit()
-            return voucher
-        except Exception as e:
-            print(f"Lỗi khi cập nhật voucher: {e}")
-            db.session.rollback()
-            return None
-    return None
-
-def delete_voucher(voucher_id):
-    """Xóa một voucher khỏi cơ sở dữ liệu."""
-    voucher = get_voucher_by_id(voucher_id)
-    if voucher:
-        try:
-            db.session.delete(voucher)
-            db.session.commit()
-            return True
-        except Exception as e:
-            print(f"Lỗi khi xóa voucher: {e}")
-            db.session.rollback()
-            return False
-    return False
-#Order_Restaurant
-def get_orders_by_restaurant(restaurant_id):
-    try:
-        query = Order.query \
-            .filter_by(restaurant_id=restaurant_id) \
-            .order_by(desc(Order.order_date)) \
-            .all()
-
-        return query
-    except Exception as e:
-        print(f"Lỗi khi lấy đơn hàng theo nhà hàng: {e}")
-        return []
-def get_order_by_id(order_id):
-    return Order.query.get(order_id)
+# 3.3.10 Module Momo, chatbot (Google AI)
+def create_payment_record(order: Order, payment_method: str):
+    """Tạo một bản ghi thanh toán mới cho một đơn hàng."""
+    payment = Payment(
+        order_id=order.id,
+        amount=order.total,
+        payment_method=payment_method,
+        payment_status=PaymentStatus.UNPAID
+    )
+    db.session.add(payment)
+    db.session.commit()
+    return payment
 
 
-def get_raw_orders_in_range(restaurant_id, start_date, end_date):
+def _distance_and_time(restaurants, user_lat, user_lng):
     """
-    Lấy tất cả các đơn hàng CÓ TRẠNG THÁI LÀ 'COMPLETED'
-    của một nhà hàng trong một khoảng thời gian nhất định.
+    Hàm phụ trợ: Nhận vào một danh sách nhà hàng và tọa độ người dùng,
+    tính toán và thêm thuộc tính .distance_km và .delivery_time_minutes.
     """
-    orders = Order.query.filter(
-        Order.restaurant_id == restaurant_id,
+    # Chỉ thực hiện nếu có đầy đủ thông tin.
+    if not all([restaurants, user_lat is not None, user_lng is not None]):
+        return restaurants  # Trả về danh sách gốc nếu thiếu thông tin
 
+    try:
+        user_location = (float(user_lat), float(user_lng))
+        for restaurant in restaurants:
+            restaurant.distance_km = None
+            restaurant.delivery_time_minutes = None  # Đổi tên cho rõ ràng
 
+            if restaurant.lat and restaurant.lng:
+                restaurant_location = (float(restaurant.lat), float(restaurant.lng))
+                distance = geodesic(user_location, restaurant_location).km
+                restaurant.distance_km = round(distance, 1)
+                restaurant.delivery_time_minutes = round(10 + (distance * 5))
+    except (ValueError, TypeError) as e:
+        print(f"Lỗi khi xử lý tọa độ: {e}. Bỏ qua tính toán.")
 
-        Order.order_date >= start_date,
-        Order.order_date <= end_date
-    ).order_by(Order.order_date).all()
+    return restaurants
 
-    return orders
 if __name__ == "__main__":
     print(auth_user("user", 123))
