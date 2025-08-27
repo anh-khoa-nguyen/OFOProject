@@ -31,7 +31,7 @@ class Config:
 class DevelopmentConfig(Config):
     """Cấu hình cho môi trường phát triển"""
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = "mysql+pymysql://root:%s@localhost/ofodb?charset=utf8mb4" % quote('admin')
+    SQLALCHEMY_DATABASE_URI = "mysql+pymysql://root:%s@localhost/ofodb?charset=utf8mb4" % quote('Abc@123')
     SERVER = 'https://workable-primarily-ferret.ngrok-free.app'
 
     MOMO_PARTNER_CODE = 'MOMO'
