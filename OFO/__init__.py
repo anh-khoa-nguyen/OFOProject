@@ -1,5 +1,5 @@
 # __init__.py
-
+import os # Thêm dòng này
 from flask import Flask,session, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
@@ -39,6 +39,8 @@ def load_user(user_id):
 
 def create_app(config_name='development'):
     """Hàm khởi tạo ứng dụng Flask (Application Factory)."""
+    config_name = os.getenv('FLASK_CONFIG', 'development')
+
     app = Flask(__name__)
 
     # 1. Tải cấu hình từ file config.py

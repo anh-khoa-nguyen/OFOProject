@@ -1,0 +1,22 @@
+# Git
+.git
+.gitignore
+
+# Docker
+.dockerignore
+Dockerfile
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv
+venv
+*.egg-info/
+dist/
+build/
+
+# Node.js
+node_modules
+npm-debug.log

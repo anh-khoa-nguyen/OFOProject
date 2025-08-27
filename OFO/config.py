@@ -57,10 +57,60 @@ class TestingConfig(Config):
     MOMO_IPN_URL_BASE = "http://localhost.test/momo"
     MOMO_REDIRECT_URL = "http://localhost.test"
 
+class ProductionConfig(Config):
+    """Cấu hình cho môi trường Production (khi chạy trong Docker)"""
+
+    # --- Cài đặt chung cho Production ---
+    DEBUG = False
+    TESTING = False
+    SQLALCHEMY_TRACK_MODIFICATIONS = False # Tắt để tối ưu hiệu năng
+
+    # --- Đọc các thông tin nhạy cảm từ Biến Môi trường ---
+
+    # 1. Secret Key của Flask
+    # Rất quan trọng, phải được đặt trong môi trường production
+    # Lệnh để tạo key ngẫu nhiên: python -c 'import secrets; print(secrets.token_hex(16))'
+    SECRET_KEY = os.environ.get('SECRET_KEY')
+
+    # 2. Chuỗi kết nối Database
+    # Ví dụ giá trị của DATABASE_URL:
+    # "mysql+pymysql://user:password@host/dbname?charset=utf8mb4"
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:////app/instance/prod.db'
+
+    # 3. Thông tin Cloudinary
+    CLOUDINARY_CLOUD_NAME = os.environ.get('CLOUDINARY_CLOUD_NAME')
+    CLOUDINARY_API_KEY = os.environ.get('CLOUDINARY_API_KEY')
+    CLOUDINARY_API_SECRET = os.environ.get('CLOUDINARY_API_SECRET')
+
+    # 4. Thông tin Google API
+    GOOGLE_API_KEY = os.environ.get('GOOGLE_API_KEY')
+
+    # 5. Thông tin MoMo
+    # Lấy URL của server từ biến môi trường
+    SERVER = os.environ.get('SERVER_URL') # Ví dụ: 'https://your-production-domain.com'
+
+    MOMO_PARTNER_CODE = os.environ.get('MOMO_PARTNER_CODE')
+    MOMO_ACCESS_KEY = os.environ.get('MOMO_ACCESS_KEY')
+    MOMO_SECRET_KEY = os.environ.get('MOMO_SECRET_KEY')
+
+    # Sử dụng endpoint thật của MoMo, không phải môi trường test
+    MOMO_ENDPOINT = 'https://payment.momo.vn/v2/gateway/api/create'
+
+    if SERVER:
+        MOMO_IPN_URL_BASE = f'{SERVER}/momo/confirm-payment'
+        MOMO_REDIRECT_URL = f'{SERVER}'
+    else:
+        MOMO_IPN_URL_BASE = None
+        MOMO_REDIRECT_URL = None
+
+    # 6. Các cấu hình ứng dụng khác (nếu có)
+    SO_PHAN_TU = int(os.environ.get('ITEMS_PER_PAGE', 10))
+
 # Dictionary để dễ dàng truy cập các lớp config
 config_by_name = {
     'development': DevelopmentConfig,
-    'testing': TestingConfig
+    'testing': TestingConfig,
+    'production': ProductionConfig
 }
 
 project_dir = os.path.dirname(__file__)

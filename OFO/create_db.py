@@ -1,30 +1,58 @@
 # create_db.py - Phiên bản tương thích với Application Factory
 
 # 1. Import hàm create_app và đối tượng db từ __init__
+import os
 from __init__ import create_app, db
 from models import *
 import hashlib
 from sqlalchemy import text
 from datetime import time
-import datetime
+import random
 
 # 2. Gọi create_app() để tạo một phiên bản ứng dụng.
 #    Chúng ta có thể dùng cấu hình 'development' mặc định.
-app = create_app('development')
+app = create_app()
 
 # 3. Đẩy một application context để script có thể truy cập CSDL
 with app.app_context():
     print("--- CHUẨN BỊ LÀM MỚI CƠ SỞ DỮ LIỆU ---")
 
-    with db.engine.connect() as connection:
-        with connection.begin():
-            connection.execute(text('SET FOREIGN_KEY_CHECKS=0;'))
+    # Lấy engine và kiểm tra loại database đang sử dụng
+    engine = db.get_engine()
+    dialect_name = engine.dialect.name
+    print(f"--> Đang sử dụng dialect: {dialect_name}")
 
+    # with db.engine.connect() as connection:
+    #     with connection.begin():
+    #         connection.execute(text('SET FOREIGN_KEY_CHECKS=0;'))
+    #
+    #         db.metadata.drop_all(bind=connection)
+    #
+    #         db.metadata.create_all(bind=connection)
+    #
+    #         connection.execute(text('SET FOREIGN_KEY_CHECKS=1;'))
+
+    # Cách 1: Sử dụng transaction và chỉ thực thi lệnh MySQL khi cần
+    with engine.connect() as connection:
+        with connection.begin():  # Bắt đầu một transaction
+            # Chỉ thực thi các lệnh SET nếu là MySQL
+            if dialect_name == 'mysql':
+                print("--> Vô hiệu hóa kiểm tra khóa ngoại cho MySQL.")
+                connection.execute(text('SET FOREIGN_KEY_CHECKS=0;'))
+
+            # db.drop_all() là cách của SQLAlchemy để xóa tất cả các bảng,
+            # hoạt động trên cả MySQL và SQLite.
+            print("--> Xóa tất cả các bảng cũ...")
             db.metadata.drop_all(bind=connection)
 
+            # db.create_all() sẽ tạo lại các bảng dựa trên models.py
+            print("--> Tạo lại các bảng mới...")
             db.metadata.create_all(bind=connection)
 
-            connection.execute(text('SET FOREIGN_KEY_CHECKS=1;'))
+            # Bật lại kiểm tra khóa ngoại nếu là MySQL
+            if dialect_name == 'mysql':
+                print("--> Bật lại kiểm tra khóa ngoại cho MySQL.")
+                connection.execute(text('SET FOREIGN_KEY_CHECKS=1;'))
 
     print("\n--- Bắt đầu thêm dữ liệu mẫu ---")
 
@@ -903,5 +931,13 @@ with app.app_context():
     db.session.commit()
 
     # Cuối cùng
-    db.session.commit()
-    print("\n--- TẠO DỮ LIỆU THÀNH CÔNG ---")
+    # db.session.commit()
+    # print("\n--- TẠO DỮ LIỆU THÀNH CÔNG ---")
+    try:
+        db.session.commit()
+        print("\n--- TẠO DỮ LIỆU THÀNH CÔNG ---")
+    except Exception as e:
+        db.session.rollback()
+        print(f"\n!!! LỖI KHI COMMIT DỮ LIỆU CUỐI CÙNG: {e}")
+    finally:
+        db.session.close()

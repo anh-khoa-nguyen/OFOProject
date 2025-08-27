@@ -1,0 +1,26 @@
+Build lại image để "ghi" phiên bản code mới vào một "đĩa CD" mới.
+docker build -t ofo-project .
+
+
+Dừng và xóa container cũ đang chạy từ "đĩa CD" cũ.
+docker rm -f ofo-app
+
+
+Chạy container mới từ "đĩa CD" mới.
+docker run -d -p 5000:5000 --name ofo-app -e SECRET_KEY='day-la-mot-cai-key-bi-mat-de-test-docker' -e CLOUDINARY_CLOUD_NAME="dq2jtbrda" -e CLOUDINARY_API_KEY="341769211452564" -e CLOUDINARY_API_SECRET="_5G4itRP_2YE52K8srR6cJO5Las" ofo-project
+
+
+Thực thi lệnh bên trong container mới (nếu cần).
+docker exec -it ofo-app python create_db.py
+
+Liệt kê các container đang chạy:
+docker ps
+
+Liệt kê các image đã được build trên máy của bạn:
+docker images
+
+Xem toàn bộ log của một container từ đầu đến cuối:
+docker logs ofo-app
+
+Xem log và tiếp tục theo dõi (Live Tailing):
+docker logs -f ofo-app
