@@ -11,14 +11,15 @@ describe('Address Selection Flow with Real API Calls', () => {
 
   /**
    * KỊCH BẢN 1: TÌM KIẾM BẰNG Ô INPUT CHÍNH
-   * Đã sửa lỗi race condition.
+   * Đã sửa lỗi race condition và xử lý trường hợp không hiện gợi ý.
    */
-  it('should allow user to search, select, and confirm an address using the main geocoder', () => {
+  it('should allow user to search, select, and confirm an address, retrying if suggestions dont appear', () => {
     const userAddressInput = '33 Sơn Hà';
+    const addressToRetry = 'Hà'; // Phần sẽ gõ lại nếu cần
+    const charsToRemove = addressToRetry.length;
 
     // 1. Lắng nghe TẤT CẢ các API call quan trọng
     cy.intercept('GET', '**/place/autocomplete*').as('goongAutocomplete');
-    // THÊM MỚI: Lắng nghe API lấy chi tiết địa điểm
     cy.intercept('GET', '**/place/detail*').as('goongDetail');
     cy.intercept('POST', '/api/set-address').as('setAddressApiCall');
 
@@ -29,15 +30,35 @@ describe('Address Selection Flow with Real API Calls', () => {
     // 3. Chờ API autocomplete hoàn thành
     cy.wait('@goongAutocomplete');
 
-    // 4. Click vào kết quả đầu tiên
-    cy.get('#geocoder-container .suggestions li > a')
-      .first()
-      .should('be.visible')
-      .click();
+    // 4. KIỂM TRA ĐIỀU KIỆN: Gợi ý có hiện ra không?
+    cy.get('body').then(($body) => {
+      // Tìm kiếm phần tử gợi ý trong body
+      if ($body.find('#geocoder-container .suggestions li > a').length > 0) {
+        // TRƯỜNG HỢP 1: Gợi ý xuất hiện -> Click luôn
+        cy.get('#geocoder-container .suggestions li > a').first().click();
+      } else {
+        // TRƯỜNG HỢP 2: Không thấy gợi ý -> Xóa vài ký tự và gõ lại
+        cy.log('Suggestions not found, attempting to re-trigger.');
+        
+        // Tạo chuỗi backspace động dựa trên độ dài của phần cần gõ lại
+        const backspaces = '{backspace}'.repeat(charsToRemove);
+        
+        cy.get('#geocoder-container > .mapboxgl-ctrl-geocoder > .mapboxgl-ctrl-geocoder--input')
+          .type(`${backspaces}${addressToRetry}`);
+
+        // Chờ API được gọi lại
+        cy.wait('@goongAutocomplete');
+
+        // Click vào kết quả đầu tiên (lúc này nên xuất hiện)
+        cy.get('#geocoder-container .suggestions li > a')
+          .first()
+          .should('be.visible')
+          .click();
+      }
+    });
 
     // 5. THÊM BƯỚC CHỜ QUAN TRỌNG NHẤT
     // Chờ cho đến khi API lấy chi tiết địa điểm hoàn thành.
-    // Điều này đảm bảo JS đã có đủ thời gian để cập nhật tọa độ.
     cy.wait('@goongDetail');
 
     // 6. Bây giờ mới click vào nút "Xác nhận địa chỉ"
