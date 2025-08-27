@@ -19,6 +19,7 @@ from sqlalchemy.orm import joinedload, subqueryload
 # 3. THƯ VIỆN CỦA DỰ ÁN
 from __init__ import db, socketio
 from models import *
+import requests
 
 # =====================================================================
 # 3.2.1 GIAO DIỆN TRANG CHỦ VÀ TÌM KIẾM NHÀ HÀNG..

@@ -8,7 +8,7 @@ from unittest.mock import patch, MagicMock
 from __init__ import create_app, db
 from models import User, Restaurant, Dish, Order, Payment, OrderDetail, UserRole, OrderState, PaymentStatus
 
-# Import các hàm cần test (đã sửa lại đường dẫn import cho nhất quán)
+# Import các hàm cần test
 from dao import create_order_from_cart, create_payment_record
 from index import create_momo_payment_request
 
@@ -28,22 +28,22 @@ class MomoPaymentTestCase(unittest.TestCase):
         self.app_context.push()
         db.create_all()
 
-        # --- Dựng "sân khấu" dữ liệu (ĐÃ SỬA LẠI CHO ĐÚNG MODEL) ---
+        # --- Dựng "sân khấu" dữ liệu trong một giao dịch duy nhất ---
         hashed_password = str(hashlib.md5('password'.encode('utf-8')).hexdigest())
 
-        # Tạo user với đầy đủ thông tin
         user = User(name="momo_user", email="momo@test.com", phone="0902000001", password=hashed_password, role=UserRole.USER)
         owner = User(name="momo_owner", email="owner.momo@test.com", phone="0902000002", password=hashed_password, role=UserRole.RESTAURANT)
         db.session.add_all([user, owner])
-        db.session.commit()
+        db.session.flush() # Lấy ID cho user và owner
 
-        # Tạo nhà hàng với đầy đủ thông tin
         restaurant = Restaurant(restaurant_name="Quán MoMo", owner_user_id=owner.id, address="123 MoMo Street")
         db.session.add(restaurant)
-        db.session.commit()
+        db.session.flush() # Lấy ID cho restaurant
 
         dish = Dish(name="Món ăn MoMo", price=100000.0, restaurant_id=restaurant.id)
         db.session.add(dish)
+
+        # Commit tất cả mọi thứ một lần duy nhất
         db.session.commit()
 
         # Dữ liệu giỏ hàng giả
@@ -75,19 +75,16 @@ class MomoPaymentTestCase(unittest.TestCase):
     def test_create_order_and_payment_record(self):
         """(MOMO-Setup) Kiểm tra tạo Order và Payment record thành công."""
         print(f"\n--- Mục đích: {self.test_create_order_and_payment_record.__doc__} ---")
-        # 1. Tạo đơn hàng
         new_order = create_order_from_cart(
             user_id=self.user_id, restaurant_id=self.restaurant_id, cart_data=self.cart_data,
             delivery_address="123 Test Street", note="Giao nhanh", subtotal=200000,
             shipping_fee=15000, discount=0, delivery_time="30"
         )
         self.assertIsNotNone(new_order)
-        # Sửa lại cú pháp SQLAlchemy cho hiện đại
         self.assertEqual(db.session.query(Order).count(), 1)
         self.assertEqual(db.session.query(OrderDetail).count(), 1)
         self.assertEqual(new_order.total, 215000)
 
-        # 2. Tạo bản ghi thanh toán
         payment = create_payment_record(new_order, 'momo')
         self.assertIsNotNone(payment)
         self.assertEqual(db.session.query(Payment).count(), 1)
@@ -96,7 +93,7 @@ class MomoPaymentTestCase(unittest.TestCase):
         self.assertEqual(payment.payment_status, PaymentStatus.UNPAID)
         print(">>> Kết quả: ĐÚNG - Tạo Order và Payment thành công.")
 
-    # Giả lập việc gọi API `requests.post`
+    # SỬA LỖI: Patch đúng vào 'dao.requests.post'
     @patch('dao.requests.post')
     def test_create_momo_request_success(self, mock_post):
         """(MOMO) Kiểm tra tạo yêu cầu thanh toán MoMo thành công."""
@@ -125,6 +122,7 @@ class MomoPaymentTestCase(unittest.TestCase):
         mock_post.assert_called_once()
         print(">>> Kết quả: ĐÚNG - Trả về payUrl và cập nhật DB thành công.")
 
+    # SỬA LỖI: Patch đúng vào 'dao.requests.post'
     @patch('dao.requests.post')
     def test_create_momo_request_failure(self, mock_post):
         """(MOMO) Kiểm tra trường hợp MoMo API trả về lỗi."""
