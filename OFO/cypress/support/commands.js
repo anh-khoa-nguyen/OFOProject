@@ -25,7 +25,7 @@ Cypress.Commands.add('typeAndRetryUntilSuggestionsAppear', { prevSubject: 'eleme
     }
 
     // Gõ text và cho nó một chút delay để giống người thật hơn
-    cy.wrap(subject).type(textToType, { delay: 100 });
+    cy.wrap(subject).type(textToType, { delay: 500 });
 
     // Đợi một khoảng thời gian cho cơ chế debouncing của app hoạt động
     cy.wait(interval);
