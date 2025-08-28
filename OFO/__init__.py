@@ -82,16 +82,7 @@ def create_app(config_name='development'):
 
 @event.listens_for(Engine, "connect")
 def set_sqlite_pragma(dbapi_connection, connection_record):
-    """
-    Sự kiện này sẽ được gọi mỗi khi có một kết nối mới được tạo.
-    Nó sẽ kiểm tra xem database có phải là SQLite không. Nếu đúng, nó sẽ bật
-    chức năng kiểm tra khóa ngoại (foreign key).
-    """
-    # Lấy engine từ connection_record
-    engine = connection_record.engine
-
-    # Chỉ thực thi câu lệnh PRAGMA nếu dialect là 'sqlite'
-    if engine.dialect.name == 'sqlite':
+    if isinstance(dbapi_connection, sqlite3.Connection):  # đúng cách check SQLite
         cursor = dbapi_connection.cursor()
         cursor.execute("PRAGMA foreign_keys=ON;")
         cursor.close()
