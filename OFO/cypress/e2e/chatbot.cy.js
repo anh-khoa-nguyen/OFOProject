@@ -121,5 +121,4 @@ describe('Chatbot Functionality', () => {
       cy.get('br').should('exist');
     });
   });
-
 });
