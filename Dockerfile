@@ -32,4 +32,5 @@ RUN chmod +x startup.sh
 
 EXPOSE 5000
 
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "manage:app"]
+#CMD ["gunicorn", "--bind", "0.0.0.0:5000", "manage:app"]
+CMD ["./startup.sh"]
