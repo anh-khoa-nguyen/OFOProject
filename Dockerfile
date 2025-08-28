@@ -22,7 +22,13 @@ COPY OFO/ .
 
 # === THÊM DÒNG NÀY VÀO ===
 # Tạo thư mục 'instance' để chứa file database SQLite
-RUN mkdir instance
+# RUN mkdir instance
+
+# 1. Copy script khởi động mới vào trong image
+COPY startup.sh .
+
+# 2. Cấp quyền thực thi cho script
+RUN chmod +x startup.sh
 
 EXPOSE 5000
 
