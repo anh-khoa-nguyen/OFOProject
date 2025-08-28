@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/bin/sh
+
 
 # Dòng này đảm bảo script sẽ dừng lại ngay lập tức nếu có bất kỳ lệnh nào bị lỗi
 set -e

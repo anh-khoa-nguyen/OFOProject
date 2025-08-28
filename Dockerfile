@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     pkg-config \
     libmariadb-dev \
+    dos2unix \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -28,8 +29,12 @@ COPY OFO/ .
 COPY startup.sh .
 
 # 2. Cấp quyền thực thi cho script
-RUN chmod +x startup.sh
+#RUN chmod +x startup.sh
+RUN dos2unix startup.sh && chmod +x startup.sh
+
+RUN mkdir -p instance
 
 EXPOSE 5000
 
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "manage:app"]
+#CMD ["gunicorn", "--bind", "0.0.0.0:5000", "manage:app"]
+CMD ["./startup.sh"]
