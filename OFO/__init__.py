@@ -87,11 +87,11 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
     Nó sẽ kiểm tra xem database có phải là SQLite không. Nếu đúng, nó sẽ bật
     chức năng kiểm tra khóa ngoại (foreign key).
     """
-    # Lấy tên của dialect từ đối tượng connection_record (ví dụ: 'sqlite', 'mysql', 'postgresql')
-    dialect_name = connection_record.dialect.name
+    # Lấy engine từ connection_record
+    engine = connection_record.engine
 
     # Chỉ thực thi câu lệnh PRAGMA nếu dialect là 'sqlite'
-    if dialect_name == 'sqlite':
+    if engine.dialect.name == 'sqlite':
         cursor = dbapi_connection.cursor()
         cursor.execute("PRAGMA foreign_keys=ON;")
         cursor.close()
