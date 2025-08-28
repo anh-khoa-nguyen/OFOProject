@@ -75,8 +75,9 @@ class ProductionConfig(Config):
     # 2. Chuỗi kết nối Database
     # Ví dụ giá trị của DATABASE_URL:
     # "mysql+pymysql://user:password@host/dbname?charset=utf8mb4"
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
-
+    # SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:////app/instance/prod.db'
+    
     # 3. Thông tin Cloudinary
     CLOUDINARY_CLOUD_NAME = os.environ.get('CLOUDINARY_CLOUD_NAME')
     CLOUDINARY_API_KEY = os.environ.get('CLOUDINARY_API_KEY')
