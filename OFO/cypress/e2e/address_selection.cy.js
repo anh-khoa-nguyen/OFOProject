@@ -43,7 +43,7 @@ describe('Address Selection Flow with Real API Calls', () => {
 
     cy.get('button[data-bs-target="#mapModal"]').click();
     cy.get('#map-modal-container').should('be.visible');
-    cy.wait(1000);
+    cy.wait(3000);
 
     const marker = cy.get('.mapboxgl-marker[aria-label="Map marker"]');
     marker.should('be.visible');
